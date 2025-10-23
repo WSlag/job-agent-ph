@@ -8,7 +8,9 @@ import { getAgencyApplications } from '@/lib/application-helpers'
 import { Job, JobApplication } from '@/types'
 import Header from '@/components/layout/Header'
 import JobCard from '@/components/jobs/JobCard'
-import { Loader2, Briefcase, Users, Clock, CheckCircle } from 'lucide-react'
+import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit } from 'lucide-react'
+import Link from 'next/link'
+import { Agency } from '@/types'
 
 export default function AgencyDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -77,6 +79,39 @@ export default function AgencyDashboardPage() {
             Manage your job postings and track applications
           </p>
         </div>
+
+        {/* Agency Profile Card */}
+        {userProfile && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="bg-blue-100 p-4 rounded-lg">
+                  <UserCircle size={48} className="text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                    {(userProfile as Agency).companyName}
+                  </h2>
+                  <p className="text-gray-600 mb-2">
+                    {(userProfile as Agency).contactPerson}
+                  </p>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p><span className="font-medium">Email:</span> {userProfile.email}</p>
+                    <p><span className="font-medium">Phone:</span> {(userProfile as Agency).phone}</p>
+                    <p><span className="font-medium">Registration:</span> {(userProfile as Agency).registrationNumber}</p>
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/agency/profile/edit"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+              >
+                <Edit size={18} />
+                Edit Profile
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

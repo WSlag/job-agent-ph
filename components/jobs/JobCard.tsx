@@ -12,6 +12,7 @@ import {
   Heart,
   Share2,
   Users,
+  Edit,
 } from 'lucide-react';
 import { Job } from '@/types';
 import { useState, useEffect } from 'react';
@@ -195,25 +196,34 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         <div className="flex items-center text-gray-500 text-xs mb-4">
           <Clock size={14} className="mr-1" />
           <span>
-            Posted {formatDistanceToNow(new Date(job.postedAt))} ago
+            Posted {formatDistanceToNow(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
           </span>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {userType === 'agency' && user && job.agencyId === user.uid ? (
             // Agency view of their own job
             <>
               <Link
                 href={`/jobs/${job.id}/applicants`}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group/btn"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2.5 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group/btn text-sm"
               >
-                <Users size={18} className="group-hover/btn:scale-110 transition-transform" />
-                {applicantCount !== null ? `${applicantCount} Applicants` : 'View Applicants'}
+                <Users size={16} className="group-hover/btn:scale-110 transition-transform" />
+                {applicantCount !== null ? `${applicantCount}` : '0'}
+              </Link>
+              <Link
+                href={`/jobs/edit/${job.id}`}
+                className="bg-gray-100 text-gray-700 px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 text-sm font-semibold"
+                title="Edit Job"
+              >
+                <Edit size={16} />
+                Edit
               </Link>
               <Link
                 href={`/jobs/${job.id}`}
-                className="bg-gray-100 text-gray-700 px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center"
+                className="bg-gray-100 text-gray-700 px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center text-sm font-semibold"
+                title="View Job"
               >
                 View
               </Link>

@@ -88,7 +88,8 @@ service cloud.firestore {
     // Jobs collection
     match /jobs/{jobId} {
       // TEMPORARY: Wide open for debugging - MUST RESTRICT LATER
-      allow read, write: if isAuthenticated();
+      allow read: if true; // Allow public read for development
+      allow write: if isAuthenticated();
     }
 
     // Applications collection
@@ -97,8 +98,11 @@ service cloud.firestore {
       // Agencies can read applications for their jobs
       allow read: if isAuthenticated() && (
                     resource.data.jobHunterId == request.auth.uid ||
-                    get(/databases/$(database)/documents/jobs/$(resource.data.jobId)).data.agencyId == request.auth.uid
+                    resource.data.agencyId == request.auth.uid
                   );
+
+      // Allow list queries for authenticated users to get their applications
+      allow list: if isAuthenticated();
 
       // Only job hunters can create applications
       allow create: if isJobHunter() &&

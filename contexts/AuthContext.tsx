@@ -77,9 +77,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.error('User profile not found');
+      // Profile not found - sign out the user to prevent issues
+      console.error('User profile not found in database. User ID:', userId);
+      await firebaseSignOut(auth);
+      setUserProfile(null);
+      setUserType(null);
     } catch (error) {
       console.error('Error loading user profile:', error);
+      // Sign out on error to prevent stuck auth state
+      await firebaseSignOut(auth);
+      setUserProfile(null);
+      setUserType(null);
     }
   };
 

@@ -480,42 +480,42 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-12">
+      <footer className="bg-white text-gray-700 py-12 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="mb-4">
-                <Logo size="md" showText={true} className="[&_span]:!text-white [&_svg]:brightness-150" />
+                <Logo size="md" showText={true} />
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600">
                 Your trusted partner in finding international job opportunities.
               </p>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">For Job Seekers</h3>
+              <h3 className="text-gray-900 font-semibold mb-4">For Job Seekers</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/jobs" className="hover:text-white transition-colors">Browse Jobs</Link></li>
-                <li><Link href="/auth/register" className="hover:text-white transition-colors">Create Account</Link></li>
-                <li><Link href="/profile" className="hover:text-white transition-colors">My Profile</Link></li>
+                <li><Link href="/jobs" className="text-gray-600 hover:text-blue-600 transition-colors">Browse Jobs</Link></li>
+                <li><Link href="/auth/register" className="text-gray-600 hover:text-blue-600 transition-colors">Create Account</Link></li>
+                <li><Link href="/profile" className="text-gray-600 hover:text-blue-600 transition-colors">My Profile</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">For Employers</h3>
+              <h3 className="text-gray-900 font-semibold mb-4">For Employers</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/employer" className="hover:text-white transition-colors">Post a Job</Link></li>
-                <li><Link href="/employer/dashboard" className="hover:text-white transition-colors">Employer Dashboard</Link></li>
+                <li><Link href="/employer" className="text-gray-600 hover:text-blue-600 transition-colors">Post a Job</Link></li>
+                <li><Link href="/employer/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">Employer Dashboard</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">Company</h3>
+              <h3 className="text-gray-900 font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">About Us</Link></li>
+                <li><Link href="/contact" className="text-gray-600 hover:text-blue-600 transition-colors">Contact</Link></li>
+                <li><Link href="/privacy" className="text-gray-600 hover:text-blue-600 transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
+          <div className="border-t border-gray-200 pt-8 text-center text-sm text-gray-600">
             <p>&copy; 2025 Job Agent PH. All rights reserved. Made with ❤️ for Filipinos.</p>
           </div>
         </div>

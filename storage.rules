@@ -71,7 +71,7 @@ service firebase.storage {
     }
 
     // Job images/banners uploaded by agencies (new path)
-    match /jobs/{agencyId}/{fileName} {
+    match /jobs/{agencyId}/{jobId}/{fileName} {
       // Agencies can upload images for their jobs
       allow create: if isAuthenticated() &&
                       isOwner(agencyId) &&
