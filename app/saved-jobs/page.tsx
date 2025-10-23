@@ -5,16 +5,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { collection, query, getDocs, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import { Bookmark, MapPin, DollarSign, Clock, Trash2, ExternalLink } from 'lucide-react';
 import { Job } from '@/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
 export default function SavedJobsPage() {
-  const { currentUser, userType, loading: authLoading } = useAuth();
+  const { user: currentUser, userType, loading: authLoading } = useAuth();
   const router = useRouter();
   const [savedJobs, setSavedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);

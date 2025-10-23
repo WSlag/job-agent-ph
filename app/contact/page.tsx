@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Section } from '@/components/ui/Section';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Section from '@/components/ui/Section';
 import { validateEmail, validateMessage, sanitizeString } from '@/lib/validation';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
 

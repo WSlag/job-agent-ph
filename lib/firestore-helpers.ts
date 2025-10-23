@@ -15,6 +15,7 @@ import {
   QueryConstraint,
   Timestamp,
   serverTimestamp,
+  addDoc,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { COLLECTIONS } from './collections';
@@ -23,9 +24,21 @@ import { COLLECTIONS } from './collections';
 
 export async function createDocument<T>(
   collectionName: string,
-  docId: string,
+  docId: string | undefined,
   data: T
 ) {
+  // If docId is not provided, use addDoc to auto-generate an ID
+  if (!docId) {
+    const collectionRef = collection(db, collectionName);
+    const docRef = await addDoc(collectionRef, {
+      ...data,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return docRef.id;
+  }
+
+  // If docId is provided, use setDoc with the specific ID
   const docRef = doc(db, collectionName, docId);
   await setDoc(docRef, {
     ...data,

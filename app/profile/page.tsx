@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { updateProfile, updateEmail, updatePassword } from 'firebase/auth';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { updateProfile, updatePassword } from 'firebase/auth';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import {
   validateEmail,
   validatePhone,
@@ -46,7 +46,7 @@ interface AgencyProfile {
 }
 
 export default function ProfilePage() {
-  const { currentUser, userType, loading: authLoading } = useAuth();
+  const { user: currentUser, userType, loading: authLoading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<JobHunterProfile | AgencyProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,7 +97,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleInputChange = (field: string, value: any) {
+  const handleInputChange = (field: string, value: any) => {
     setProfile(prev => prev ? { ...prev, [field]: value } : null);
   };
 
@@ -218,8 +218,12 @@ export default function ProfilePage() {
       }
 
       // Upload files if any
-      let resumeUrl = profile.resumeUrl;
-      let profilePictureUrl = profile.profilePictureUrl || (profile as AgencyProfile).logoUrl;
+      let resumeUrl = 'resumeUrl' in profile ? profile.resumeUrl : undefined;
+      let profilePictureUrl = 'profilePictureUrl' in profile
+        ? profile.profilePictureUrl
+        : 'logoUrl' in profile
+        ? profile.logoUrl
+        : undefined;
 
       if (resumeFile) {
         resumeUrl = await uploadFile(resumeFile, `resumes/${currentUser.uid}/${resumeFile.name}`);
@@ -446,7 +450,7 @@ export default function ProfilePage() {
                         type="text"
                         value={skillInput}
                         onChange={(e) => setSkillInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Add a skill (press Enter)"
                       />

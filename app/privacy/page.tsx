@@ -1,4 +1,4 @@
-import { Section } from '@/components/ui/Section';
+import Section from '@/components/ui/Section';
 import { Shield } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {

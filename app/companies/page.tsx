@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Card } from '@/components/ui/Card';
-import { Section } from '@/components/ui/Section';
-import { Badge } from '@/components/ui/Badge';
+import Card from '@/components/ui/Card';
+import Section from '@/components/ui/Section';
+import Badge from '@/components/ui/Badge';
 import { Building2, MapPin, Briefcase, CheckCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 

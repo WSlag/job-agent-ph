@@ -439,6 +439,9 @@ export default function JobPostingForm() {
                 <p className="text-xs text-gray-500 mt-1">
                   PNG, JPG, or WEBP
                 </p>
+                <p className="text-xs text-blue-600 font-medium mt-2">
+                  Recommended: 4" x 2.1" (1200 x 630 pixels) for best display
+                </p>
               </div>
               <input
                 id="image-upload"

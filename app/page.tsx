@@ -1,7 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/collections';
+import { Job } from '@/types';
 import {
   Search,
   MapPin,
@@ -25,6 +29,38 @@ import Logo from '@/components/ui/Logo';
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
+  const [featuredJobs, setFeaturedJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFeaturedJobs();
+  }, []);
+
+  const loadFeaturedJobs = async () => {
+    try {
+      setLoading(true);
+      const jobsRef = collection(db, COLLECTIONS.JOBS);
+      const q = query(
+        jobsRef,
+        where('isActive', '==', true),
+        orderBy('postedAt', 'desc'),
+        limit(6)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const jobsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        postedAt: doc.data().postedAt?.toDate() || new Date(),
+      })) as Job[];
+
+      setFeaturedJobs(jobsData);
+    } catch (error) {
+      console.error('Error loading featured jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,86 +70,27 @@ export default function Home() {
     window.location.href = `/jobs${params.toString() ? '?' + params.toString() : ''}`;
   };
 
-  const featuredJobs = [
-    {
-      id: 1,
-      title: 'Senior Software Engineer',
-      company: 'Tech Global Inc.',
-      location: 'Singapore',
-      salary: '$5,000 - $8,000',
-      type: 'Full-time',
-      category: 'IT & Software',
-      image: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=250&fit=crop',
-      description: 'Join our innovative team building cutting-edge solutions for global markets.',
-      posted: '2 days ago',
-      applicants: 24,
-    },
-    {
-      id: 2,
-      title: 'Registered Nurse',
-      company: 'HealthCare Plus',
-      location: 'Dubai, UAE',
-      salary: '$3,500 - $5,000',
-      type: 'Full-time',
-      category: 'Healthcare',
-      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=250&fit=crop',
-      description: 'Provide quality care in a modern medical facility with excellent benefits.',
-      posted: '1 day ago',
-      applicants: 18,
-    },
-    {
-      id: 3,
-      title: 'Mechanical Engineer',
-      company: 'BuildTech Solutions',
-      location: 'Sydney, Australia',
-      salary: '$6,500 - $9,000',
-      type: 'Full-time',
-      category: 'Engineering',
-      image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=250&fit=crop',
-      description: 'Lead infrastructure projects with a pioneering engineering firm.',
-      posted: '3 days ago',
-      applicants: 31,
-    },
-    {
-      id: 4,
-      title: 'Digital Marketing Manager',
-      company: 'Creative Agency Co.',
-      location: 'Remote',
-      salary: '$4,000 - $6,500',
-      type: 'Remote',
-      category: 'Marketing',
-      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop',
-      description: 'Drive marketing campaigns for international brands from anywhere.',
-      posted: '5 days ago',
-      applicants: 42,
-    },
-    {
-      id: 5,
-      title: 'Financial Analyst',
-      company: 'Global Finance Ltd.',
-      location: 'London, UK',
-      salary: '$5,500 - $7,500',
-      type: 'Full-time',
-      category: 'Finance',
-      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&h=250&fit=crop',
-      description: 'Analyze financial data and provide strategic insights for growth.',
-      posted: '1 week ago',
-      applicants: 15,
-    },
-    {
-      id: 6,
-      title: 'ESL Teacher',
-      company: 'Education First',
-      location: 'Tokyo, Japan',
-      salary: '$3,200 - $4,500',
-      type: 'Full-time',
-      category: 'Education',
-      image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=250&fit=crop',
-      description: 'Teach English to students in a dynamic and cultural environment.',
-      posted: '4 days ago',
-      applicants: 27,
-    },
-  ];
+  const formatSalary = (job: Job) => {
+    if (!job.salaryMin && !job.salaryMax) return 'Negotiable';
+    if (job.salaryMin && job.salaryMax) {
+      return `${job.currency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
+    }
+    if (job.salaryMin) return `${job.currency} ${job.salaryMin.toLocaleString()}+`;
+    return `Up to ${job.currency} ${job.salaryMax?.toLocaleString()}`;
+  };
+
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return `${Math.floor(diffDays / 7)}w ago`;
+  };
 
   const categories = [
     { name: 'IT & Software', icon: '💻', count: 1250 },
@@ -306,91 +283,108 @@ export default function Home() {
             <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Featured Job Opportunities</h2>
             <p className="text-sm md:text-base text-gray-600 px-4">Discover your next career move with top international employers</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {featuredJobs.map((job) => (
-              <div
-                key={job.id}
-                className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
-              >
-                {/* Job Image */}
-                <div className="relative h-32 md:h-48 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
-                  <img
-                    src={job.image}
-                    alt={job.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold text-blue-600 flex items-center gap-1">
-                    <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    <span className="hidden md:inline">{job.posted}</span>
-                    <span className="md:hidden">{job.posted.split(' ')[0]}</span>
-                  </div>
-                  <button className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm p-1 md:p-2 rounded-full hover:bg-white transition-colors">
-                    <Bookmark className="w-3 h-3 md:w-4 md:h-4 text-gray-700" />
-                  </button>
-                </div>
-
-                {/* Job Details */}
-                <div className="p-3 md:p-6">
-                  {/* Job Type Badge */}
-                  <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
-                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold">
-                      {job.type}
-                    </span>
-                    <span className="bg-purple-100 text-purple-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold truncate">
-                      {job.category.split(' ')[0]}
-                    </span>
-                  </div>
-
-                  {/* Job Title & Company */}
-                  <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-1 md:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
-                    {job.title}
-                  </h3>
-                  <p className="text-xs md:text-base text-gray-600 font-medium mb-2 md:mb-3 flex items-center gap-1 md:gap-2 line-clamp-1">
-                    <Building2 className="w-3 h-3 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
-                    <span className="truncate">{job.company}</span>
-                  </p>
-
-                  {/* Description */}
-                  <p className="hidden md:block text-sm text-gray-600 mb-4 line-clamp-2">
-                    {job.description}
-                  </p>
-
-                  {/* Location & Salary */}
-                  <div className="space-y-1 md:space-y-2 mb-2 md:mb-4">
-                    <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
-                      <MapPin className="w-3 h-3 md:w-4 md:h-4 text-blue-600 flex-shrink-0" />
-                      <span className="font-medium truncate">{job.location}</span>
+          {loading ? (
+            <div className="col-span-full text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+              <p className="mt-4 text-gray-600">Loading featured jobs...</p>
+            </div>
+          ) : featuredJobs.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-600">No jobs available yet. Check back soon!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+              {featuredJobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
+                >
+                  {/* Job Image */}
+                  <div className="relative h-32 md:h-48 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
+                    {job.imageUrl ? (
+                      <img
+                        src={job.imageUrl}
+                        alt={job.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+                        <Briefcase className="w-16 h-16 text-blue-300" />
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold text-blue-600 flex items-center gap-1">
+                      <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                      <span className="hidden md:inline">{getTimeAgo(job.postedAt)}</span>
+                      <span className="md:hidden">{getTimeAgo(job.postedAt).split(' ')[0]}</span>
                     </div>
-                    <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
-                      <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
-                      <span className="font-semibold text-green-700 truncate">{job.salary}</span>
-                    </div>
-                  </div>
-
-                  {/* Applicants Info */}
-                  <div className="flex items-center gap-1 md:gap-2 text-[10px] md:text-xs text-gray-500 mb-2 md:mb-4 pb-2 md:pb-4 border-b border-gray-100">
-                    <UserCheck className="w-3 h-3 md:w-4 md:h-4" />
-                    <span>{job.applicants} applicants</span>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-1.5 md:gap-2">
-                    <Link
-                      href={`/jobs/${job.id}`}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 md:gap-2 group"
-                    >
-                      <span className="hidden md:inline">View Details</span>
-                      <span className="md:hidden">View</span>
-                      <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                    <button className="px-2 md:px-4 border-2 border-blue-600 text-blue-600 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:bg-blue-50 transition-all">
-                      Save
+                    <button className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm p-1 md:p-2 rounded-full hover:bg-white transition-colors">
+                      <Bookmark className="w-3 h-3 md:w-4 md:h-4 text-gray-700" />
                     </button>
                   </div>
+
+                  {/* Job Details */}
+                  <div className="p-3 md:p-6">
+                    {/* Job Type Badge */}
+                    <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
+                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold">
+                        {job.jobType}
+                      </span>
+                      <span className="bg-purple-100 text-purple-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold truncate">
+                        {job.locationType}
+                      </span>
+                    </div>
+
+                    {/* Job Title & Company */}
+                    <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-1 md:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      {job.title}
+                    </h3>
+                    <p className="text-xs md:text-base text-gray-600 font-medium mb-2 md:mb-3 flex items-center gap-1 md:gap-2 line-clamp-1">
+                      <Building2 className="w-3 h-3 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{job.companyName}</span>
+                    </p>
+
+                    {/* Description */}
+                    <p className="hidden md:block text-sm text-gray-600 mb-4 line-clamp-2">
+                      {job.description}
+                    </p>
+
+                    {/* Location & Salary */}
+                    <div className="space-y-1 md:space-y-2 mb-2 md:mb-4">
+                      <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
+                        <MapPin className="w-3 h-3 md:w-4 md:h-4 text-blue-600 flex-shrink-0" />
+                        <span className="font-medium truncate">{job.location}, {job.country}</span>
+                      </div>
+                      <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
+                        <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
+                        <span className="font-semibold text-green-700 truncate">{formatSalary(job)}</span>
+                      </div>
+                    </div>
+
+                    {/* Experience Required */}
+                    <div className="flex items-center gap-1 md:gap-2 text-[10px] md:text-xs text-gray-500 mb-2 md:mb-4 pb-2 md:pb-4 border-b border-gray-100">
+                      <UserCheck className="w-3 h-3 md:w-4 md:h-4" />
+                      <span>{job.experienceRequired} years experience</span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-1.5 md:gap-2">
+                      <Link
+                        href={`/jobs/${job.id}`}
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 md:gap-2 group"
+                      >
+                        <span className="hidden md:inline">View Details</span>
+                        <span className="md:hidden">View</span>
+                        <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                      <button className="px-2 md:px-4 border-2 border-blue-600 text-blue-600 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:bg-blue-50 transition-all">
+                        Save
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* View All Jobs Button */}
           <div className="text-center mt-6 md:mt-12">

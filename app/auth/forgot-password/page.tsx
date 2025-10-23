@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Logo } from '@/components/ui/Logo';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Logo from '@/components/ui/Logo';
 import { validateEmail } from '@/lib/validation';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import Link from 'next/link';

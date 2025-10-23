@@ -65,7 +65,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
   // Prepare job data
   const now = new Date()
 
-  const jobData: Omit<Job, 'id'> = {
+  const jobData: any = {
     agencyId,
     title: title.trim(),
     description: description.trim(),
@@ -74,16 +74,18 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     country,
     locationType,
     jobType,
-    salaryMin,
-    salaryMax,
     currency,
     experienceRequired,
     skills,
-    imageUrl,
     postedAt: now,
-    expiresAt,
     isActive: true,
   }
+
+  // Only add optional fields if they have values (not undefined)
+  if (salaryMin !== undefined) jobData.salaryMin = salaryMin
+  if (salaryMax !== undefined) jobData.salaryMax = salaryMax
+  if (imageUrl !== undefined) jobData.imageUrl = imageUrl
+  if (expiresAt !== undefined) jobData.expiresAt = expiresAt
 
   try {
     // Create job document in Firestore
