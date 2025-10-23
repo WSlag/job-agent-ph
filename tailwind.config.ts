@@ -7,6 +7,14 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      'xs': '375px',   // Small phones (iPhone SE, Galaxy S)
+      'sm': '640px',   // Large phones / Small tablets
+      'md': '768px',   // Tablets
+      'lg': '1024px',  // Small laptops
+      'xl': '1280px',  // Desktops
+      '2xl': '1536px', // Large desktops
+    },
     extend: {
       colors: {
         primary: {

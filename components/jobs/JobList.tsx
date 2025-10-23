@@ -58,7 +58,8 @@ export default function JobList({ jobs, loading = false, onLoadMore, hasMore = f
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* 2-column grid on mobile, 2-column on tablet, 3-column on desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {jobs.map((job) => (
           <JobCard
             key={job.id}
@@ -70,18 +71,18 @@ export default function JobList({ jobs, loading = false, onLoadMore, hasMore = f
         ))}
       </div>
 
-      {/* Load More Button */}
+      {/* Load More Button - Mobile optimized */}
       {hasMore && (
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-6 sm:mt-8">
           <button
             onClick={onLoadMore}
             disabled={loading}
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base min-h-[48px] shadow-md hover:shadow-lg"
           >
             {loading ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
-                Loading...
+                <span>Loading...</span>
               </>
             ) : (
               'Load More Jobs'

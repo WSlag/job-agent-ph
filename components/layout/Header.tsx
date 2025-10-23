@@ -64,7 +64,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm fixed top-0 left-0 right-0 w-full z-50 backdrop-blur-sm bg-white/95">
+    <header className="bg-white shadow-sm fixed top-0 left-0 right-0 w-full z-50 backdrop-blur-sm bg-white/95 hidden md:block">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -73,7 +73,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="flex items-center gap-6">
             <Link href="/jobs" className="text-gray-700 hover:text-blue-600 transition-colors">
               Browse Jobs
             </Link>

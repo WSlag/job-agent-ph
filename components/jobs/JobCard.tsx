@@ -91,9 +91,9 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
   const salary = formatSalary();
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
-      {/* Image Section */}
-      <div className="relative w-full h-48 bg-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 md:hover:-translate-y-2 transition-all duration-300 group">
+      {/* Image Section - Taller on mobile for 2-column grid */}
+      <div className="relative w-full h-40 sm:h-48 bg-gray-200 overflow-hidden">
         {job.imageUrl && !imageError ? (
           <Image
             src={job.imageUrl}
@@ -128,43 +128,40 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         </button>
       </div>
 
-      {/* Job Details Section */}
-      <div className="p-5">
-        {/* Job Title */}
+      {/* Job Details Section - Compact for mobile 2-column */}
+      <div className="p-3 sm:p-5">
+        {/* Job Title - Smaller on mobile */}
         <Link href={`/jobs/${job.id}`}>
-          <h3 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors mb-2 line-clamp-2">
+          <h3 className="text-sm sm:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors mb-1 sm:mb-2 line-clamp-2 leading-tight">
             {job.title}
           </h3>
         </Link>
 
-        {/* Company Name */}
-        <p className="text-lg text-gray-700 font-medium mb-3">
+        {/* Company Name - Smaller on mobile */}
+        <p className="text-xs sm:text-lg text-gray-600 sm:text-gray-700 font-medium mb-2 sm:mb-3 truncate">
           {job.companyName}
         </p>
 
-        {/* Location */}
-        <div className="flex items-center text-gray-600 mb-2">
-          <MapPin size={16} className="mr-2 flex-shrink-0" />
-          <span className="text-sm">
+        {/* Location - Compact on mobile */}
+        <div className="flex items-start text-gray-600 mb-1.5 sm:mb-2">
+          <MapPin size={14} className="mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
+          <span className="text-xs sm:text-sm line-clamp-2">
             {job.location}, {job.country}
-            <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
-              {job.locationType.replace('-', ' ')}
-            </span>
           </span>
         </div>
 
-        {/* Salary */}
+        {/* Salary - More prominent */}
         {salary && (
-          <div className="flex items-center text-gray-600 mb-2">
-            <DollarSign size={16} className="mr-2 flex-shrink-0" />
-            <span className="text-sm font-semibold text-green-600">
+          <div className="flex items-center text-gray-600 mb-2 sm:mb-2">
+            <DollarSign size={14} className="mr-1.5 sm:mr-2 flex-shrink-0 text-green-500" />
+            <span className="text-xs sm:text-sm font-bold text-green-600 truncate">
               {salary}
             </span>
           </div>
         )}
 
-        {/* Experience */}
-        <div className="flex items-center text-gray-600 mb-3">
+        {/* Experience - Hidden on smallest mobile, show on sm+ */}
+        <div className="hidden sm:flex items-center text-gray-600 mb-3">
           <Briefcase size={16} className="mr-2 flex-shrink-0" />
           <span className="text-sm">
             {job.experienceRequired === 0
@@ -173,78 +170,86 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
           </span>
         </div>
 
-        {/* Skills Tags */}
+        {/* Skills Tags - Show only 2 on mobile, 4 on desktop */}
         {job.skills && job.skills.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {job.skills.slice(0, 4).map((skill, index) => (
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+            {job.skills.slice(0, 2).map((skill, index) => (
               <span
                 key={index}
-                className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium"
+                className="bg-blue-50 text-blue-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium"
               >
                 {skill}
               </span>
             ))}
-            {job.skills.length > 4 && (
-              <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
-                +{job.skills.length - 4} more
+            {/* Show more skills on desktop */}
+            {job.skills.slice(2, 4).map((skill, index) => (
+              <span
+                key={index + 2}
+                className="hidden sm:inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium"
+              >
+                {skill}
+              </span>
+            ))}
+            {job.skills.length > 2 && (
+              <span className="bg-gray-100 text-gray-600 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium">
+                +{job.skills.length - 2}
               </span>
             )}
           </div>
         )}
 
-        {/* Posted Date */}
-        <div className="flex items-center text-gray-500 text-xs mb-4">
-          <Clock size={14} className="mr-1" />
-          <span>
-            Posted {formatDistanceToNow(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
+        {/* Posted Date - Smaller on mobile */}
+        <div className="flex items-center text-gray-500 text-[10px] sm:text-xs mb-2 sm:mb-4">
+          <Clock size={12} className="mr-1 sm:mr-1.5" />
+          <span className="truncate">
+            {formatDistanceToNow(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
           </span>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
+        {/* Action Buttons - Mobile optimized with touch-friendly size */}
+        <div className="flex gap-1.5 sm:gap-2">
           {userType === 'agency' && user && job.agencyId === user.uid ? (
             // Agency view of their own job
             <>
               <Link
                 href={`/jobs/${job.id}/applicants`}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-2.5 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group/btn text-sm"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 sm:gap-2 group/btn text-xs sm:text-sm min-h-[44px]"
               >
-                <Users size={16} className="group-hover/btn:scale-110 transition-transform" />
-                {applicantCount !== null ? `${applicantCount}` : '0'}
+                <Users size={14} className="sm:w-4 sm:h-4 group-hover/btn:scale-110 transition-transform" />
+                <span className="hidden xs:inline">{applicantCount !== null ? `${applicantCount}` : '0'}</span>
               </Link>
               <Link
                 href={`/jobs/edit/${job.id}`}
-                className="bg-gray-100 text-gray-700 px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-1.5 text-sm font-semibold"
+                className="bg-gray-100 text-gray-700 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-semibold min-h-[44px]"
                 title="Edit Job"
               >
-                <Edit size={16} />
-                Edit
+                <Edit size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Edit</span>
               </Link>
               <Link
                 href={`/jobs/${job.id}`}
-                className="bg-gray-100 text-gray-700 px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center text-sm font-semibold"
+                className="bg-gray-100 text-gray-700 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center text-xs sm:text-sm font-semibold min-h-[44px]"
                 title="View Job"
               >
                 View
               </Link>
             </>
           ) : (
-            // Job hunter view
+            // Job hunter view - Single button on mobile for cleaner look
             <>
-              <button
-                onClick={handleMessage}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group/btn"
+              <Link
+                href={`/jobs/${job.id}`}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 group/btn text-xs sm:text-base min-h-[48px]"
               >
-                <MessageCircle size={18} className="group-hover/btn:scale-110 transition-transform" />
-                Message Agency
-              </button>
+                <span>View Job</span>
+              </Link>
 
               <button
                 onClick={handleShare}
-                className="bg-gray-100 text-gray-700 px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center group/share"
+                className="bg-gray-100 text-gray-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center group/share min-h-[48px] min-w-[48px]"
                 aria-label="Share job"
               >
-                <Share2 size={18} className="group-hover/share:scale-110 transition-transform" />
+                <Share2 size={16} className="sm:w-[18px] sm:h-[18px] group-hover/share:scale-110 transition-transform" />
               </button>
             </>
           )}

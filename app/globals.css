@@ -48,6 +48,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+  /* Safe area for iOS devices with notches */
+  padding-bottom: env(safe-area-inset-bottom);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
@@ -138,6 +140,16 @@ body {
   /* Blur Background */
   .blur-circle {
     @apply absolute w-96 h-96 rounded-full blur-3xl opacity-10;
+  }
+
+  /* Safe Area Bottom for iOS */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Bottom Navigation Padding */
+  .pb-bottom-nav {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
   }
 }
 
