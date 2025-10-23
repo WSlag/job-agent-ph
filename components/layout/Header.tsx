@@ -64,7 +64,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm fixed top-0 left-0 right-0 w-full z-50 backdrop-blur-sm bg-white/95 hidden md:block">
+    <header className="bg-white/80 backdrop-blur-md shadow-soft fixed top-0 left-0 right-0 w-full z-50 border-b border-white/20 hidden md:block">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -74,7 +74,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="flex items-center gap-6">
-            <Link href="/jobs" className="text-gray-700 hover:text-blue-600 transition-colors">
+            <Link href="/jobs" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105">
               Browse Jobs
             </Link>
 
@@ -82,51 +82,51 @@ export default function Header() {
               <>
                 {userType === 'agency' && (
                   <>
-                    <Link href="/jobs/post" className="text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-2">
+                    <Link href="/jobs/post" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2">
                       <Briefcase size={18} />
                       Post Job
                     </Link>
-                    <Link href="/agency/dashboard" className="text-gray-700 hover:text-blue-600 transition-colors">
+                    <Link href="/agency/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105">
                       Dashboard
                     </Link>
                   </>
                 )}
                 {userType === 'jobhunter' && (
                   <>
-                    <Link href="/profile/applications" className="text-gray-700 hover:text-blue-600 transition-colors relative">
+                    <Link href="/profile/applications" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105 relative">
                       <span className="flex items-center gap-2">
                         <FileText size={18} />
                         Applications
                         {pendingApplications > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          <span className="absolute -top-1 -right-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
                             {pendingApplications > 9 ? '9+' : pendingApplications}
                           </span>
                         )}
                       </span>
                     </Link>
-                    <Link href="/saved-jobs" className="text-gray-700 hover:text-blue-600 transition-colors">
+                    <Link href="/saved-jobs" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105">
                       Saved Jobs
                     </Link>
                   </>
                 )}
-                <Link href="/messages" className="text-gray-700 hover:text-blue-600 transition-colors relative">
+                <Link href="/messages" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105 relative">
                   <span className="flex items-center gap-2">
                     <MessageCircle size={18} />
                     Messages
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md animate-pulse">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
                   </span>
                 </Link>
-                <Link href="/profile" className="text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-2">
+                <Link href="/profile" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2">
                   <User size={18} />
                   Profile
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="text-gray-700 hover:text-red-600 transition-colors flex items-center gap-2"
+                  className="text-gray-700 hover:text-red-600 font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2"
                 >
                   <LogOut size={18} />
                   Logout
@@ -136,13 +136,13 @@ export default function Header() {
               <>
                 <Link
                   href="/auth/login"
-                  className="text-gray-700 hover:text-blue-600 transition-colors"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 hover:scale-105 hover:shadow-lg font-semibold"
                 >
                   Sign Up
                 </Link>

@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import HeroCarousel from '@/components/ui/HeroCarousel';
 import Logo from '@/components/ui/Logo';
+import { motion } from 'framer-motion';
+import { fadeInUp, staggerContainer, listItemAnimation } from '@/lib/animations';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,30 +130,48 @@ export default function Home() {
     <main className="min-h-screen bg-white w-full">
       {/* Top Banner - Non-sticky, disappears on scroll */}
       {/* Desktop View */}
-      <div className="hidden md:block bg-gradient-to-r from-blue-600 to-purple-600 text-white border-b border-blue-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="hidden md:block bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white border-b border-blue-700 relative overflow-hidden"
+      >
+        {/* Animated background overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2 font-semibold text-xl">
-              <Users className="w-6 h-6" />
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="flex items-center gap-2 font-semibold text-xl"
+            >
+              <Users className="w-6 h-6 animate-bounce" />
               <span>Explore 300,000+ Jobs Now!</span>
-            </div>
-            <div className="flex items-center gap-4">
+            </motion.div>
+            <motion.div
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="flex items-center gap-4"
+            >
               <Link
                 href="/auth/login?type=jobseeker"
-                className="bg-white/20 backdrop-blur-sm px-5 py-2 rounded-full font-semibold text-base hover:bg-white/30 transition-all"
+                className="bg-white/20 backdrop-blur-md px-5 py-2 rounded-full font-semibold text-base hover:bg-white/30 hover:scale-105 transition-all shadow-lg"
               >
                 For Job Hunters
               </Link>
               <Link
                 href="/auth/login?type=employer"
-                className="bg-white/20 backdrop-blur-sm px-5 py-2 rounded-full font-semibold text-base hover:bg-white/30 transition-all"
+                className="bg-white/20 backdrop-blur-md px-5 py-2 rounded-full font-semibold text-base hover:bg-white/30 hover:scale-105 transition-all shadow-lg"
               >
                 For Employers
               </Link>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Mobile View - Simple Banner */}
       <div className="md:hidden bg-gradient-to-r from-blue-600 to-purple-600 py-4">
@@ -231,19 +251,29 @@ export default function Home() {
       </nav>
 
       {/* Hero Carousel Section */}
-      <section className="relative bg-gradient-to-br from-gray-50 via-white to-gray-50 pt-4 md:pt-8 pb-8 md:pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-gray-50 via-white to-blue-50/30 pt-4 md:pt-8 pb-8 md:pb-16 overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"></div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+        >
           <HeroCarousel />
-        </div>
+        </motion.div>
       </section>
 
       {/* Search Bar Section - Sticky */}
-      <div className="sticky top-[56px] md:top-[64px] z-40 bg-white border-b border-gray-200 shadow-md w-full left-0 right-0">
+      <div className="sticky top-[56px] md:top-[64px] z-40 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-soft w-full left-0 right-0">
         <div className="max-w-7xl mx-auto px-3 md:px-4 sm:px-6 lg:px-8 py-3 md:py-4">
           <form onSubmit={handleSearch} className="w-full">
             <div className="flex flex-col md:flex-row gap-2 md:gap-3">
               {/* Job Search Input */}
-              <div className="flex-1 flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 bg-gray-50 rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
+              <div className="flex-1 flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
+                <Search className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Job title or keywords"
@@ -254,7 +284,8 @@ export default function Home() {
               </div>
 
               {/* Location Input */}
-              <div className="flex-1 flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 bg-gray-50 rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
+              <div className="flex-1 flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
+                <MapPin className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Location"
@@ -265,12 +296,14 @@ export default function Home() {
               </div>
 
               {/* Search Button */}
-              <button
+              <motion.button
                 type="submit"
-                className="bg-blue-600 text-white px-6 md:px-8 py-2 md:py-3 rounded-lg text-sm md:text-base font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 md:px-8 py-2 md:py-3 rounded-xl text-sm md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 Search
-              </button>
+              </motion.button>
             </div>
           </form>
         </div>
@@ -279,10 +312,16 @@ export default function Home() {
       {/* Featured Jobs Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-6 md:mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-6 md:mb-12"
+          >
             <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Featured Job Opportunities</h2>
             <p className="text-sm md:text-base text-gray-600 px-4">Discover your next career move with top international employers</p>
-          </div>
+          </motion.div>
           {loading ? (
             <div className="col-span-full text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
@@ -294,11 +333,20 @@ export default function Home() {
             </div>
           ) : (
             <>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-              {featuredJobs.map((job) => (
-                <div
+            <motion.div
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true }}
+              className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
+            >
+              {featuredJobs.map((job, index) => (
+                <motion.div
                   key={job.id}
-                  className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
+                  variants={listItemAnimation}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -6, scale: 1.02 }}
+                  className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden hover:shadow-2xl transition-shadow duration-300 group"
                 >
                   {/* Job Image */}
                   <div className="relative h-32 md:h-48 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
@@ -313,14 +361,18 @@ export default function Home() {
                         <Briefcase className="w-16 h-16 text-blue-300" />
                       </div>
                     )}
-                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold text-blue-600 flex items-center gap-1">
+                    <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold text-blue-600 flex items-center gap-1 shadow-lg border border-blue-100">
                       <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
                       <span className="hidden md:inline">{getTimeAgo(job.postedAt)}</span>
                       <span className="md:hidden">{getTimeAgo(job.postedAt).split(' ')[0]}</span>
                     </div>
-                    <button className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm p-1 md:p-2 rounded-full hover:bg-white transition-colors">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="absolute top-2 left-2 bg-white/95 backdrop-blur-md p-1 md:p-2 rounded-full hover:bg-white transition-colors shadow-lg border border-gray-100"
+                    >
                       <Bookmark className="w-3 h-3 md:w-4 md:h-4 text-gray-700" />
-                    </button>
+                    </motion.button>
                   </div>
 
                   {/* Job Details */}
@@ -371,31 +423,41 @@ export default function Home() {
                     <div className="flex gap-1.5 md:gap-2">
                       <Link
                         href={`/jobs/${job.id}`}
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 md:gap-2 group"
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 md:gap-2 group/btn"
                       >
                         <span className="hidden md:inline">View Details</span>
                         <span className="md:hidden">View</span>
-                        <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover/btn:translate-x-1 transition-transform" />
                       </Link>
-                      <button className="px-2 md:px-4 border-2 border-blue-600 text-blue-600 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:bg-blue-50 transition-all">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="px-2 md:px-4 border-2 border-blue-600 text-blue-600 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:bg-blue-50 transition-all"
+                      >
                         Save
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
+            </motion.div>
 
             {/* View All Jobs Button */}
-            <div className="text-center mt-6 md:mt-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="text-center mt-6 md:mt-12"
+            >
               <Link
                 href="/jobs"
-                className="inline-flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-6 md:px-8 py-3 md:py-4 rounded-full text-sm md:text-base font-semibold hover:bg-blue-600 hover:text-white transition-all shadow-md hover:shadow-xl"
+                className="inline-flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-6 md:px-8 py-3 md:py-4 rounded-full text-sm md:text-base font-semibold hover:bg-blue-600 hover:text-white transition-all shadow-md hover:shadow-xl hover:scale-105"
               >
                 View All Job Opportunities
                 <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
               </Link>
-            </div>
+            </motion.div>
             </>
           )}
         </div>
@@ -427,34 +489,63 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+      <section className="py-20 bg-gradient-to-br from-gray-50 via-white to-blue-50/30 relative overflow-hidden">
+        {/* Decorative background */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/5 to-purple-400/5 rounded-full blur-3xl"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
             <h2 className="text-3xl font-bold text-gray-900 mb-3">Why Choose Job Agent PH?</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               We're revolutionizing job hunting with innovative features designed for Filipino professionals
             </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          </motion.div>
+          <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+          >
             {features.map((feature, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="text-center group hover:scale-105 transition-transform"
+                variants={listItemAnimation}
+                whileHover={{ y: -8, scale: 1.05 }}
+                className="text-center group"
               >
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-2xl text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl text-blue-600 mb-4 group-hover:from-blue-600 group-hover:to-blue-700 group-hover:text-white transition-all shadow-md group-hover:shadow-xl">
                   {feature.icon}
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2 text-lg">{feature.title}</h3>
                 <p className="text-gray-600 text-sm">{feature.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 relative overflow-hidden">
+        {/* Animated decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10"
+        >
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Start Your Journey?
           </h2>
@@ -462,21 +553,25 @@ export default function Home() {
             Join thousands of Filipinos who found their dream jobs abroad
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth/register"
-              className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl inline-flex items-center justify-center gap-2"
-            >
-              Create Free Account
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/jobs"
-              className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-all inline-flex items-center justify-center gap-2"
-            >
-              Browse All Jobs
-            </Link>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                href="/auth/register"
+                className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl inline-flex items-center justify-center gap-2"
+              >
+                Create Free Account
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                href="/jobs"
+                className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-all inline-flex items-center justify-center gap-2 backdrop-blur-sm"
+              >
+                Browse All Jobs
+              </Link>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Footer */}

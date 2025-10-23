@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import JobCard from './JobCard';
 import { Job } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { JobListSkeleton } from '@/components/skeletons/JobCardSkeleton';
+import { staggerContainer, listItemAnimation } from '@/lib/animations';
 
 interface JobListProps {
   jobs: Job[];
@@ -40,11 +42,7 @@ export default function JobList({ jobs, loading = false, onLoadMore, hasMore = f
   };
 
   if (loading && jobs.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="animate-spin text-blue-600" size={48} />
-      </div>
-    );
+    return <JobListSkeleton count={6} />;
   }
 
   if (jobs.length === 0) {
@@ -59,35 +57,46 @@ export default function JobList({ jobs, loading = false, onLoadMore, hasMore = f
   return (
     <div>
       {/* 2-column grid on mobile, 2-column on tablet, 3-column on desktop */}
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-        {jobs.map((job) => (
-          <JobCard
+      <motion.div
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
+      >
+        {jobs.map((job, index) => (
+          <motion.div
             key={job.id}
-            job={job}
-            onSave={handleSave}
-            onMessage={handleMessage}
-            isSaved={savedJobs.has(job.id)}
-          />
+            variants={listItemAnimation}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: index * 0.05 }}
+          >
+            <JobCard
+              job={job}
+              onSave={handleSave}
+              onMessage={handleMessage}
+              isSaved={savedJobs.has(job.id)}
+            />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Load More Button - Mobile optimized */}
       {hasMore && (
         <div className="flex justify-center mt-6 sm:mt-8">
-          <button
-            onClick={onLoadMore}
-            disabled={loading}
-            className="bg-blue-600 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base min-h-[48px] shadow-md hover:shadow-lg"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                <span>Loading...</span>
-              </>
-            ) : (
-              'Load More Jobs'
-            )}
-          </button>
+          {loading ? (
+            <JobListSkeleton count={3} />
+          ) : (
+            <motion.button
+              onClick={onLoadMore}
+              disabled={loading}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base min-h-[48px] shadow-md hover:shadow-lg"
+            >
+              Load More Jobs
+            </motion.button>
+          )}
         </div>
       )}
     </div>

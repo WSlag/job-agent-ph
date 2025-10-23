@@ -18,6 +18,8 @@ import { Job } from '@/types';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getJobApplicationCount } from '@/lib/application-helpers';
+import { motion } from 'framer-motion';
+import { fadeInUp } from '@/lib/animations';
 
 interface JobCardProps {
   job: Job;
@@ -91,7 +93,13 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
   const salary = formatSalary();
 
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 md:hover:-translate-y-2 transition-all duration-300 group">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-shadow duration-300 group"
+    >
       {/* Image Section - Taller on mobile for 2-column grid */}
       <div className="relative w-full h-40 sm:h-48 bg-gray-200 overflow-hidden">
         {job.imageUrl && !imageError ? (
@@ -116,16 +124,23 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         </div>
 
         {/* Save Button */}
-        <button
+        <motion.button
           onClick={handleSave}
-          className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 border border-gray-100"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-lg hover:bg-white transition-all duration-300 border border-gray-100"
           aria-label={saved ? 'Unsave job' : 'Save job'}
         >
-          <Heart
-            size={20}
-            className={`transition-all duration-300 ${saved ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-600'}`}
-          />
-        </button>
+          <motion.div
+            animate={saved ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Heart
+              size={20}
+              className={`transition-all duration-300 ${saved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+            />
+          </motion.div>
+        </motion.button>
       </div>
 
       {/* Job Details Section - Compact for mobile 2-column */}
@@ -244,17 +259,19 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
                 <span>View Job</span>
               </Link>
 
-              <button
+              <motion.button
                 onClick={handleShare}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className="bg-gray-100 text-gray-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center group/share min-h-[48px] min-w-[48px]"
                 aria-label="Share job"
               >
                 <Share2 size={16} className="sm:w-[18px] sm:h-[18px] group-hover/share:scale-110 transition-transform" />
-              </button>
+              </motion.button>
             </>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
