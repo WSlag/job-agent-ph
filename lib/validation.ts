@@ -5,12 +5,14 @@
 
 // Email validation
 export function validateEmail(email: string): boolean {
+  if (!email) return false;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email.trim());
 }
 
 // Phone number validation (international format)
 export function validatePhone(phone: string): boolean {
+  if (!phone) return false;
   // Accepts formats: +1234567890, (123) 456-7890, 123-456-7890, etc.
   const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
   return phoneRegex.test(phone.trim());

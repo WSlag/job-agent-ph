@@ -162,7 +162,7 @@ export async function getAgencyJobs(agencyId: string): Promise<Job[]> {
   const { where } = await import('firebase/firestore')
 
   try {
-    const jobs = await queryDocuments<Job>(
+    const { data: jobs } = await queryDocuments<Job>(
       'jobs',
       [where('agencyId', '==', agencyId)],
       100

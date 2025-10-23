@@ -293,6 +293,7 @@ export default function Home() {
               <p className="text-gray-600">No jobs available yet. Check back soon!</p>
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {featuredJobs.map((job) => (
                 <div
@@ -384,18 +385,19 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          )}
 
-          {/* View All Jobs Button */}
-          <div className="text-center mt-6 md:mt-12">
-            <Link
-              href="/jobs"
-              className="inline-flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-6 md:px-8 py-3 md:py-4 rounded-full text-sm md:text-base font-semibold hover:bg-blue-600 hover:text-white transition-all shadow-md hover:shadow-xl"
-            >
-              View All Job Opportunities
-              <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-            </Link>
-          </div>
+            {/* View All Jobs Button */}
+            <div className="text-center mt-6 md:mt-12">
+              <Link
+                href="/jobs"
+                className="inline-flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-6 md:px-8 py-3 md:py-4 rounded-full text-sm md:text-base font-semibold hover:bg-blue-600 hover:text-white transition-all shadow-md hover:shadow-xl"
+              >
+                View All Job Opportunities
+                <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+              </Link>
+            </div>
+            </>
+          )}
         </div>
       </section>
 

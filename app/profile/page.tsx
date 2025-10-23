@@ -206,8 +206,8 @@ export default function ProfilePage() {
           return;
         }
 
-        if (!validateEmail(agencyProfile.contactEmail)) {
-          setMessage({ type: 'error', text: 'Invalid contact email format' });
+        if (!agencyProfile.contactEmail || !validateEmail(agencyProfile.contactEmail)) {
+          setMessage({ type: 'error', text: 'Contact email is required and must be valid' });
           return;
         }
 

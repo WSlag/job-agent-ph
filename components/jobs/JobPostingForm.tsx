@@ -65,7 +65,7 @@ export default function JobPostingForm() {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
-    companyName: userProfile?.companyName || '',
+    companyName: (userProfile && 'companyName' in userProfile) ? userProfile.companyName : '',
     location: '',
     country: 'Philippines',
     locationType: 'on-site',

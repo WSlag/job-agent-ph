@@ -113,14 +113,20 @@ export default function SavedJobsPage() {
     }
   };
 
-  const formatSalaryRange = (min: number, max: number) => {
+  const formatSalaryRange = (min?: number, max?: number) => {
+    if (!min && !max) {
+      return 'Negotiable';
+    }
     const formatter = new Intl.NumberFormat('en-PH', {
       style: 'currency',
       currency: 'PHP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
-    return `${formatter.format(min)} - ${formatter.format(max)}`;
+    if (min && max) {
+      return `${formatter.format(min)} - ${formatter.format(max)}`;
+    }
+    return formatter.format(min || max || 0);
   };
 
   if (authLoading || loading) {
@@ -175,7 +181,7 @@ export default function SavedJobsPage() {
                         </Link>
                         <p className="text-gray-600 mt-1">{job.companyName || 'Company Name'}</p>
                       </div>
-                      <Badge variant={job.isActive ? 'success' : 'secondary'}>
+                      <Badge variant={job.isActive ? 'success' : 'default'}>
                         {job.isActive ? 'Active' : 'Closed'}
                       </Badge>
                     </div>
@@ -216,7 +222,7 @@ export default function SavedJobsPage() {
                     </div>
 
                     <div className="text-xs text-gray-500">
-                      Posted {format(job.postedAt.toDate(), 'MMM d, yyyy')}
+                      Posted {format(job.postedAt, 'MMM d, yyyy')}
                     </div>
                   </div>
 
