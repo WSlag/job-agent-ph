@@ -1,0 +1,249 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isJobHunter() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'jobhunter';
+    }
+
+    function isAgency() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'agency';
+    }
+
+    function isVerifiedAgency() {
+      return isAgency() &&
+             exists(/databases/$(database)/documents/agencies/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.verified == true;
+    }
+
+    // Validate data size limits
+    function validateStringLength(field, minLen, maxLen) {
+      return field is string && field.size() >= minLen && field.size() <= maxLen;
+    }
+
+    function validateEmail(email) {
+      return email is string && email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+    }
+
+    // Users collection - basic user info
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) &&
+                      request.resource.data.keys().hasAll(['email', 'userType', 'createdAt']) &&
+                      validateEmail(request.resource.data.email) &&
+                      request.resource.data.userType in ['jobhunter', 'agency'] &&
+                      request.resource.data.createdAt is timestamp;
+      allow update: if isOwner(userId) &&
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['email', 'userType', 'createdAt']);
+      allow delete: if isOwner(userId);
+    }
+
+    // Job Hunters collection - extended profile
+    match /jobHunters/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) &&
+                      isJobHunter() &&
+                      request.resource.data.keys().hasAll(['fullName', 'location', 'skills', 'createdAt']) &&
+                      validateStringLength(request.resource.data.fullName, 2, 100) &&
+                      validateStringLength(request.resource.data.location, 2, 200) &&
+                      request.resource.data.skills is list &&
+                      request.resource.data.skills.size() > 0 &&
+                      request.resource.data.skills.size() <= 50 &&
+                      request.resource.data.createdAt is timestamp;
+      allow update: if isOwner(userId) &&
+                      isJobHunter();
+      allow delete: if isOwner(userId);
+    }
+
+    // Agencies collection - company info
+    match /agencies/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) &&
+                      isAgency() &&
+                      request.resource.data.keys().hasAll(['companyName', 'contactEmail', 'createdAt']) &&
+                      validateStringLength(request.resource.data.companyName, 2, 200) &&
+                      validateEmail(request.resource.data.contactEmail) &&
+                      request.resource.data.createdAt is timestamp &&
+                      (!request.resource.data.keys().hasAny(['verified']) || request.resource.data.verified == false);
+      allow update: if isOwner(userId) &&
+                      isAgency() &&
+                      // Prevent agencies from self-verifying
+                      (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified']));
+      allow delete: if isOwner(userId);
+    }
+
+    // Jobs collection
+    match /jobs/{jobId} {
+      // Anyone can read active jobs
+      allow read: if true;
+
+      // Only verified agencies can create jobs
+      allow create: if isVerifiedAgency() &&
+                      request.resource.data.keys().hasAll([
+                        'title', 'description', 'agencyId', 'location',
+                        'jobType', 'salaryMin', 'salaryMax', 'skills',
+                        'postedAt', 'isActive'
+                      ]) &&
+                      request.resource.data.agencyId == request.auth.uid &&
+                      validateStringLength(request.resource.data.title, 3, 200) &&
+                      validateStringLength(request.resource.data.description, 50, 10000) &&
+                      request.resource.data.jobType in ['full-time', 'part-time', 'contract', 'internship'] &&
+                      request.resource.data.salaryMin >= 0 &&
+                      request.resource.data.salaryMax >= request.resource.data.salaryMin &&
+                      request.resource.data.salaryMax <= 10000000 &&
+                      request.resource.data.skills is list &&
+                      request.resource.data.skills.size() > 0 &&
+                      request.resource.data.skills.size() <= 50 &&
+                      request.resource.data.postedAt is timestamp &&
+                      request.resource.data.isActive is bool;
+
+      // Only the agency that posted the job can update it
+      allow update: if isAgency() &&
+                      resource.data.agencyId == request.auth.uid &&
+                      // Prevent changing agencyId
+                      request.resource.data.agencyId == resource.data.agencyId;
+
+      // Only the agency that posted the job can delete it
+      allow delete: if isAgency() &&
+                      resource.data.agencyId == request.auth.uid;
+    }
+
+    // Applications collection
+    match /applications/{applicationId} {
+      // Job hunters can read their own applications
+      // Agencies can read applications for their jobs
+      allow read: if isAuthenticated() && (
+                    resource.data.jobHunterId == request.auth.uid ||
+                    get(/databases/$(database)/documents/jobs/$(resource.data.jobId)).data.agencyId == request.auth.uid
+                  );
+
+      // Only job hunters can create applications
+      allow create: if isJobHunter() &&
+                      request.resource.data.keys().hasAll([
+                        'jobId', 'jobHunterId', 'agencyId',
+                        'status', 'appliedAt'
+                      ]) &&
+                      request.resource.data.jobHunterId == request.auth.uid &&
+                      request.resource.data.status == 'pending' &&
+                      request.resource.data.appliedAt is timestamp &&
+                      // Validate job exists and is active
+                      exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)) &&
+                      get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.isActive == true &&
+                      // Validate coverLetter if present
+                      (!request.resource.data.keys().hasAny(['coverLetter']) ||
+                       validateStringLength(request.resource.data.coverLetter, 0, 5000));
+
+      // Job hunters can update their own applications (withdraw, update cover letter)
+      // Agencies can update status only
+      allow update: if isAuthenticated() && (
+                      (resource.data.jobHunterId == request.auth.uid &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'jobId', 'jobHunterId', 'agencyId'])) ||
+                      (get(/databases/$(database)/documents/jobs/$(resource.data.jobId)).data.agencyId == request.auth.uid &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+                       request.resource.data.status in ['pending', 'reviewing', 'shortlisted', 'rejected', 'accepted'])
+                    );
+
+      // Only job hunters can delete their own applications (before review)
+      allow delete: if isJobHunter() &&
+                      resource.data.jobHunterId == request.auth.uid &&
+                      resource.data.status == 'pending';
+    }
+
+    // Conversations collection
+    match /conversations/{conversationId} {
+      // Participants can read their own conversations
+      allow read: if isAuthenticated() && (
+                    resource.data.jobHunterId == request.auth.uid ||
+                    resource.data.agencyId == request.auth.uid
+                  );
+
+      // Both parties can create conversations
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll([
+                        'jobId', 'jobHunterId', 'agencyId',
+                        'createdAt', 'updatedAt'
+                      ]) &&
+                      (request.resource.data.jobHunterId == request.auth.uid ||
+                       request.resource.data.agencyId == request.auth.uid) &&
+                      request.resource.data.createdAt is timestamp &&
+                      request.resource.data.updatedAt is timestamp &&
+                      // Validate job exists
+                      exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId));
+
+      // Participants can update (to mark messages as read, update timestamp)
+      allow update: if isAuthenticated() && (
+                      resource.data.jobHunterId == request.auth.uid ||
+                      resource.data.agencyId == request.auth.uid
+                    ) &&
+                    !request.resource.data.diff(resource.data).affectedKeys()
+                      .hasAny(['jobId', 'jobHunterId', 'agencyId', 'createdAt']);
+
+      // No deletion of conversations
+      allow delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Participants can read messages
+        allow read: if isAuthenticated() && (
+                      get(/databases/$(database)/documents/conversations/$(conversationId)).data.jobHunterId == request.auth.uid ||
+                      get(/databases/$(database)/documents/conversations/$(conversationId)).data.agencyId == request.auth.uid
+                    );
+
+        // Participants can create messages
+        allow create: if isAuthenticated() &&
+                        request.resource.data.keys().hasAll([
+                          'senderId', 'content', 'timestamp', 'read'
+                        ]) &&
+                        request.resource.data.senderId == request.auth.uid &&
+                        validateStringLength(request.resource.data.content, 1, 2000) &&
+                        request.resource.data.timestamp is timestamp &&
+                        request.resource.data.read is bool &&
+                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data.jobHunterId == request.auth.uid ||
+                         get(/databases/$(database)/documents/conversations/$(conversationId)).data.agencyId == request.auth.uid);
+
+        // Only sender can update their messages (mark as edited) or receiver can mark as read
+        allow update: if isAuthenticated() && (
+                        (resource.data.senderId == request.auth.uid &&
+                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'edited', 'editedAt'])) ||
+                        (resource.data.senderId != request.auth.uid &&
+                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']))
+                      );
+
+        // No deletion of messages
+        allow delete: if false;
+      }
+    }
+
+    // Saved Jobs collection (user-specific)
+    match /savedJobs/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+
+      match /jobs/{jobId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                        isJobHunter() &&
+                        exists(/databases/$(database)/documents/jobs/$(jobId));
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

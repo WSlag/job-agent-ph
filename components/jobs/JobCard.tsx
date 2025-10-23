@@ -11,9 +11,12 @@ import {
   MessageCircle,
   Heart,
   Share2,
+  Users,
 } from 'lucide-react';
 import { Job } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getJobApplicationCount } from '@/lib/application-helpers';
 
 interface JobCardProps {
   job: Job;
@@ -23,8 +26,26 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, onSave, onMessage, isSaved = false }: JobCardProps) {
+  const { userType, user } = useAuth();
   const [saved, setSaved] = useState(isSaved);
   const [imageError, setImageError] = useState(false);
+  const [applicantCount, setApplicantCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Only load applicant count for agencies viewing their own jobs
+    if (userType === 'agency' && user && job.agencyId === user.uid) {
+      loadApplicantCount();
+    }
+  }, [userType, user, job.agencyId, job.id]);
+
+  const loadApplicantCount = async () => {
+    try {
+      const count = await getJobApplicationCount(job.id);
+      setApplicantCount(count);
+    } catch (error) {
+      console.error('Error loading applicant count:', error);
+    }
+  };
 
   const handleSave = () => {
     setSaved(!saved);
@@ -34,9 +55,8 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
   };
 
   const handleMessage = () => {
-    if (onMessage) {
-      onMessage(job.id);
-    }
+    // Redirect to messages page with jobId parameter
+    window.location.href = `/messages?jobId=${job.id}`;
   };
 
   const handleShare = async () => {
@@ -181,21 +201,43 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <button
-            onClick={handleMessage}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group/btn"
-          >
-            <MessageCircle size={18} className="group-hover/btn:scale-110 transition-transform" />
-            Message Agency
-          </button>
+          {userType === 'agency' && user && job.agencyId === user.uid ? (
+            // Agency view of their own job
+            <>
+              <Link
+                href={`/jobs/${job.id}/applicants`}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group/btn"
+              >
+                <Users size={18} className="group-hover/btn:scale-110 transition-transform" />
+                {applicantCount !== null ? `${applicantCount} Applicants` : 'View Applicants'}
+              </Link>
+              <Link
+                href={`/jobs/${job.id}`}
+                className="bg-gray-100 text-gray-700 px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center"
+              >
+                View
+              </Link>
+            </>
+          ) : (
+            // Job hunter view
+            <>
+              <button
+                onClick={handleMessage}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group/btn"
+              >
+                <MessageCircle size={18} className="group-hover/btn:scale-110 transition-transform" />
+                Message Agency
+              </button>
 
-          <button
-            onClick={handleShare}
-            className="bg-gray-100 text-gray-700 px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center group/share"
-            aria-label="Share job"
-          >
-            <Share2 size={18} className="group-hover/share:scale-110 transition-transform" />
-          </button>
+              <button
+                onClick={handleShare}
+                className="bg-gray-100 text-gray-700 px-4 py-3 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center group/share"
+                aria-label="Share job"
+              >
+                <Share2 size={18} className="group-hover/share:scale-110 transition-transform" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

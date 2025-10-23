@@ -7,7 +7,9 @@ import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasAppliedToJob } from '@/lib/application-helpers';
 import Header from '@/components/layout/Header';
+import ApplicationModal from '@/components/applications/ApplicationModal';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -21,6 +23,7 @@ import {
   Share2,
   ArrowLeft,
   Loader2,
+  CheckCircle,
 } from 'lucide-react';
 
 export default function JobDetailsPage() {
@@ -31,10 +34,17 @@ export default function JobDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [checkingApplication, setCheckingApplication] = useState(false);
 
   useEffect(() => {
     loadJob();
   }, [params.id]);
+
+  useEffect(() => {
+    checkApplicationStatus();
+  }, [params.id, user]);
 
   const loadJob = async () => {
     try {
@@ -55,16 +65,40 @@ export default function JobDetailsPage() {
     }
   };
 
+  const checkApplicationStatus = async () => {
+    if (!user || userType !== 'jobhunter' || !params.id) return;
+
+    setCheckingApplication(true);
+    try {
+      const applied = await hasAppliedToJob(params.id as string, user.uid);
+      setHasApplied(applied);
+    } catch (error) {
+      console.error('Error checking application status:', error);
+    } finally {
+      setCheckingApplication(false);
+    }
+  };
+
   const handleApply = () => {
     if (!user) {
       // Show login prompt
       setShowAuthPrompt(true);
     } else if (userType === 'jobhunter') {
-      // Navigate to application/message page
-      router.push(`/messages?jobId=${params.id}`);
+      if (hasApplied) {
+        // Navigate to applications page
+        router.push('/profile/applications');
+      } else {
+        // Show application modal
+        setShowApplicationModal(true);
+      }
     } else {
       alert('Only job hunters can apply to jobs');
     }
+  };
+
+  const handleApplicationSuccess = () => {
+    setHasApplied(true);
+    setShowApplicationModal(false);
   };
 
   const handleShare = async () => {
@@ -252,12 +286,28 @@ export default function JobDetailsPage() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-              <button
-                onClick={handleApply}
-                className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors mb-4 text-lg"
-              >
-                Apply Now
-              </button>
+              {hasApplied ? (
+                <div className="mb-4">
+                  <div className="flex items-center justify-center gap-2 bg-green-50 text-green-700 px-6 py-4 rounded-lg mb-3">
+                    <CheckCircle size={20} />
+                    <span className="font-semibold">Application Submitted</span>
+                  </div>
+                  <button
+                    onClick={() => router.push('/profile/applications')}
+                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    View Application
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleApply}
+                  disabled={checkingApplication}
+                  className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors mb-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {checkingApplication ? 'Checking...' : 'Apply Now'}
+                </button>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -334,6 +384,17 @@ export default function JobDetailsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Application Modal */}
+      {showApplicationModal && job && (
+        <ApplicationModal
+          jobId={job.id}
+          agencyId={job.agencyId}
+          jobTitle={job.title}
+          onClose={() => setShowApplicationModal(false)}
+          onSuccess={handleApplicationSuccess}
+        />
       )}
     </div>
   );

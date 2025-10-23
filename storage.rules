@@ -1,0 +1,106 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB
+    }
+
+    function isValidPdfFile() {
+      return request.resource.contentType == 'application/pdf' &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB
+    }
+
+    function isValidResumeFile() {
+      return (request.resource.contentType == 'application/pdf' ||
+              request.resource.contentType.matches('application/msword.*') ||
+              request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.*')) &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB
+    }
+
+    // Resumes uploaded by job hunters
+    match /resumes/{userId}/{fileName} {
+      // Job hunters can upload their own resumes
+      allow create: if isAuthenticated() &&
+                      isOwner(userId) &&
+                      isValidResumeFile();
+
+      // Anyone authenticated can read resumes (for agencies viewing applications)
+      allow read: if isAuthenticated();
+
+      // Only owner can update/delete their resumes
+      allow update, delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Company logos uploaded by agencies
+    match /company-logos/{userId}/{fileName} {
+      // Agencies can upload their company logos
+      allow create: if isAuthenticated() &&
+                      isOwner(userId) &&
+                      isValidImageFile();
+
+      // Anyone can read company logos (public)
+      allow read: if true;
+
+      // Only owner can update/delete their logos
+      allow update, delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Profile pictures for both job hunters and agencies
+    match /profile-pictures/{userId}/{fileName} {
+      // Users can upload their own profile pictures
+      allow create: if isAuthenticated() &&
+                      isOwner(userId) &&
+                      isValidImageFile();
+
+      // Anyone authenticated can read profile pictures
+      allow read: if isAuthenticated();
+
+      // Only owner can update/delete their profile pictures
+      allow update, delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Job images/banners uploaded by agencies
+    match /job-images/{agencyId}/{jobId}/{fileName} {
+      // Agencies can upload images for their jobs
+      allow create: if isAuthenticated() &&
+                      isOwner(agencyId) &&
+                      isValidImageFile();
+
+      // Anyone can read job images (public)
+      allow read: if true;
+
+      // Only the agency owner can update/delete
+      allow update, delete: if isAuthenticated() && isOwner(agencyId);
+    }
+
+    // Message attachments (if implemented)
+    match /message-attachments/{conversationId}/{messageId}/{fileName} {
+      // Only conversation participants can upload attachments
+      // This would require custom claims or additional validation
+      allow create: if isAuthenticated() &&
+                      (isValidImageFile() || isValidPdfFile());
+
+      // Only conversation participants can read attachments
+      allow read: if isAuthenticated();
+
+      // Only sender can delete (would need additional validation)
+      allow delete: if isAuthenticated();
+    }
+
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

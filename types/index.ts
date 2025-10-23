@@ -79,14 +79,25 @@ export interface Conversation {
 }
 
 // Application Types
+export type ApplicationStatus = 'pending' | 'reviewing' | 'shortlisted' | 'rejected' | 'hired';
+
 export interface JobApplication {
   id: string;
   jobId: string;
   jobHunterId: string;
-  conversationId: string;
-  status: 'pending' | 'reviewing' | 'shortlisted' | 'rejected' | 'hired';
+  agencyId: string;
+  conversationId?: string;
+  status: ApplicationStatus;
+  coverLetter?: string;
+  resumeUrl?: string;
   appliedAt: Date;
   updatedAt: Date;
+}
+
+export interface ApplicationWithDetails extends JobApplication {
+  job?: Job;
+  jobHunter?: JobHunter;
+  agency?: Agency;
 }
 
 // API Response Types

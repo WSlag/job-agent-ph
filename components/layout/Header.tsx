@@ -2,13 +2,57 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { User, LogOut, Menu, X, MessageCircle, Briefcase, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import Logo from '@/components/ui/Logo';
+import { subscribeToConversations } from '@/lib/messaging-helpers';
+import { subscribeToJobHunterApplications } from '@/lib/application-helpers';
 
 export default function Header() {
   const { user, userType, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingApplications, setPendingApplications] = useState(0);
+
+  useEffect(() => {
+    if (!user || !userType) {
+      setUnreadCount(0);
+      return;
+    }
+
+    // Subscribe to conversations to count unread messages
+    const unsubscribe = subscribeToConversations(
+      user.uid,
+      userType,
+      (conversations) => {
+        let total = 0;
+        conversations.forEach((convo) => {
+          // Count unread messages from the other party
+          if (convo.lastMessage && convo.lastMessage.senderId !== user.uid && !convo.lastMessage.read) {
+            total++;
+          }
+        });
+        setUnreadCount(total);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user, userType]);
+
+  useEffect(() => {
+    if (!user || userType !== 'jobhunter') {
+      setPendingApplications(0);
+      return;
+    }
+
+    // Subscribe to applications to count pending ones
+    const unsubscribe = subscribeToJobHunterApplications(user.uid, (applications) => {
+      const pending = applications.filter(app => app.status === 'pending' || app.status === 'reviewing').length;
+      setPendingApplications(pending);
+    });
+
+    return () => unsubscribe();
+  }, [user, userType]);
 
   const handleSignOut = async () => {
     try {
@@ -37,17 +81,44 @@ export default function Header() {
             {user ? (
               <>
                 {userType === 'agency' && (
-                  <Link href="/agency/dashboard" className="text-gray-700 hover:text-blue-600 transition-colors">
-                    Dashboard
-                  </Link>
+                  <>
+                    <Link href="/jobs/post" className="text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-2">
+                      <Briefcase size={18} />
+                      Post Job
+                    </Link>
+                    <Link href="/agency/dashboard" className="text-gray-700 hover:text-blue-600 transition-colors">
+                      Dashboard
+                    </Link>
+                  </>
                 )}
                 {userType === 'jobhunter' && (
-                  <Link href="/saved-jobs" className="text-gray-700 hover:text-blue-600 transition-colors">
-                    Saved Jobs
-                  </Link>
+                  <>
+                    <Link href="/profile/applications" className="text-gray-700 hover:text-blue-600 transition-colors relative">
+                      <span className="flex items-center gap-2">
+                        <FileText size={18} />
+                        Applications
+                        {pendingApplications > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            {pendingApplications > 9 ? '9+' : pendingApplications}
+                          </span>
+                        )}
+                      </span>
+                    </Link>
+                    <Link href="/saved-jobs" className="text-gray-700 hover:text-blue-600 transition-colors">
+                      Saved Jobs
+                    </Link>
+                  </>
                 )}
-                <Link href="/messages" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Messages
+                <Link href="/messages" className="text-gray-700 hover:text-blue-600 transition-colors relative">
+                  <span className="flex items-center gap-2">
+                    <MessageCircle size={18} />
+                    Messages
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </span>
                 </Link>
                 <Link href="/profile" className="text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-2">
                   <User size={18} />
@@ -103,29 +174,64 @@ export default function Header() {
               {user ? (
                 <>
                   {userType === 'agency' && (
-                    <Link
-                      href="/agency/dashboard"
-                      className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
+                    <>
+                      <Link
+                        href="/jobs/post"
+                        className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 flex items-center gap-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Briefcase size={18} />
+                        Post Job
+                      </Link>
+                      <Link
+                        href="/agency/dashboard"
+                        className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    </>
                   )}
                   {userType === 'jobhunter' && (
-                    <Link
-                      href="/saved-jobs"
-                      className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Saved Jobs
-                    </Link>
+                    <>
+                      <Link
+                        href="/profile/applications"
+                        className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 relative"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <span className="flex items-center gap-2">
+                          <FileText size={18} />
+                          Applications
+                          {pendingApplications > 0 && (
+                            <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                              {pendingApplications > 9 ? '9+' : pendingApplications}
+                            </span>
+                          )}
+                        </span>
+                      </Link>
+                      <Link
+                        href="/saved-jobs"
+                        className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Saved Jobs
+                      </Link>
+                    </>
                   )}
                   <Link
                     href="/messages"
-                    className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
+                    className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 relative"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Messages
+                    <span className="flex items-center gap-2">
+                      <MessageCircle size={18} />
+                      Messages
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </span>
                   </Link>
                   <Link
                     href="/profile"
