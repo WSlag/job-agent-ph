@@ -445,7 +445,7 @@ export default function JobEditForm({ job }: JobEditFormProps) {
               <img
                 src={imagePreview}
                 alt="Job preview"
-                className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-300"
+                className="w-full max-w-md h-64 object-cover rounded-lg border border-gray-300"
               />
               <button
                 type="button"
@@ -470,6 +470,9 @@ export default function JobEditForm({ job }: JobEditFormProps) {
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
               <p className="text-sm text-gray-600">Click to upload job image</p>
               <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+              <p className="text-xs text-blue-600 font-medium mt-2">
+                Recommended: 5.3" x 3" (16:9 ratio) for best display
+              </p>
             </label>
           </div>
         )}

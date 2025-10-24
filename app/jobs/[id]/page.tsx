@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   Loader2,
   CheckCircle,
+  MessageCircle,
 } from 'lucide-react';
 
 export default function JobDetailsPage() {
@@ -115,6 +116,16 @@ export default function JobDetailsPage() {
     }
   };
 
+  const handleMessageAgency = () => {
+    if (!user) {
+      setShowAuthPrompt(true);
+    } else if (userType === 'jobhunter' && job) {
+      router.push(`/messages?jobId=${job.id}&agencyId=${job.agencyId}`);
+    } else {
+      alert('Only job hunters can message agencies');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
@@ -178,24 +189,25 @@ export default function JobDetailsPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               {/* Job Image */}
-              <div className="relative w-full h-64 bg-gray-200">
+              <div className="relative w-full h-48 md:h-64 bg-gray-200 overflow-hidden">
                 {job.imageUrl && !imageError ? (
                   <Image
                     src={job.imageUrl}
                     alt={`${job.companyName} - ${job.title}`}
                     fill
-                    className="object-cover"
+                    className="object-cover hover:scale-105 transition-transform duration-300"
                     onError={() => setImageError(true)}
+                    priority
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
-                    <Briefcase size={96} className="text-white opacity-50" />
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600">
+                    <Briefcase size={96} className="text-white opacity-60" />
                   </div>
                 )}
 
                 {/* Job Type Badge */}
                 <div className="absolute top-4 right-4">
-                  <span className="bg-white px-4 py-2 rounded-full text-sm font-semibold text-blue-600 shadow-md">
+                  <span className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold text-blue-600 shadow-lg border border-blue-100">
                     {job.jobType.replace('-', ' ').toUpperCase()}
                   </span>
                 </div>
@@ -306,6 +318,17 @@ export default function JobDetailsPage() {
                   className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors mb-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {checkingApplication ? 'Checking...' : 'Apply Now'}
+                </button>
+              )}
+
+              {/* Message Agency Button - Full Width for Job Hunters */}
+              {userType === 'jobhunter' && (
+                <button
+                  onClick={handleMessageAgency}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition-colors mb-3 flex items-center justify-center gap-2"
+                >
+                  <MessageCircle size={20} />
+                  Message Agency
                 </button>
               )}
 

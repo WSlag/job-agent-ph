@@ -333,131 +333,131 @@ export default function Home() {
             </div>
           ) : (
             <>
-            <motion.div
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
-            >
-              {featuredJobs.map((job, index) => (
-                <motion.div
-                  key={job.id}
-                  variants={listItemAnimation}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -6, scale: 1.02 }}
-                  className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden hover:shadow-2xl transition-shadow duration-300 group"
-                >
-                  {/* Job Image */}
-                  <div className="relative h-32 md:h-48 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
-                    {job.imageUrl ? (
-                      <img
-                        src={job.imageUrl}
-                        alt={job.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
-                        <Briefcase className="w-16 h-16 text-blue-300" />
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
+              >
+                {featuredJobs.map((job, index) => (
+                  <motion.div
+                    key={job.id}
+                    variants={listItemAnimation}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden hover:shadow-2xl transition-shadow duration-300 group"
+                  >
+                    {/* Job Image */}
+                    <div className="relative h-32 md:h-48 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
+                      {job.imageUrl ? (
+                        <img
+                          src={job.imageUrl}
+                          alt={job.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+                          <Briefcase className="w-16 h-16 text-blue-300" />
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold text-blue-600 flex items-center gap-1 shadow-lg border border-blue-100">
+                        <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                        <span className="hidden md:inline">{getTimeAgo(job.postedAt)}</span>
+                        <span className="md:hidden">{getTimeAgo(job.postedAt).split(' ')[0]}</span>
                       </div>
-                    )}
-                    <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold text-blue-600 flex items-center gap-1 shadow-lg border border-blue-100">
-                      <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                      <span className="hidden md:inline">{getTimeAgo(job.postedAt)}</span>
-                      <span className="md:hidden">{getTimeAgo(job.postedAt).split(' ')[0]}</span>
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="absolute top-2 left-2 bg-white/95 backdrop-blur-md p-1 md:p-2 rounded-full hover:bg-white transition-colors shadow-lg border border-gray-100"
-                    >
-                      <Bookmark className="w-3 h-3 md:w-4 md:h-4 text-gray-700" />
-                    </motion.button>
-                  </div>
-
-                  {/* Job Details */}
-                  <div className="p-3 md:p-6">
-                    {/* Job Type Badge */}
-                    <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
-                      <span className="bg-blue-100 text-blue-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold">
-                        {job.jobType}
-                      </span>
-                      <span className="bg-purple-100 text-purple-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold truncate">
-                        {job.locationType}
-                      </span>
-                    </div>
-
-                    {/* Job Title & Company */}
-                    <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-1 md:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
-                      {job.title}
-                    </h3>
-                    <p className="text-xs md:text-base text-gray-600 font-medium mb-2 md:mb-3 flex items-center gap-1 md:gap-2 line-clamp-1">
-                      <Building2 className="w-3 h-3 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
-                      <span className="truncate">{job.companyName}</span>
-                    </p>
-
-                    {/* Description */}
-                    <p className="hidden md:block text-sm text-gray-600 mb-4 line-clamp-2">
-                      {job.description}
-                    </p>
-
-                    {/* Location & Salary */}
-                    <div className="space-y-1 md:space-y-2 mb-2 md:mb-4">
-                      <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
-                        <MapPin className="w-3 h-3 md:w-4 md:h-4 text-blue-600 flex-shrink-0" />
-                        <span className="font-medium truncate">{job.location}, {job.country}</span>
-                      </div>
-                      <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
-                        <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
-                        <span className="font-semibold text-green-700 truncate">{formatSalary(job)}</span>
-                      </div>
-                    </div>
-
-                    {/* Experience Required */}
-                    <div className="flex items-center gap-1 md:gap-2 text-[10px] md:text-xs text-gray-500 mb-2 md:mb-4 pb-2 md:pb-4 border-b border-gray-100">
-                      <UserCheck className="w-3 h-3 md:w-4 md:h-4" />
-                      <span>{job.experienceRequired} years experience</span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-1.5 md:gap-2">
-                      <Link
-                        href={`/jobs/${job.id}`}
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 md:gap-2 group/btn"
-                      >
-                        <span className="hidden md:inline">View Details</span>
-                        <span className="md:hidden">View</span>
-                        <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover/btn:translate-x-1 transition-transform" />
-                      </Link>
                       <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-2 md:px-4 border-2 border-blue-600 text-blue-600 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:bg-blue-50 transition-all"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="absolute top-2 left-2 bg-white/95 backdrop-blur-md p-1 md:p-2 rounded-full hover:bg-white transition-colors shadow-lg border border-gray-100"
                       >
-                        Save
+                        <Bookmark className="w-3 h-3 md:w-4 md:h-4 text-gray-700" />
                       </motion.button>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </motion.div>
 
-            {/* View All Jobs Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="text-center mt-6 md:mt-12"
-            >
-              <Link
-                href="/jobs"
-                className="inline-flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-6 md:px-8 py-3 md:py-4 rounded-full text-sm md:text-base font-semibold hover:bg-blue-600 hover:text-white transition-all shadow-md hover:shadow-xl hover:scale-105"
+                    {/* Job Details */}
+                    <div className="p-3 md:p-6">
+                      {/* Job Type Badge */}
+                      <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
+                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold">
+                          {job.jobType}
+                        </span>
+                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold truncate">
+                          {job.locationType}
+                        </span>
+                      </div>
+
+                      {/* Job Title & Company */}
+                      <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-1 md:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        {job.title}
+                      </h3>
+                      <p className="text-xs md:text-base text-gray-600 font-medium mb-2 md:mb-3 flex items-center gap-1 md:gap-2 line-clamp-1">
+                        <Building2 className="w-3 h-3 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
+                        <span className="truncate">{job.companyName}</span>
+                      </p>
+
+                      {/* Description */}
+                      <p className="hidden md:block text-sm text-gray-600 mb-4 line-clamp-2">
+                        {job.description}
+                      </p>
+
+                      {/* Location & Salary */}
+                      <div className="space-y-1 md:space-y-2 mb-2 md:mb-4">
+                        <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
+                          <MapPin className="w-3 h-3 md:w-4 md:h-4 text-blue-600 flex-shrink-0" />
+                          <span className="font-medium truncate">{job.location}, {job.country}</span>
+                        </div>
+                        <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
+                          <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
+                          <span className="font-semibold text-green-700 truncate">{formatSalary(job)}</span>
+                        </div>
+                      </div>
+
+                      {/* Experience Required */}
+                      <div className="flex items-center gap-1 md:gap-2 text-[10px] md:text-xs text-gray-500 mb-2 md:mb-4 pb-2 md:pb-4 border-b border-gray-100">
+                        <UserCheck className="w-3 h-3 md:w-4 md:h-4" />
+                        <span>{job.experienceRequired} years experience</span>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-1.5 md:gap-2">
+                        <Link
+                          href={`/jobs/${job.id}`}
+                          className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 md:gap-2 group/btn"
+                        >
+                          <span className="hidden md:inline">View Details</span>
+                          <span className="md:hidden">View</span>
+                          <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover/btn:translate-x-1 transition-transform" />
+                        </Link>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-2 md:px-4 border-2 border-blue-600 text-blue-600 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:bg-blue-50 transition-all"
+                        >
+                          Save
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* View All Jobs Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-center mt-6 md:mt-12"
               >
-                View All Job Opportunities
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
-              </Link>
-            </motion.div>
+                <Link
+                  href="/jobs"
+                  className="inline-flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-6 md:px-8 py-3 md:py-4 rounded-full text-sm md:text-base font-semibold hover:bg-blue-600 hover:text-white transition-all shadow-md hover:shadow-xl hover:scale-105"
+                >
+                  View All Job Opportunities
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+                </Link>
+              </motion.div>
             </>
           )}
         </div>

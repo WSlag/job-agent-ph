@@ -11,6 +11,7 @@ import type { JobType, JobLocation } from '@/types'
 interface FormData {
   title: string
   description: string
+  tagline: string
   companyName: string
   location: string
   country: string
@@ -65,6 +66,7 @@ export default function JobPostingForm() {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
+    tagline: '',
     companyName: (userProfile && 'companyName' in userProfile) ? userProfile.companyName : '',
     location: '',
     country: 'Philippines',
@@ -158,6 +160,7 @@ export default function JobPostingForm() {
         agencyId: userProfile!.id,
         title: formData.title,
         description: formData.description,
+        tagline: formData.tagline.trim() || undefined,
         companyName: formData.companyName,
         location: formData.location,
         country: formData.country,
@@ -220,6 +223,29 @@ export default function JobPostingForm() {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Your company name"
         />
+      </div>
+
+      {/* Job Tagline */}
+      <div>
+        <label htmlFor="tagline" className="block text-sm font-medium text-gray-700 mb-1">
+          Job Tagline
+        </label>
+        <input
+          type="text"
+          id="tagline"
+          name="tagline"
+          value={formData.tagline}
+          onChange={handleChange}
+          maxLength={100}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g., Drive marketing campaigns for international brands"
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          A short, catchy summary (max 100 characters) that appears on job cards. Leave empty to use first sentence of description.
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          {formData.tagline.length}/100 characters
+        </p>
       </div>
 
       {/* Job Description */}
@@ -440,7 +466,7 @@ export default function JobPostingForm() {
                   PNG, JPG, or WEBP
                 </p>
                 <p className="text-xs text-blue-600 font-medium mt-2">
-                  Recommended: 4" x 2.1" (1200 x 630 pixels) for best display
+                  Recommended: 5.3" x 3" (16:9 ratio) for best display
                 </p>
               </div>
               <input
@@ -457,7 +483,7 @@ export default function JobPostingForm() {
             <img
               src={imagePreview}
               alt="Job preview"
-              className="w-full h-64 object-cover rounded-lg"
+              className="w-full h-80 object-cover rounded-lg"
             />
             <button
               type="button"

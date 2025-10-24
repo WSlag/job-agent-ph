@@ -39,6 +39,7 @@ export interface Job {
   agencyId: string;
   title: string;
   description: string;
+  tagline?: string; // Short summary for job cards (max 100 chars)
   companyName: string;
   location: string;
   country: string;
@@ -50,6 +51,7 @@ export interface Job {
   experienceRequired: number; // years
   skills: string[];
   imageUrl?: string;
+  category?: string;
   postedAt: Date;
   expiresAt?: Date;
   isActive: boolean;

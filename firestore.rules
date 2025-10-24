@@ -42,10 +42,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId) &&
-                      request.resource.data.keys().hasAll(['email', 'userType', 'createdAt']) &&
+                      request.resource.data.keys().hasAll(['email', 'userType']) &&
                       validateEmail(request.resource.data.email) &&
-                      request.resource.data.userType in ['jobhunter', 'agency'] &&
-                      request.resource.data.createdAt is timestamp;
+                      request.resource.data.userType in ['jobhunter', 'agency'];
       allow update: if isOwner(userId) &&
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['email', 'userType', 'createdAt']);
       allow delete: if isOwner(userId);
@@ -55,16 +54,12 @@ service cloud.firestore {
     match /jobHunters/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId) &&
-                      isJobHunter() &&
-                      request.resource.data.keys().hasAll(['fullName', 'location', 'skills', 'createdAt']) &&
-                      validateStringLength(request.resource.data.fullName, 2, 100) &&
-                      validateStringLength(request.resource.data.location, 2, 200) &&
+                      request.resource.data.keys().hasAll(['email', 'userType']) &&
+                      validateEmail(request.resource.data.email) &&
+                      request.resource.data.userType == 'jobhunter' &&
                       request.resource.data.skills is list &&
-                      request.resource.data.skills.size() > 0 &&
-                      request.resource.data.skills.size() <= 50 &&
-                      request.resource.data.createdAt is timestamp;
-      allow update: if isOwner(userId) &&
-                      isJobHunter();
+                      request.resource.data.skills.size() <= 50;
+      allow update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
 
@@ -72,14 +67,11 @@ service cloud.firestore {
     match /agencies/{userId} {
       allow read: if isAuthenticated();
       allow create: if isOwner(userId) &&
-                      isAgency() &&
-                      request.resource.data.keys().hasAll(['companyName', 'contactEmail', 'createdAt']) &&
-                      validateStringLength(request.resource.data.companyName, 2, 200) &&
-                      validateEmail(request.resource.data.contactEmail) &&
-                      request.resource.data.createdAt is timestamp &&
+                      request.resource.data.keys().hasAll(['email', 'userType']) &&
+                      validateEmail(request.resource.data.email) &&
+                      request.resource.data.userType == 'agency' &&
                       (!request.resource.data.keys().hasAny(['verified']) || request.resource.data.verified == false);
       allow update: if isOwner(userId) &&
-                      isAgency() &&
                       // Prevent agencies from self-verifying
                       (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified']));
       allow delete: if isOwner(userId);

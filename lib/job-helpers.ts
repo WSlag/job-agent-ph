@@ -7,6 +7,7 @@ interface CreateJobParams {
   agencyId: string
   title: string
   description: string
+  tagline?: string
   companyName: string
   location: string
   country: string
@@ -31,6 +32,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     agencyId,
     title,
     description,
+    tagline,
     companyName,
     location,
     country,
@@ -82,6 +84,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
   }
 
   // Only add optional fields if they have values (not undefined)
+  if (tagline !== undefined && tagline.trim()) jobData.tagline = tagline.trim()
   if (salaryMin !== undefined) jobData.salaryMin = salaryMin
   if (salaryMax !== undefined) jobData.salaryMax = salaryMax
   if (imageUrl !== undefined) jobData.imageUrl = imageUrl

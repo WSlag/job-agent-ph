@@ -8,11 +8,11 @@ import {
   Briefcase,
   Clock,
   DollarSign,
-  MessageCircle,
-  Heart,
-  Share2,
+  Building2,
+  Bookmark,
   Users,
   Edit,
+  ArrowRight,
 } from 'lucide-react';
 import { Job } from '@/types';
 import { useState, useEffect } from 'react';
@@ -57,24 +57,6 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
     }
   };
 
-  const handleMessage = () => {
-    // Redirect to messages page with jobId parameter
-    window.location.href = `/messages?jobId=${job.id}`;
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: job.title,
-          text: `Check out this job: ${job.title} at ${job.companyName}`,
-          url: window.location.origin + `/jobs/${job.id}`,
-        });
-      } catch (error) {
-        console.error('Error sharing:', error);
-      }
-    }
-  };
 
   const formatSalary = () => {
     if (!job.salaryMin && !job.salaryMax) return null;
@@ -92,182 +74,168 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
 
   const salary = formatSalary();
 
+  // Get tagline or fallback to brief description preview
+  const getTaglineOrPreview = () => {
+    // Use tagline if available
+    if (job.tagline && job.tagline.trim()) {
+      return job.tagline.trim();
+    }
+
+    // Fallback: get first sentence from description
+    if (!job.description) return '';
+
+    const firstSentence = job.description.split(/[.!?]/)[0].trim();
+
+    // If first sentence is too long, cut at 60 chars
+    if (firstSentence.length > 60) {
+      return job.description.substring(0, 60).trim() + '...';
+    }
+
+    return firstSentence.length > 0 ? firstSentence + '.' : '';
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4, scale: 1.02 }}
+      whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-shadow duration-300 group"
+      className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
     >
-      {/* Image Section - Taller on mobile for 2-column grid */}
-      <div className="relative w-full h-40 sm:h-48 bg-gray-200 overflow-hidden">
+      {/* Image Section */}
+      <div className="relative w-full h-64 bg-gray-100 overflow-hidden">
         {job.imageUrl && !imageError ? (
           <Image
             src={job.imageUrl}
             alt={`${job.companyName} - ${job.title}`}
             fill
-            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            className="object-cover"
             onError={() => setImageError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600">
-            <Briefcase size={64} className="text-white opacity-60 group-hover:scale-110 transition-transform duration-300" />
+            <Briefcase size={48} className="text-white opacity-60" />
           </div>
         )}
 
-        {/* Job Type Badge */}
-        <div className="absolute top-3 right-3 animate-slide-up">
-          <span className="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-blue-600 shadow-lg border border-blue-100">
-            {job.jobType.replace('-', ' ').toUpperCase()}
-          </span>
-        </div>
-
-        {/* Save Button */}
-        <motion.button
+        {/* Bookmark Button - Top Left */}
+        <button
           onClick={handleSave}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-lg hover:bg-white transition-all duration-300 border border-gray-100"
+          className="absolute top-3 left-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
           aria-label={saved ? 'Unsave job' : 'Save job'}
         >
-          <motion.div
-            animate={saved ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Heart
-              size={20}
-              className={`transition-all duration-300 ${saved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
-            />
-          </motion.div>
-        </motion.button>
+          <Bookmark
+            size={18}
+            className={`transition-all ${saved ? 'fill-blue-600 text-blue-600' : 'text-gray-600'}`}
+          />
+        </button>
+
+        {/* Posted Time Badge - Top Right */}
+        <div className="absolute top-3 right-3">
+          <span className="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">
+            <Clock size={12} />
+            {formatDistanceToNow(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
+          </span>
+        </div>
       </div>
 
-      {/* Job Details Section - Compact for mobile 2-column */}
-      <div className="p-3 sm:p-5">
-        {/* Job Title - Smaller on mobile */}
+      {/* Content Section */}
+      <div className="p-5">
+        {/* Job Type & Category Tags */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-xs font-medium">
+            {job.locationType === 'remote' ? 'Remote' : job.locationType === 'on-site' ? 'On-site' : 'Hybrid'}
+          </span>
+          {job.category && (
+            <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-md text-xs font-medium">
+              {job.category}
+            </span>
+          )}
+          {job.jobType && (
+            <span className="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs font-medium">
+              {job.jobType.replace('-', ' ')}
+            </span>
+          )}
+        </div>
+
+        {/* Job Title */}
         <Link href={`/jobs/${job.id}`}>
-          <h3 className="text-sm sm:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors mb-1 sm:mb-2 line-clamp-2 leading-tight">
+          <h3 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors mb-2 line-clamp-2">
             {job.title}
           </h3>
         </Link>
 
-        {/* Company Name - Smaller on mobile */}
-        <p className="text-xs sm:text-lg text-gray-600 sm:text-gray-700 font-medium mb-2 sm:mb-3 truncate">
-          {job.companyName}
-        </p>
-
-        {/* Location - Compact on mobile */}
-        <div className="flex items-start text-gray-600 mb-1.5 sm:mb-2">
-          <MapPin size={14} className="mr-1.5 sm:mr-2 flex-shrink-0 mt-0.5" />
-          <span className="text-xs sm:text-sm line-clamp-2">
-            {job.location}, {job.country}
-          </span>
+        {/* Company Name */}
+        <div className="flex items-center gap-2 text-gray-600 mb-2">
+          <Building2 size={16} className="flex-shrink-0" />
+          <span className="text-sm font-medium truncate">{job.companyName}</span>
         </div>
 
-        {/* Salary - More prominent */}
+        {/* Job Tagline / Short Description */}
+        {getTaglineOrPreview() && (
+          <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+            {getTaglineOrPreview()}
+          </p>
+        )}
+
+        {/* Location */}
+        <div className="flex items-center gap-2 text-gray-600 mb-2">
+          <MapPin size={16} className="flex-shrink-0" />
+          <span className="text-sm truncate">{job.location}, {job.country}</span>
+        </div>
+
+        {/* Salary */}
         {salary && (
-          <div className="flex items-center text-gray-600 mb-2 sm:mb-2">
-            <DollarSign size={14} className="mr-1.5 sm:mr-2 flex-shrink-0 text-green-500" />
-            <span className="text-xs sm:text-sm font-bold text-green-600 truncate">
-              {salary}
-            </span>
+          <div className="flex items-center gap-2 text-green-600 mb-2">
+            <DollarSign size={16} className="flex-shrink-0" />
+            <span className="text-sm font-semibold">{salary}</span>
           </div>
         )}
 
-        {/* Experience - Hidden on smallest mobile, show on sm+ */}
-        <div className="hidden sm:flex items-center text-gray-600 mb-3">
-          <Briefcase size={16} className="mr-2 flex-shrink-0" />
-          <span className="text-sm">
-            {job.experienceRequired === 0
-              ? 'No experience required'
-              : `${job.experienceRequired}+ years experience`}
-          </span>
-        </div>
-
-        {/* Skills Tags - Show only 2 on mobile, 4 on desktop */}
-        {job.skills && job.skills.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-            {job.skills.slice(0, 2).map((skill, index) => (
-              <span
-                key={index}
-                className="bg-blue-50 text-blue-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium"
-              >
-                {skill}
-              </span>
-            ))}
-            {/* Show more skills on desktop */}
-            {job.skills.slice(2, 4).map((skill, index) => (
-              <span
-                key={index + 2}
-                className="hidden sm:inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium"
-              >
-                {skill}
-              </span>
-            ))}
-            {job.skills.length > 2 && (
-              <span className="bg-gray-100 text-gray-600 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium">
-                +{job.skills.length - 2}
-              </span>
-            )}
+        {/* Applicant Count */}
+        {userType === 'agency' && user && job.agencyId === user.uid ? (
+          <div className="flex items-center gap-2 text-gray-600 mb-4">
+            <Users size={16} className="flex-shrink-0" />
+            <span className="text-sm">{applicantCount !== null ? applicantCount : 0} applicants</span>
           </div>
-        )}
+        ) : null}
 
-        {/* Posted Date - Smaller on mobile */}
-        <div className="flex items-center text-gray-500 text-[10px] sm:text-xs mb-2 sm:mb-4">
-          <Clock size={12} className="mr-1 sm:mr-1.5" />
-          <span className="truncate">
-            {formatDistanceToNow(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
-          </span>
-        </div>
-
-        {/* Action Buttons - Mobile optimized with touch-friendly size */}
-        <div className="flex gap-1.5 sm:gap-2">
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4 border-t border-gray-100">
           {userType === 'agency' && user && job.agencyId === user.uid ? (
-            // Agency view of their own job
+            // Agency view
             <>
               <Link
                 href={`/jobs/${job.id}/applicants`}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 sm:gap-2 group/btn text-xs sm:text-sm min-h-[44px]"
+                className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center text-sm flex items-center justify-center gap-2"
               >
-                <Users size={14} className="sm:w-4 sm:h-4 group-hover/btn:scale-110 transition-transform" />
-                <span className="hidden xs:inline">{applicantCount !== null ? `${applicantCount}` : '0'}</span>
+                <Users size={16} />
+                Applicants
               </Link>
               <Link
                 href={`/jobs/edit/${job.id}`}
-                className="bg-gray-100 text-gray-700 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-semibold min-h-[44px]"
-                title="Edit Job"
+                className="px-4 py-2.5 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors text-sm flex items-center justify-center gap-2"
               >
-                <Edit size={14} className="sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Edit</span>
-              </Link>
-              <Link
-                href={`/jobs/${job.id}`}
-                className="bg-gray-100 text-gray-700 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center text-xs sm:text-sm font-semibold min-h-[44px]"
-                title="View Job"
-              >
-                View
+                <Edit size={16} />
+                Edit
               </Link>
             </>
           ) : (
-            // Job hunter view - Single button on mobile for cleaner look
+            // Job hunter view
             <>
               <Link
                 href={`/jobs/${job.id}`}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 group/btn text-xs sm:text-base min-h-[48px]"
+                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2"
               >
-                <span>View Job</span>
+                View Details
+                <ArrowRight size={18} />
               </Link>
-
-              <motion.button
-                onClick={handleShare}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-gray-100 text-gray-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm hover:shadow-md flex items-center justify-center group/share min-h-[48px] min-w-[48px]"
-                aria-label="Share job"
+              <button
+                onClick={handleSave}
+                className="px-6 py-3 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors"
               >
-                <Share2 size={16} className="sm:w-[18px] sm:h-[18px] group-hover/share:scale-110 transition-transform" />
-              </motion.button>
+                Save
+              </button>
             </>
           )}
         </div>
