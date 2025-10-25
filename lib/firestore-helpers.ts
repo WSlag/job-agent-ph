@@ -110,13 +110,39 @@ export async function queryDocuments<T>(
 
 // Helper to convert Firestore Timestamp to Date
 export function timestampToDate(timestamp: any): Date {
+  // Handle null/undefined
+  if (!timestamp) {
+    return new Date();
+  }
+
+  // Handle Firestore Timestamp
   if (timestamp instanceof Timestamp) {
     return timestamp.toDate();
   }
-  if (timestamp?.toDate) {
+
+  // Handle objects with toDate method
+  if (timestamp?.toDate && typeof timestamp.toDate === 'function') {
     return timestamp.toDate();
   }
-  return new Date(timestamp);
+
+  // Handle Date objects
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+
+  // Try to parse as date string/number
+  try {
+    const date = new Date(timestamp);
+    // Check if date is valid
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  } catch (error) {
+    console.warn('Failed to convert timestamp to date:', timestamp);
+  }
+
+  // Fallback to current date
+  return new Date();
 }
 
 // Helper to check if document exists

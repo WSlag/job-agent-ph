@@ -42,7 +42,7 @@ export default function Header() {
   useEffect(() => {
     if (!user || userType !== 'jobhunter') {
       setPendingApplications(0);
-      return;
+      return () => {}; // Return empty cleanup function
     }
 
     // Subscribe to applications to count pending ones

@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import JobList from '@/components/jobs/JobList';
-import Header from '@/components/layout/Header';
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Search, Filter, MapPin, Briefcase, DollarSign } from 'lucide-react';
 
 const COUNTRIES = [
@@ -97,68 +97,45 @@ export default function JobsPage() {
   };
 
   const filteredJobs = jobs.filter((job) => {
+    // Search term filter
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
-      return (
+      const matchesSearch = (
         job.title.toLowerCase().includes(search) ||
         job.companyName.toLowerCase().includes(search) ||
         job.location.toLowerCase().includes(search) ||
         job.skills.some((skill) => skill.toLowerCase().includes(search))
       );
+      if (!matchesSearch) return false;
     }
+
+    // Minimum salary filter
     if (minSalary && job.salaryMin) {
-      return job.salaryMin >= parseInt(minSalary);
+      if (job.salaryMin < parseInt(minSalary)) return false;
     }
+
     return true;
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <Header />
+    <div className="min-h-screen bg-gray-50">
+      {/* Enhanced Header with Integrated Search, Filters, and Search Button */}
+      <HeaderDesign1Enhanced
+        searchPlaceholder="Search jobs, companies, skills..."
+        showFiltersButton={true}
+        showSearchButton={true}
+        onFiltersClick={() => setShowFilters(!showFilters)}
+        onSearchButtonClick={handleSearch}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        showNavigation={false}
+      />
 
-      {/* Search Section */}
-      <div className="bg-white shadow-sm fixed top-16 left-0 right-0 w-full z-40 backdrop-blur-sm bg-white/95">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Browse Jobs Abroad
-          </h1>
-
-          {/* Search Bar */}
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Search jobs, companies, skills..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="bg-white border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 md:w-auto"
-            >
-              <Filter size={20} />
-              Filters
-            </button>
-
-            <button
-              onClick={handleSearch}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-            >
-              Search
-            </button>
-          </div>
-
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Filters Panel - Below Header */}
+      {showFilters && (
+        <div className="fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md">
+          <div className="container mx-auto px-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Country Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -168,7 +145,7 @@ export default function JobsPage() {
                 <select
                   value={selectedCountry}
                   onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
                   <option value="">All Countries</option>
                   {COUNTRIES.map((country) => (
@@ -188,7 +165,7 @@ export default function JobsPage() {
                 <select
                   value={selectedJobType}
                   onChange={(e) => setSelectedJobType(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
                   <option value="">All Types</option>
                   {JOB_TYPES.map((type) => (
@@ -210,16 +187,16 @@ export default function JobsPage() {
                   placeholder="e.g., 50000"
                   value={minSalary}
                   onChange={(e) => setMinSalary(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 />
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Jobs List */}
-      <div className="container mx-auto px-4 py-8 mt-[220px]">
+      <div className={`container mx-auto px-4 py-8 ${showFilters ? 'mt-[200px] md:mt-[140px]' : 'mt-20'}`}>
         <div className="mb-6">
           <p className="text-gray-600">
             Showing {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import Header from '@/components/layout/Header';
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Conversation, Job, Agency, JobHunter } from '@/types';
 import { subscribeToConversations, getOrCreateConversation } from '@/lib/messaging-helpers';
 import { doc, getDoc } from 'firebase/firestore';
@@ -114,7 +114,7 @@ function MessagesContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <Header />
+        <HeaderDesign1Enhanced hideSearch />
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
@@ -124,7 +124,7 @@ function MessagesContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
-      <Header />
+      <HeaderDesign1Enhanced hideSearch />
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -235,7 +235,7 @@ export default function MessagesPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-gray-50 pt-16">
-          <Header />
+          <HeaderDesign1Enhanced hideSearch />
           <div className="flex items-center justify-center py-20">
             <Loader2 className="animate-spin text-blue-600" size={48} />
           </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Agency } from '@/types'
-import Header from '@/components/layout/Header'
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced'
 import AgencyProfileEditForm from '@/components/profile/AgencyProfileEditForm'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -30,7 +30,7 @@ export default function EditAgencyProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        <HeaderDesign1Enhanced hideSearch />
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
@@ -41,7 +41,7 @@ export default function EditAgencyProfilePage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        <HeaderDesign1Enhanced hideSearch />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <p className="text-red-800 font-semibold mb-4">{error}</p>
@@ -64,7 +64,7 @@ export default function EditAgencyProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <HeaderDesign1Enhanced hideSearch />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

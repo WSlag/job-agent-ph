@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { getAgencyJobs } from '@/lib/job-helpers'
 import { getAgencyApplications } from '@/lib/application-helpers'
 import { Job, JobApplication } from '@/types'
-import Header from '@/components/layout/Header'
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced'
 import JobCard from '@/components/jobs/JobCard'
 import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit } from 'lucide-react'
 import Link from 'next/link'
@@ -54,7 +54,7 @@ export default function AgencyDashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <Header />
+        <HeaderDesign1Enhanced hideSearch />
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
@@ -69,7 +69,7 @@ export default function AgencyDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
-      <Header />
+      <HeaderDesign1Enhanced hideSearch />
 
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}

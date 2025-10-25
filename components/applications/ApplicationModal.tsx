@@ -69,7 +69,7 @@ export default function ApplicationModal({
     setError(null)
 
     try {
-      // Check if already applied
+      // Check if already applied (first check)
       const alreadyApplied = await hasAppliedToJob(jobId, user.uid)
       if (alreadyApplied) {
         setError('You have already applied to this job')
@@ -90,6 +90,14 @@ export default function ApplicationModal({
         agencyId
       )
 
+      // Double-check before creating application (prevent race condition)
+      const stillNotApplied = await hasAppliedToJob(jobId, user.uid)
+      if (stillNotApplied) {
+        setError('You have already applied to this job')
+        setLoading(false)
+        return
+      }
+
       // Create application
       await createApplication({
         jobId,
@@ -107,7 +115,12 @@ export default function ApplicationModal({
       onClose()
     } catch (err: any) {
       console.error('Error submitting application:', err)
-      setError(err.message || 'Failed to submit application. Please try again.')
+      // Handle duplicate application error gracefully
+      if (err.message && err.message.toLowerCase().includes('already applied')) {
+        setError('You have already applied to this job')
+      } else {
+        setError(err.message || 'Failed to submit application. Please try again.')
+      }
     } finally {
       setLoading(false)
     }

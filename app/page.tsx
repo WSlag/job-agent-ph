@@ -9,24 +9,25 @@ import { Job } from '@/types';
 import {
   Search,
   MapPin,
-  Globe,
-  Building2,
-  Users,
   ArrowRight,
   CheckCircle,
   MessageCircle,
-  Star,
   Sparkles,
   Clock,
   DollarSign,
   UserCheck,
   Bookmark,
+  Globe,
+  Users,
+  Star,
   Briefcase,
+  Building2,
 } from 'lucide-react';
 import HeroCarousel from '@/components/ui/HeroCarousel';
+import LandingNav3Enhanced from '@/components/layout/LandingNav3Enhanced';
 import Logo from '@/components/ui/Logo';
 import { motion } from 'framer-motion';
-import { fadeInUp, staggerContainer, listItemAnimation } from '@/lib/animations';
+import { staggerContainer, listItemAnimation } from '@/lib/animations';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -127,131 +128,13 @@ export default function Home() {
   ];
 
   return (
-    <main className="min-h-screen bg-white w-full">
-      {/* Top Banner - Non-sticky, disappears on scroll */}
-      {/* Desktop View */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="hidden md:block bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white border-b border-blue-700 relative overflow-hidden"
-      >
-        {/* Animated background overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+    <>
+      {/* Enhanced App-Style Navigation */}
+      <LandingNav3Enhanced />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex items-center justify-between h-16">
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="flex items-center gap-2 font-semibold text-xl"
-            >
-              <Users className="w-6 h-6 animate-bounce" />
-              <span>Explore 300,000+ Jobs Now!</span>
-            </motion.div>
-            <motion.div
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="flex items-center gap-4"
-            >
-              <Link
-                href="/auth/login?type=jobseeker"
-                className="bg-white/20 backdrop-blur-md px-5 py-2 rounded-full font-semibold text-base hover:bg-white/30 hover:scale-105 transition-all shadow-lg"
-              >
-                For Job Hunters
-              </Link>
-              <Link
-                href="/auth/login?type=employer"
-                className="bg-white/20 backdrop-blur-md px-5 py-2 rounded-full font-semibold text-base hover:bg-white/30 hover:scale-105 transition-all shadow-lg"
-              >
-                For Employers
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Mobile View - Simple Banner */}
-      <div className="md:hidden bg-gradient-to-r from-blue-600 to-purple-600 py-4">
-        <div className="px-4">
-          <h1 className="text-2xl font-bold text-white text-center">
-            Explore 100,000+ Jobs Now!
-          </h1>
-        </div>
-      </div>
-
-      {/* Navigation - Sticky */}
-      <nav className="border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 md:px-4 lg:px-6">
-          <div className="flex justify-between items-center h-14 md:h-16">
-            {/* Left Section - Logo */}
-            <div className="flex items-center gap-6 md:gap-8">
-              <div className="flex-shrink-0">
-                <Logo size="sm" showText={true} />
-              </div>
-
-              {/* Navigation Links - Hidden on mobile */}
-              <div className="hidden md:flex items-center gap-6">
-                <Link
-                  href="/jobs"
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium transition-colors"
-                >
-                  <Briefcase className="w-4 h-4" />
-                  <span>Find Jobs</span>
-                </Link>
-                <Link
-                  href="/companies"
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium transition-colors"
-                >
-                  <Building2 className="w-4 h-4" />
-                  <span>Companies</span>
-                </Link>
-                <Link
-                  href="/resources"
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium transition-colors"
-                >
-                  <Globe className="w-4 h-4" />
-                  <span>Resources</span>
-                </Link>
-              </div>
-            </div>
-
-            {/* Right Section - Search, Actions */}
-            <div className="flex items-center gap-2 md:gap-4">
-              {/* Search Bar - Desktop only */}
-              <div className="hidden lg:flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 w-64">
-                <Search className="w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search jobs, companies..."
-                  className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
-                />
-              </div>
-
-              {/* Post a Job Button */}
-              <Link
-                href="/post-job"
-                className="hidden md:inline-flex bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all"
-              >
-                Post a Job
-              </Link>
-
-              {/* User Avatar */}
-              <Link
-                href="/profile"
-                className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-              >
-                U
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Carousel Section */}
-      <section className="relative bg-gradient-to-br from-gray-50 via-white to-blue-50/30 pt-4 md:pt-8 pb-8 md:pb-16 overflow-hidden">
+      <main className="min-h-screen bg-white w-full pt-28 md:pt-32">
+        {/* Hero Carousel Section */}
+        <section className="relative bg-gradient-to-br from-gray-50 via-white to-blue-50/30 pt-4 md:pt-8 pb-8 md:pb-16 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"></div>
@@ -266,30 +149,66 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Search Bar Section - Sticky */}
-      <div className="sticky top-[56px] md:top-[64px] z-40 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-soft w-full left-0 right-0">
-        <div className="max-w-7xl mx-auto px-3 md:px-4 sm:px-6 lg:px-8 py-3 md:py-4">
+        {/* Search Bar Section - Fixed */}
+        <div className="fixed top-14 md:top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm w-full">
+        <div className="max-w-7xl mx-auto px-2.5 py-2 md:px-4 sm:px-6 lg:px-8 md:py-4">
           <form onSubmit={handleSearch} className="w-full">
-            <div className="flex flex-col md:flex-row gap-2 md:gap-3">
+            {/* Mobile: Compact Single Row Layout */}
+            <div className="md:hidden flex items-center gap-1.5">
               {/* Job Search Input */}
-              <div className="flex-1 flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
+              <div className="flex-1 flex items-center gap-1.5 px-2.5 py-2 bg-white rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
+                <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Job title or keywords"
+                  className="flex-1 outline-none text-xs text-gray-900 placeholder-gray-400 bg-transparent min-w-0"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Location Icon Button */}
+              <div className="flex items-center gap-1 px-2 py-2 bg-white rounded-lg border border-gray-300 focus-within:border-blue-500 flex-shrink-0">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="City"
+                  className="w-10 outline-none text-xs text-gray-900 placeholder-gray-400 bg-transparent"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                />
+              </div>
+
+              {/* Search Button */}
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold hover:from-blue-700 hover:to-blue-800 transition-all whitespace-nowrap flex-shrink-0"
+              >
+                Search
+              </button>
+            </div>
+
+            {/* Desktop: Original Layout */}
+            <div className="hidden md:flex flex-row gap-3">
+              {/* Job Search Input */}
+              <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
                 <Search className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Job title or keywords"
-                  className="flex-1 outline-none text-sm md:text-base text-gray-900 placeholder-gray-500 bg-transparent"
+                  className="flex-1 outline-none text-base text-gray-900 placeholder-gray-500 bg-transparent"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
 
               {/* Location Input */}
-              <div className="flex-1 flex items-center gap-2 px-3 md:px-4 py-2 md:py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
+              <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
                 <MapPin className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Location"
-                  className="flex-1 outline-none text-sm md:text-base text-gray-900 placeholder-gray-500 bg-transparent"
+                  className="flex-1 outline-none text-base text-gray-900 placeholder-gray-500 bg-transparent"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 />
@@ -300,7 +219,7 @@ export default function Home() {
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 md:px-8 py-2 md:py-3 rounded-xl text-sm md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 Search
               </motion.button>
@@ -309,8 +228,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Featured Jobs Section */}
-      <section className="py-16 bg-white">
+        {/* Featured Jobs Section */}
+        <section className="pt-16 md:pt-20 pb-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -580,7 +499,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="mb-4">
-                <Logo size="md" showText={true} />
+                <Logo size="sm" showText={true} />
               </div>
               <p className="text-sm text-gray-600">
                 Your trusted partner in finding international job opportunities.
@@ -615,6 +534,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </main>
+      </main>
+    </>
   );
 }

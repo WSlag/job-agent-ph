@@ -8,6 +8,7 @@ import Section from '@/components/ui/Section';
 import Badge from '@/components/ui/Badge';
 import { Building2, MapPin, Briefcase, CheckCircle, Search } from 'lucide-react';
 import Link from 'next/link';
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 
 interface Agency {
   id: string;
@@ -79,8 +80,10 @@ export default function CompaniesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <HeaderDesign1Enhanced />
+
       {/* Hero Section */}
-      <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20">
+      <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 mt-16">
         <div className="max-w-4xl mx-auto text-center">
           <Building2 className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-5xl font-bold mb-6">Browse Companies</h1>
@@ -94,7 +97,22 @@ export default function CompaniesPage() {
         <div className="max-w-6xl mx-auto">
           {/* Search Bar */}
           <div className="mb-8">
-            <div className="relative max-w-2xl mx-auto">
+            {/* Mobile: Compact Layout */}
+            <div className="md:hidden flex items-center gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search companies..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs bg-gray-50"
+                />
+              </div>
+            </div>
+
+            {/* Desktop: Original Layout */}
+            <div className="hidden md:block relative max-w-2xl mx-auto">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import JobCard from './JobCard';
 import { Job } from '@/types';
@@ -15,6 +16,7 @@ interface JobListProps {
 }
 
 export default function JobList({ jobs, loading = false, onLoadMore, hasMore = false }: JobListProps) {
+  const router = useRouter();
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -37,8 +39,8 @@ export default function JobList({ jobs, loading = false, onLoadMore, hasMore = f
   };
 
   const handleMessage = (jobId: string) => {
-    // Navigate to message page or open message modal
-    window.location.href = `/messages?jobId=${jobId}`;
+    // Use Next.js router for client-side navigation
+    router.push(`/messages?jobId=${jobId}`);
   };
 
   if (loading && jobs.length === 0) {

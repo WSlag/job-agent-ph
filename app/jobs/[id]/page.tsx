@@ -8,7 +8,7 @@ import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { hasAppliedToJob } from '@/lib/application-helpers';
-import Header from '@/components/layout/Header';
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import ApplicationModal from '@/components/applications/ApplicationModal';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
@@ -38,6 +38,7 @@ export default function JobDetailsPage() {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [checkingApplication, setCheckingApplication] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     loadJob();
@@ -46,6 +47,17 @@ export default function JobDetailsPage() {
   useEffect(() => {
     checkApplicationStatus();
   }, [params.id, user]);
+
+  useEffect(() => {
+    // Check if job is saved
+    if (params.id) {
+      const saved = localStorage.getItem('savedJobs');
+      if (saved) {
+        const savedJobs = JSON.parse(saved);
+        setIsSaved(savedJobs.includes(params.id));
+      }
+    }
+  }, [params.id]);
 
   const loadJob = async () => {
     try {
@@ -126,10 +138,29 @@ export default function JobDetailsPage() {
     }
   };
 
+  const handleSaveJob = () => {
+    if (!params.id) return;
+
+    const saved = localStorage.getItem('savedJobs');
+    let savedJobs: string[] = saved ? JSON.parse(saved) : [];
+
+    if (isSaved) {
+      // Remove from saved jobs
+      savedJobs = savedJobs.filter(id => id !== params.id);
+      setIsSaved(false);
+    } else {
+      // Add to saved jobs
+      savedJobs.push(params.id as string);
+      setIsSaved(true);
+    }
+
+    localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <Header />
+        <HeaderDesign1Enhanced hideSearch />
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
@@ -140,7 +171,7 @@ export default function JobDetailsPage() {
   if (!job) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <Header />
+        <HeaderDesign1Enhanced hideSearch />
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Job Not Found</h1>
           <button
@@ -172,7 +203,7 @@ export default function JobDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
-      <Header />
+      <HeaderDesign1Enhanced hideSearch />
 
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
@@ -334,11 +365,15 @@ export default function JobDetailsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => {/* Handle save */}}
-                  className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+                  onClick={handleSaveJob}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${
+                    isSaved
+                      ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
-                  <Heart size={20} />
-                  Save
+                  <Heart size={20} className={isSaved ? 'fill-red-600' : ''} />
+                  {isSaved ? 'Saved' : 'Save'}
                 </button>
 
                 <button

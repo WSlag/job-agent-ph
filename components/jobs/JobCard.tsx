@@ -39,7 +39,8 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
     if (userType === 'agency' && user && job.agencyId === user.uid) {
       loadApplicantCount();
     }
-  }, [userType, user, job.agencyId, job.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userType, user, job.agencyId, job.id]); // loadApplicantCount is stable
 
   const loadApplicantCount = async () => {
     try {
@@ -103,7 +104,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
       className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
     >
       {/* Image Section */}
-      <div className="relative w-full h-64 bg-gray-100 overflow-hidden">
+      <div className="relative w-full h-48 sm:h-56 md:h-64 bg-gray-100 overflow-hidden">
         {job.imageUrl && !imageError ? (
           <Image
             src={job.imageUrl}
@@ -121,38 +122,38 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         {/* Bookmark Button - Top Left */}
         <button
           onClick={handleSave}
-          className="absolute top-3 left-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
+          className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white p-0.5 sm:p-1 rounded-full shadow-sm hover:bg-gray-50 transition-colors w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center"
           aria-label={saved ? 'Unsave job' : 'Save job'}
         >
           <Bookmark
-            size={18}
+            size={12}
             className={`transition-all ${saved ? 'fill-blue-600 text-blue-600' : 'text-gray-600'}`}
           />
         </button>
 
         {/* Posted Time Badge - Top Right */}
         <div className="absolute top-3 right-3">
-          <span className="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">
-            <Clock size={12} />
+          <span className="bg-white/95 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">
+            <Clock size={12} className="hidden sm:inline" />
             {formatDistanceToNow(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
           </span>
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="p-5">
+      <div className="p-3 sm:p-4 md:p-5">
         {/* Job Type & Category Tags */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-md text-xs font-medium">
+        <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+          <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-medium">
             {job.locationType === 'remote' ? 'Remote' : job.locationType === 'on-site' ? 'On-site' : 'Hybrid'}
           </span>
           {job.category && (
-            <span className="bg-purple-50 text-purple-700 px-3 py-1 rounded-md text-xs font-medium">
+            <span className="bg-purple-50 text-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-medium">
               {job.category}
             </span>
           )}
           {job.jobType && (
-            <span className="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs font-medium">
+            <span className="bg-green-50 text-green-700 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-medium">
               {job.jobType.replace('-', ' ')}
             </span>
           )}
@@ -160,63 +161,63 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
 
         {/* Job Title */}
         <Link href={`/jobs/${job.id}`}>
-          <h3 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors mb-2 line-clamp-2">
+          <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors mb-1.5 sm:mb-2 line-clamp-2">
             {job.title}
           </h3>
         </Link>
 
         {/* Company Name */}
-        <div className="flex items-center gap-2 text-gray-600 mb-2">
-          <Building2 size={16} className="flex-shrink-0" />
-          <span className="text-sm font-medium truncate">{job.companyName}</span>
+        <div className="flex items-center gap-1.5 text-gray-600 mb-1.5 sm:mb-2">
+          <Building2 size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
+          <span className="text-xs sm:text-sm font-medium truncate">{job.companyName}</span>
         </div>
 
         {/* Job Tagline / Short Description */}
         {getTaglineOrPreview() && (
-          <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+          <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3 line-clamp-2 leading-relaxed">
             {getTaglineOrPreview()}
           </p>
         )}
 
         {/* Location */}
-        <div className="flex items-center gap-2 text-gray-600 mb-2">
-          <MapPin size={16} className="flex-shrink-0" />
-          <span className="text-sm truncate">{job.location}, {job.country}</span>
+        <div className="flex items-center gap-1.5 text-gray-600 mb-1.5 sm:mb-2">
+          <MapPin size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
+          <span className="text-xs sm:text-sm truncate">{job.location}, {job.country}</span>
         </div>
 
         {/* Salary */}
         {salary && (
-          <div className="flex items-center gap-2 text-green-600 mb-2">
-            <DollarSign size={16} className="flex-shrink-0" />
-            <span className="text-sm font-semibold">{salary}</span>
+          <div className="flex items-center gap-1.5 text-green-600 mb-1.5 sm:mb-2">
+            <DollarSign size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm font-semibold">{salary}</span>
           </div>
         )}
 
         {/* Applicant Count */}
         {userType === 'agency' && user && job.agencyId === user.uid ? (
-          <div className="flex items-center gap-2 text-gray-600 mb-4">
-            <Users size={16} className="flex-shrink-0" />
-            <span className="text-sm">{applicantCount !== null ? applicantCount : 0} applicants</span>
+          <div className="flex items-center gap-1.5 text-gray-600 mb-2 sm:mb-4">
+            <Users size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm">{applicantCount !== null ? applicantCount : 0} applicants</span>
           </div>
         ) : null}
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-gray-100">
+        <div className="flex gap-2 pt-2 sm:pt-3 border-t border-gray-100">
           {userType === 'agency' && user && job.agencyId === user.uid ? (
             // Agency view
             <>
               <Link
                 href={`/jobs/${job.id}/applicants`}
-                className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center text-sm flex items-center justify-center gap-2"
+                className="flex-1 bg-blue-600 text-white px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center text-xs sm:text-sm flex items-center justify-center gap-1"
               >
-                <Users size={16} />
+                <Users size={13} className="sm:w-[14px] sm:h-[14px]" />
                 Applicants
               </Link>
               <Link
                 href={`/jobs/edit/${job.id}`}
-                className="px-4 py-2.5 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors text-sm flex items-center justify-center gap-2"
+                className="px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors text-xs sm:text-sm flex items-center justify-center gap-1"
               >
-                <Edit size={16} />
+                <Edit size={13} className="sm:w-[14px] sm:h-[14px]" />
                 Edit
               </Link>
             </>
@@ -225,14 +226,14 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
             <>
               <Link
                 href={`/jobs/${job.id}`}
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2"
+                className="flex-1 bg-blue-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center text-xs sm:text-sm flex items-center justify-center gap-1"
               >
-                View Details
-                <ArrowRight size={18} />
+                <span>View</span>
+                <ArrowRight size={14} className="sm:w-4 sm:h-4" />
               </Link>
               <button
                 onClick={handleSave}
-                className="px-6 py-3 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors"
+                className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors text-xs sm:text-sm"
               >
                 Save
               </button>

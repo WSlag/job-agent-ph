@@ -1,11 +1,14 @@
 import Section from '@/components/ui/Section';
 import { Shield } from 'lucide-react';
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50">
+      <HeaderDesign1Enhanced />
+
       {/* Hero Section */}
-      <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20">
+      <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 mt-16">
         <div className="max-w-4xl mx-auto text-center">
           <Shield className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-5xl font-bold mb-6">Privacy Policy</h1>

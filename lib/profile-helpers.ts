@@ -6,6 +6,7 @@
 import { db } from './firebase'
 import { doc, updateDoc, Timestamp, collection, query, where, getDocs, writeBatch } from 'firebase/firestore'
 import { Agency, JobHunter } from '@/types'
+import { COLLECTIONS } from './collections'
 
 /**
  * Updates an agency profile
@@ -17,8 +18,8 @@ export async function updateAgencyProfile(
   data: Partial<Omit<Agency, 'id' | 'email' | 'userType' | 'createdAt'>>
 ): Promise<void> {
   try {
-    const userRef = doc(db, 'users', userId)
-    await updateDoc(userRef, {
+    const agencyRef = doc(db, COLLECTIONS.AGENCIES, userId)
+    await updateDoc(agencyRef, {
       ...data,
       updatedAt: Timestamp.now(),
     })
@@ -53,8 +54,8 @@ export async function updateJobHunterProfile(
   data: Partial<Omit<JobHunter, 'id' | 'email' | 'userType' | 'createdAt'>>
 ): Promise<void> {
   try {
-    const userRef = doc(db, 'users', userId)
-    await updateDoc(userRef, {
+    const jobHunterRef = doc(db, COLLECTIONS.JOB_HUNTERS, userId)
+    await updateDoc(jobHunterRef, {
       ...data,
       updatedAt: Timestamp.now(),
     })

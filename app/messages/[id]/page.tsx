@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import Header from '@/components/layout/Header';
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Message } from '@/types';
 import {
   subscribeToMessages,
@@ -147,7 +147,7 @@ export default function ConversationPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <Header />
+        <HeaderDesign1Enhanced hideSearch />
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
@@ -169,7 +169,7 @@ export default function ConversationPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 flex flex-col">
-      <Header />
+      <HeaderDesign1Enhanced hideSearch />
 
       {/* Chat Header */}
       <div className="bg-white border-b shadow-sm">

@@ -14,22 +14,14 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
+// Initialize app first (works on both client and server)
+const app: FirebaseApp = !getApps().length
+  ? initializeApp(firebaseConfig)
+  : getApps()[0];
 
-if (typeof window !== 'undefined') {
-  // Client-side initialization
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
-
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-}
+// Initialize services (these are safe to call on server, they just won't be used)
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
+const storage: FirebaseStorage = getStorage(app);
 
 export { auth, db, storage };

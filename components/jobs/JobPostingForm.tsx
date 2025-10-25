@@ -151,6 +151,19 @@ export default function JobPostingForm() {
       const salaryMin = formData.salaryMin ? parseFloat(formData.salaryMin) : undefined
       const salaryMax = formData.salaryMax ? parseFloat(formData.salaryMax) : undefined
 
+      // Validate salary range
+      if (salaryMin !== undefined && salaryMin < 0) {
+        throw new Error('Minimum salary cannot be negative')
+      }
+      if (salaryMax !== undefined && salaryMax < 0) {
+        throw new Error('Maximum salary cannot be negative')
+      }
+      if (salaryMin && salaryMin > 100000000) {
+        throw new Error('Minimum salary is unrealistically high')
+      }
+      if (salaryMax && salaryMax > 100000000) {
+        throw new Error('Maximum salary is unrealistically high')
+      }
       if (salaryMin && salaryMax && salaryMin > salaryMax) {
         throw new Error('Minimum salary cannot be greater than maximum salary')
       }

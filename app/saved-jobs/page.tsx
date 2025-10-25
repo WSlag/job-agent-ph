@@ -12,6 +12,7 @@ import { Bookmark, MapPin, DollarSign, Clock, Trash2, ExternalLink } from 'lucid
 import { Job } from '@/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 
 export default function SavedJobsPage() {
   const { user: currentUser, userType, loading: authLoading } = useAuth();
@@ -141,7 +142,9 @@ export default function SavedJobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 pt-24">
+      <HeaderDesign1Enhanced hideSearch />
+
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="mb-8">
           <div className="flex items-center gap-3">
