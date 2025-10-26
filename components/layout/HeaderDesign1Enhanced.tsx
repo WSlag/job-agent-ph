@@ -289,7 +289,7 @@ export default function HeaderDesign1Enhanced({
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Search Icon - Mobile */}
               {!hideSearch && (
                 <button
@@ -317,7 +317,7 @@ export default function HeaderDesign1Enhanced({
               {user ? (
                 <Link
                   href="/profile"
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold hover:shadow-lg transition-shadow"
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold hover:shadow-lg transition-shadow"
                 >
                   {getUserInitial()}
                 </Link>

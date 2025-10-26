@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
@@ -8,6 +9,7 @@ import { Job } from '@/types';
 import JobList from '@/components/jobs/JobList';
 import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Search, Filter, MapPin, Briefcase, DollarSign } from 'lucide-react';
+import { getCategoryNames } from '@/lib/categories';
 
 const COUNTRIES = [
   { code: 'AE', name: 'UAE (Middle East)' },
@@ -27,19 +29,30 @@ const COUNTRIES = [
 const JOB_TYPES = ['full-time', 'part-time', 'contract'];
 
 export default function JobsPage() {
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedJobType, setSelectedJobType] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [minSalary, setMinSalary] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
+  // Read category from URL params on mount
+  useEffect(() => {
+    const categoryParam = searchParams?.get('category');
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+      setShowFilters(true); // Auto-show filters when category is selected
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     loadJobs();
-  }, [selectedCountry, selectedJobType]);
+  }, [selectedCountry, selectedJobType, selectedCategory]);
 
   const loadJobs = async (loadMore = false) => {
     try {
@@ -58,6 +71,10 @@ export default function JobsPage() {
 
       if (selectedJobType) {
         constraints.push(where('jobType', '==', selectedJobType));
+      }
+
+      if (selectedCategory) {
+        constraints.push(where('category', '==', selectedCategory));
       }
 
       const q = query(jobsRef, ...constraints);
@@ -135,7 +152,27 @@ export default function JobsPage() {
       {showFilters && (
         <div className="fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md">
           <div className="container mx-auto px-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Category Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Filter size={16} />
+                  Category
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">All Categories</option>
+                  {getCategoryNames().map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Country Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">

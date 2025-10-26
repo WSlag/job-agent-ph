@@ -106,12 +106,21 @@ function LoginForm() {
             </button>
           </form>
 
-          <p className="text-center text-gray-600 mt-6">
-            Don't have an account?{' '}
-            <Link href="/auth/signup" className="text-blue-600 hover:underline font-semibold">
-              Sign Up
-            </Link>
-          </p>
+          <div className="text-center mt-6 space-y-4">
+            <p className="text-gray-600">
+              Don't have an account?{' '}
+              <Link href="/auth/signup" className="text-blue-600 hover:underline font-semibold">
+                Sign Up
+              </Link>
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
+            >
+              Maybe Later - Continue Browsing
+            </button>
+          </div>
         </div>
       </div>
     </div>

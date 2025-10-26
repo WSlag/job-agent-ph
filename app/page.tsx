@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
+import { useAuth } from '@/contexts/AuthContext';
 import { Job } from '@/types';
 import {
   Search,
@@ -26,18 +27,28 @@ import {
 import HeroCarousel from '@/components/ui/HeroCarousel';
 import LandingNav3Enhanced from '@/components/layout/LandingNav3Enhanced';
 import Logo from '@/components/ui/Logo';
+import Modal from '@/components/ui/Modal';
 import { motion } from 'framer-motion';
 import { staggerContainer, listItemAnimation } from '@/lib/animations';
+import { CATEGORIES } from '@/lib/categories';
 
 export default function Home() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
+  const [categoryCounts, setCategoryCounts] = useState<{ [key: string]: number }>({});
+  const [selectedFeature, setSelectedFeature] = useState<number | null>(null);
 
   useEffect(() => {
     loadFeaturedJobs();
-  }, []);
+    loadCategoryCounts();
+    if (user) {
+      loadSavedJobs();
+    }
+  }, [user]);
 
   const loadFeaturedJobs = async () => {
     try {
@@ -65,12 +76,82 @@ export default function Home() {
     }
   };
 
+  const loadCategoryCounts = async () => {
+    try {
+      const jobsRef = collection(db, COLLECTIONS.JOBS);
+      const counts: { [key: string]: number } = {};
+
+      // Load counts for each category
+      for (const category of CATEGORIES) {
+        const q = query(
+          jobsRef,
+          where('isActive', '==', true),
+          where('category', '==', category.name)
+        );
+        const snapshot = await getDocs(q);
+        counts[category.name] = snapshot.size;
+      }
+
+      setCategoryCounts(counts);
+    } catch (error) {
+      console.error('Error loading category counts:', error);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (searchQuery) params.append('q', searchQuery);
     if (location) params.append('location', location);
     window.location.href = `/jobs${params.toString() ? '?' + params.toString() : ''}`;
+  };
+
+  const loadSavedJobs = async () => {
+    if (!user) return;
+
+    try {
+      const savedJobsRef = collection(db, 'savedJobs', user.uid, 'jobs');
+      const savedJobsSnapshot = await getDocs(query(savedJobsRef));
+      const jobIds = savedJobsSnapshot.docs.map(doc => doc.id);
+      setSavedJobs(new Set(jobIds));
+    } catch (error) {
+      console.error('Error loading saved jobs:', error);
+    }
+  };
+
+  const handleSave = async (jobId: string) => {
+    if (!user) {
+      alert('Please log in to save jobs');
+      window.location.href = '/auth/login';
+      return;
+    }
+
+    try {
+      const savedJobRef = doc(db, 'savedJobs', user.uid, 'jobs', jobId);
+
+      if (savedJobs.has(jobId)) {
+        // Remove from saved jobs
+        await deleteDoc(savedJobRef);
+        setSavedJobs(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(jobId);
+          return newSet;
+        });
+      } else {
+        // Add to saved jobs
+        await setDoc(savedJobRef, {
+          savedAt: new Date(),
+        });
+        setSavedJobs(prev => {
+          const newSet = new Set(prev);
+          newSet.add(jobId);
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error('Error saving job:', error);
+      alert('Failed to save job. Please try again.');
+    }
   };
 
   const formatSalary = (job: Job) => {
@@ -95,35 +176,30 @@ export default function Home() {
     return `${Math.floor(diffDays / 7)}w ago`;
   };
 
-  const categories = [
-    { name: 'IT & Software', icon: '💻', count: 1250 },
-    { name: 'Healthcare', icon: '🏥', count: 890 },
-    { name: 'Engineering', icon: '⚙️', count: 670 },
-    { name: 'Finance', icon: '💰', count: 540 },
-    { name: 'Marketing', icon: '📱', count: 420 },
-    { name: 'Education', icon: '📚', count: 380 },
-  ];
-
   const features = [
     {
       icon: <MessageCircle className="w-6 h-6" />,
       title: 'Direct Messaging',
       description: 'Connect directly with recruitment agencies',
+      detailedDescription: 'Skip the middleman and communicate directly with verified recruitment agencies. Our platform enables real-time messaging, allowing you to ask questions, discuss opportunities, and negotiate terms instantly.',
     },
     {
       icon: <Globe className="w-6 h-6" />,
       title: 'Global Opportunities',
       description: 'Find jobs worldwide from top companies',
+      detailedDescription: 'Access thousands of international job opportunities from reputable companies across the globe. We partner with employers in major destinations including Middle East, Europe, Asia, and North America.',
     },
     {
       icon: <CheckCircle className="w-6 h-6" />,
       title: 'Verified Agencies',
       description: 'All agencies are verified and trusted',
+      detailedDescription: 'Your safety is our priority. Every recruitment agency on our platform undergoes thorough verification including license checks, background screening, and compliance reviews to ensure legitimacy and trustworthiness.',
     },
     {
       icon: <Sparkles className="w-6 h-6" />,
       title: 'AI-Powered Matching',
       description: 'Get personalized job recommendations',
+      detailedDescription: 'Our intelligent matching system analyzes your skills, experience, and preferences to recommend the most suitable job opportunities. Save time and increase your chances of finding the perfect role.',
     },
   ];
 
@@ -285,13 +361,6 @@ export default function Home() {
                         <span className="hidden md:inline">{getTimeAgo(job.postedAt)}</span>
                         <span className="md:hidden">{getTimeAgo(job.postedAt).split(' ')[0]}</span>
                       </div>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="absolute top-2 left-2 bg-white/95 backdrop-blur-md p-1 md:p-2 rounded-full hover:bg-white transition-colors shadow-lg border border-gray-100"
-                      >
-                        <Bookmark className="w-3 h-3 md:w-4 md:h-4 text-gray-700" />
-                      </motion.button>
                     </div>
 
                     {/* Job Details */}
@@ -351,9 +420,14 @@ export default function Home() {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-2 md:px-4 border-2 border-blue-600 text-blue-600 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:bg-blue-50 transition-all"
+                          onClick={() => handleSave(job.id)}
+                          className={`px-2 md:px-4 border-2 rounded-lg md:rounded-xl text-xs md:text-base font-semibold transition-all ${
+                            savedJobs.has(job.id)
+                              ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'
+                              : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                          }`}
                         >
-                          Save
+                          {savedJobs.has(job.id) ? 'Saved' : 'Save'}
                         </motion.button>
                       </div>
                     </div>
@@ -390,7 +464,7 @@ export default function Home() {
             <p className="text-gray-600">Explore opportunities in your field</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category, index) => (
+            {CATEGORIES.map((category, index) => (
               <Link
                 key={index}
                 href={`/jobs?category=${encodeURIComponent(category.name)}`}
@@ -399,7 +473,11 @@ export default function Home() {
                 <div className="text-center">
                   <div className="text-4xl mb-3">{category.icon}</div>
                   <h3 className="font-semibold text-gray-900 mb-1 text-sm">{category.name}</h3>
-                  <p className="text-xs text-gray-600">{category.count} jobs</p>
+                  <p className="text-xs text-gray-600">
+                    {categoryCounts[category.name] !== undefined
+                      ? `${categoryCounts[category.name]} jobs`
+                      : 'Loading...'}
+                  </p>
                 </div>
               </Link>
             ))}
@@ -437,7 +515,8 @@ export default function Home() {
                 key={index}
                 variants={listItemAnimation}
                 whileHover={{ y: -8, scale: 1.05 }}
-                className="text-center group"
+                onClick={() => setSelectedFeature(index)}
+                className="text-center group cursor-pointer"
               >
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl text-blue-600 mb-4 group-hover:from-blue-600 group-hover:to-blue-700 group-hover:text-white transition-all shadow-md group-hover:shadow-xl">
                   {feature.icon}
@@ -516,8 +595,8 @@ export default function Home() {
             <div>
               <h3 className="text-gray-900 font-semibold mb-4">For Employers</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/employer" className="text-gray-600 hover:text-blue-600 transition-colors">Post a Job</Link></li>
-                <li><Link href="/employer/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">Employer Dashboard</Link></li>
+                <li><Link href="/jobs/post" className="text-gray-600 hover:text-blue-600 transition-colors">Post a Job</Link></li>
+                <li><Link href="/agency/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">Employer Dashboard</Link></li>
               </ul>
             </div>
             <div>
@@ -535,6 +614,17 @@ export default function Home() {
         </div>
       </footer>
       </main>
+
+      {/* Feature Modal */}
+      {selectedFeature !== null && (
+        <Modal
+          isOpen={selectedFeature !== null}
+          onClose={() => setSelectedFeature(null)}
+          title={features[selectedFeature].title}
+          description={features[selectedFeature].detailedDescription}
+          icon={features[selectedFeature].icon}
+        />
+      )}
     </>
   );
 }

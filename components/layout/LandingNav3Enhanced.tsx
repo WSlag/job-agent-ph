@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { collection, query, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 /**
  * LANDING NAV 3 ENHANCED: Beautiful App-Style Navigation
@@ -18,8 +21,40 @@ import { useState } from 'react';
  */
 
 export default function LandingNav3Enhanced() {
+  const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [savedJobsCount, setSavedJobsCount] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      loadSavedJobsCount();
+    } else {
+      setSavedJobsCount(0);
+    }
+  }, [user]);
+
+  const loadSavedJobsCount = async () => {
+    if (!user) return;
+
+    try {
+      const savedJobsRef = collection(db, 'savedJobs', user.uid, 'jobs');
+      const savedJobsSnapshot = await getDocs(query(savedJobsRef));
+      setSavedJobsCount(savedJobsSnapshot.size);
+    } catch (error) {
+      console.error('Error loading saved jobs count:', error);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/jobs?q=${encodeURIComponent(searchQuery)}`;
+    } else {
+      window.location.href = '/jobs';
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -40,18 +75,20 @@ export default function LandingNav3Enhanced() {
 
             {/* Desktop Search Bar */}
             <div className="hidden md:flex flex-1 max-w-xl mx-8">
-              <div className="relative w-full group">
+              <form onSubmit={handleSearch} className="relative w-full group">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
                 <input
                   type="text"
                   placeholder="Search jobs, companies, skills..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent focus:bg-white transition-all text-sm placeholder:text-gray-400"
                 />
-              </div>
+              </form>
             </div>
 
             {/* Quick Action Icons */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-2">
               {/* Search - Mobile */}
               <button
                 onClick={() => setShowSearch(!showSearch)}
@@ -68,19 +105,22 @@ export default function LandingNav3Enhanced() {
                 aria-label="Saved Jobs"
               >
                 <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500 group-hover:fill-red-100 transition-all" />
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold shadow-lg">
-                  3
-                </span>
+                {savedJobsCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold shadow-lg">
+                    {savedJobsCount}
+                  </span>
+                )}
               </Link>
 
               {/* Notifications */}
-              <button
+              <Link
+                href="/notifications"
                 className="relative p-2 hover:bg-purple-50 rounded-xl transition-colors group"
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse shadow-lg"></span>
-              </button>
+                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse shadow-lg"></span>
+              </Link>
 
               {/* Login/Profile - Desktop */}
               <Link
@@ -94,7 +134,7 @@ export default function LandingNav3Enhanced() {
               {/* Menu Toggle */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors ml-1"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
                 aria-label="Menu"
               >
                 {isMenuOpen ? (
@@ -109,15 +149,17 @@ export default function LandingNav3Enhanced() {
           {/* Mobile Search Bar - Expandable */}
           {showSearch && (
             <div className="md:hidden pb-3 animate-fadeIn">
-              <div className="relative group">
+              <form onSubmit={handleSearch} className="relative group">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
                 <input
                   type="text"
                   placeholder="Search jobs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent focus:bg-white transition-all text-sm"
                   autoFocus
                 />
-              </div>
+              </form>
             </div>
           )}
         </div>
@@ -126,48 +168,48 @@ export default function LandingNav3Enhanced() {
       {/* Beautiful Category Pills Navigation */}
       <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide py-2.5 sm:py-3">
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide py-2 sm:py-3">
             <Link
               href="/jobs?location=remote"
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border border-blue-300 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border border-blue-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              <span>🌏</span>
-              <span>Remote Jobs</span>
+              <span className="text-[11px] sm:text-sm">🌏</span>
+              <span>Remote</span>
             </Link>
             <Link
               href="/jobs?type=full-time"
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
             >
-              <span>💼</span>
-              <span>Full-time</span>
+              <span className="text-[11px] sm:text-sm">💼</span>
+              <span>Full</span>
             </Link>
             <Link
               href="/jobs?location=dubai"
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-orange-300 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-orange-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
             >
-              <span>🇦🇪</span>
-              <span>Dubai</span>
+              <span className="text-[11px] sm:text-sm">🇦🇪</span>
+              <span>Dub</span>
             </Link>
             <Link
               href="/jobs?location=singapore"
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 hover:text-red-700 border border-gray-200 hover:border-red-300 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 hover:text-red-700 border border-gray-200 hover:border-red-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
             >
-              <span>🇸🇬</span>
-              <span>Singapore</span>
+              <span className="text-[11px] sm:text-sm">🇸🇬</span>
+              <span>Sing</span>
             </Link>
             <Link
               href="/jobs?featured=true"
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border border-yellow-300 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border border-yellow-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              <Sparkles className="w-3 h-3" />
-              <span>Featured</span>
+              <Sparkles className="w-2 h-2 sm:w-3 sm:h-3" />
+              <span>Feat</span>
             </Link>
             <Link
               href="/jobs?salary=high"
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
             >
-              <span>💰</span>
-              <span>High Salary</span>
+              <span className="text-[11px] sm:text-sm">💰</span>
+              <span>High</span>
             </Link>
           </div>
         </div>

@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
 import {
   MapPin,
   Briefcase,
@@ -58,6 +57,18 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
     }
   };
 
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return `${Math.floor(diffDays / 7)}w`;
+  };
 
   const formatSalary = () => {
     if (!job.salaryMin && !job.salaryMax) return null;
@@ -119,23 +130,11 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
           </div>
         )}
 
-        {/* Bookmark Button - Top Left */}
-        <button
-          onClick={handleSave}
-          className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white p-0.5 sm:p-1 rounded-full shadow-sm hover:bg-gray-50 transition-colors w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center"
-          aria-label={saved ? 'Unsave job' : 'Save job'}
-        >
-          <Bookmark
-            size={12}
-            className={`transition-all ${saved ? 'fill-blue-600 text-blue-600' : 'text-gray-600'}`}
-          />
-        </button>
-
         {/* Posted Time Badge - Top Right */}
         <div className="absolute top-3 right-3">
           <span className="bg-white/95 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">
             <Clock size={12} className="hidden sm:inline" />
-            {formatDistanceToNow(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
+            {getTimeAgo(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
           </span>
         </div>
       </div>
@@ -233,9 +232,13 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
               </Link>
               <button
                 onClick={handleSave}
-                className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors text-xs sm:text-sm"
+                className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg font-semibold border-2 transition-colors text-xs sm:text-sm ${
+                  saved
+                    ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'
+                    : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                }`}
               >
-                Save
+                {saved ? 'Saved' : 'Save'}
               </button>
             </>
           )}
