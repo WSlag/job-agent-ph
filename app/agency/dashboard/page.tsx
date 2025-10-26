@@ -8,9 +8,10 @@ import { getAgencyApplications } from '@/lib/application-helpers'
 import { Job, JobApplication } from '@/types'
 import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced'
 import JobCard from '@/components/jobs/JobCard'
-import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit } from 'lucide-react'
+import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit, Star } from 'lucide-react'
 import Link from 'next/link'
 import { Agency } from '@/types'
+import FeaturedRequestModal from '@/components/modals/FeaturedRequestModal'
 
 export default function AgencyDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -18,6 +19,7 @@ export default function AgencyDashboardPage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(true)
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false)
 
   useEffect(() => {
     // Check authentication
@@ -163,12 +165,20 @@ export default function AgencyDashboardPage() {
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <button
               onClick={() => router.push('/jobs/post')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
+              <Briefcase size={20} />
               Post New Job
+            </button>
+            <button
+              onClick={() => setShowFeaturedModal(true)}
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-colors flex items-center gap-2"
+            >
+              <Star size={20} />
+              Request Featured Job
             </button>
             {pendingApplications > 0 && (
               <button
@@ -219,6 +229,16 @@ export default function AgencyDashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Featured Request Modal */}
+      <FeaturedRequestModal
+        isOpen={showFeaturedModal}
+        onClose={() => setShowFeaturedModal(false)}
+        onSuccess={() => {
+          // Reload dashboard data to show updated status
+          loadDashboardData()
+        }}
+      />
     </div>
   )
 }

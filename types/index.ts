@@ -1,5 +1,5 @@
 // User Types
-export type UserType = 'jobhunter' | 'agency';
+export type UserType = 'jobhunter' | 'agency' | 'admin';
 
 export interface User {
   id: string;
@@ -30,6 +30,13 @@ export interface Agency extends User {
   verified: boolean;
 }
 
+export interface Admin extends User {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  role: 'super_admin' | 'moderator';
+}
+
 // Job Types
 export type JobType = 'full-time' | 'part-time' | 'contract';
 export type JobLocation = 'remote' | 'hybrid' | 'on-site';
@@ -55,6 +62,11 @@ export interface Job {
   postedAt: Date;
   expiresAt?: Date;
   isActive: boolean;
+  // Featured job fields
+  isFeatured: boolean;
+  featuredPriority?: number; // 1-5, determines carousel order (1 = first)
+  featuredRequestId?: string; // Links to FeaturedJobRequest
+  featuredAt?: Date; // When job was featured
 }
 
 // Message Types
@@ -116,4 +128,31 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
   hasMore: boolean;
+}
+
+// Featured Job Request Types
+export type FeaturedRequestStatus = 'pending' | 'approved' | 'rejected';
+export type PaymentMethod = 'bank_transfer' | 'gcash' | 'paymaya' | 'paypal' | 'other';
+
+export interface FeaturedJobRequest {
+  id: string;
+  jobId: string;
+  agencyId: string;
+  status: FeaturedRequestStatus;
+  paymentMethod: PaymentMethod;
+  paymentReference: string;
+  paymentAmount: number;
+  currency: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  reviewedBy?: string; // Admin ID who approved/rejected
+  reviewedAt?: Date;
+  rejectionReason?: string;
+  approvedPriority?: number; // Priority assigned when approved (1-5)
+}
+
+export interface FeaturedJobRequestWithDetails extends FeaturedJobRequest {
+  job?: Job;
+  agency?: Agency;
 }

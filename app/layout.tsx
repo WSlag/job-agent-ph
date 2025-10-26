@@ -15,7 +15,6 @@ export const metadata: Metadata = {
   title: "Job Agent PH - Find Your Dream Job Abroad",
   description: "Connect with recruitment agencies and find jobs abroad. Made for Filipinos, by Filipinos.",
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -28,6 +27,10 @@ export const metadata: Metadata = {
     icon: "/icons/icon-192x192.png",
     apple: "/icons/icon-192x192.png",
   },
+};
+
+export const viewport = {
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({

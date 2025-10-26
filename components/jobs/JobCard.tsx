@@ -12,6 +12,7 @@ import {
   Users,
   Edit,
   ArrowRight,
+  Star,
 } from 'lucide-react';
 import { Job } from '@/types';
 import { useState, useEffect } from 'react';
@@ -112,7 +113,11 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+      className={`bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden ${
+        job.isFeatured
+          ? 'border-2 border-yellow-400 ring-2 ring-yellow-100'
+          : 'border border-gray-100'
+      }`}
     >
       {/* Image Section */}
       <div className="relative w-full h-48 sm:h-56 md:h-64 bg-gray-100 overflow-hidden">
@@ -127,6 +132,16 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600">
             <Briefcase size={48} className="text-white opacity-60" />
+          </div>
+        )}
+
+        {/* Featured Badge - Top Left */}
+        {job.isFeatured && (
+          <div className="absolute top-3 left-3">
+            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-lg flex items-center gap-1">
+              <Star size={12} className="fill-current" />
+              FEATURED
+            </span>
           </div>
         )}
 

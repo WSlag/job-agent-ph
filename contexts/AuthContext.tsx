@@ -11,12 +11,12 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
-import { User, UserType, JobHunter, Agency } from '@/types';
+import { User, UserType, JobHunter, Agency, Admin } from '@/types';
 import { COLLECTIONS } from '@/lib/collections';
 
 interface AuthContextType {
   user: FirebaseUser | null;
-  userProfile: JobHunter | Agency | null;
+  userProfile: JobHunter | Agency | Admin | null;
   userType: UserType | null;
   loading: boolean;
   signUp: (
@@ -34,7 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [userProfile, setUserProfile] = useState<JobHunter | Agency | null>(null);
+  const [userProfile, setUserProfile] = useState<JobHunter | Agency | Admin | null>(null);
   const [userType, setUserType] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserProfile = async (userId: string) => {
     try {
+      // Check if user is admin first
+      const adminDoc = await getDoc(doc(db, COLLECTIONS.ADMINS, userId));
+
+      if (adminDoc.exists()) {
+        setUserProfile({ id: adminDoc.id, ...adminDoc.data() } as Admin);
+        setUserType('admin');
+        return;
+      }
+
       // Check if user is job hunter
       const jobHunterDoc = await getDoc(
         doc(db, COLLECTIONS.JOB_HUNTERS, userId)
@@ -145,6 +154,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Update display name
         await updateProfile(userCredential.user, {
           displayName: profileData.companyName,
+        });
+      } else if (userType === 'admin') {
+        const adminProfile = {
+          ...profileData,
+          email,
+          userType,
+          role: profileData.role || 'moderator',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        await setDoc(doc(db, COLLECTIONS.ADMINS, userId), adminProfile);
+
+        // Update display name
+        await updateProfile(userCredential.user, {
+          displayName: `${profileData.firstName} ${profileData.lastName}`,
         });
       }
 

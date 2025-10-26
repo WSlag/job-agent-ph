@@ -88,12 +88,13 @@ service cloud.firestore {
     match /applications/{applicationId} {
       // Job hunters can read their own applications
       // Agencies can read applications for their jobs
-      allow read: if isAuthenticated() && (
+      allow get: if isAuthenticated() && (
                     resource.data.jobHunterId == request.auth.uid ||
                     resource.data.agencyId == request.auth.uid
                   );
 
-      // Allow list queries for authenticated users to get their applications
+      // Allow list queries - Firestore will filter based on the query constraints
+      // This enables queries like where('jobHunterId', '==', userId)
       allow list: if isAuthenticated();
 
       // Only job hunters can create applications

@@ -16,11 +16,13 @@ export const COLLECTIONS = {
   USERS: 'users',
   JOB_HUNTERS: 'jobHunters',
   AGENCIES: 'agencies',
+  ADMINS: 'admins',
   JOBS: 'jobs',
   CONVERSATIONS: 'conversations',
   MESSAGES: 'messages', // subcollection under conversations
   APPLICATIONS: 'applications',
   SAVED_JOBS: 'savedJobs',
+  FEATURED_REQUESTS: 'featuredRequests',
 } as const;
 
 // Helper to get collection paths
@@ -28,6 +30,7 @@ export const getCollectionPath = {
   users: () => COLLECTIONS.USERS,
   jobHunters: () => COLLECTIONS.JOB_HUNTERS,
   agencies: () => COLLECTIONS.AGENCIES,
+  admins: () => COLLECTIONS.ADMINS,
   jobs: () => COLLECTIONS.JOBS,
   conversations: () => COLLECTIONS.CONVERSATIONS,
   messages: (conversationId: string) =>
@@ -35,6 +38,7 @@ export const getCollectionPath = {
   applications: () => COLLECTIONS.APPLICATIONS,
   savedJobs: (userId: string) =>
     `${COLLECTIONS.USERS}/${userId}/${COLLECTIONS.SAVED_JOBS}`,
+  featuredRequests: () => COLLECTIONS.FEATURED_REQUESTS,
 };
 
 // Firestore indexes needed (create in Firebase Console)
@@ -54,6 +58,13 @@ export const REQUIRED_INDEXES = [
     ],
   },
   {
+    collection: 'jobs',
+    fields: [
+      { field: 'isFeatured', order: 'DESCENDING' },
+      { field: 'featuredPriority', order: 'ASCENDING' },
+    ],
+  },
+  {
     collection: 'conversations',
     fields: [
       { field: 'jobHunterId', order: 'ASCENDING' },
@@ -65,6 +76,20 @@ export const REQUIRED_INDEXES = [
     fields: [
       { field: 'agencyId', order: 'ASCENDING' },
       { field: 'updatedAt', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'featuredRequests',
+    fields: [
+      { field: 'status', order: 'ASCENDING' },
+      { field: 'createdAt', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'featuredRequests',
+    fields: [
+      { field: 'agencyId', order: 'ASCENDING' },
+      { field: 'createdAt', order: 'DESCENDING' },
     ],
   },
 ];

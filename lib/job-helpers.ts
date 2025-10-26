@@ -81,6 +81,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     skills,
     postedAt: now,
     isActive: true,
+    isFeatured: false, // Default to not featured
   }
 
   // Only add optional fields if they have values (not undefined)
