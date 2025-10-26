@@ -69,6 +69,7 @@ export default function HeaderDesign1Enhanced({
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingApplications, setPendingApplications] = useState(0);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   // Use controlled or uncontrolled search input
   const searchQuery = searchValue !== undefined ? searchValue : internalSearchQuery;
@@ -315,12 +316,56 @@ export default function HeaderDesign1Enhanced({
 
               {/* User Avatar or Login */}
               {user ? (
-                <Link
-                  href="/profile"
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold hover:shadow-lg transition-shadow"
-                >
-                  {getUserInitial()}
-                </Link>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold hover:shadow-lg transition-shadow"
+                  >
+                    {getUserInitial()}
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {showUserDropdown && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowUserDropdown(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-20">
+                        {userType === 'admin' ? (
+                          <Link
+                            href="/admin/dashboard"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                            onClick={() => setShowUserDropdown(false)}
+                          >
+                            <LayoutDashboard className="inline w-4 h-4 mr-2" />
+                            Admin Dashboard
+                          </Link>
+                        ) : (
+                          <Link
+                            href="/profile"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                            onClick={() => setShowUserDropdown(false)}
+                          >
+                            <User className="inline w-4 h-4 mr-2" />
+                            Profile
+                          </Link>
+                        )}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <button
+                          onClick={() => {
+                            handleSignOut();
+                            setShowUserDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut className="inline w-4 h-4 mr-2" />
+                          Logout
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <>
                   {showNavigation && (

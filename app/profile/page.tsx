@@ -70,6 +70,12 @@ export default function ProfilePage() {
       return;
     }
 
+    // Redirect admin users to admin dashboard
+    if (currentUser && userType === 'admin') {
+      router.push('/admin/dashboard');
+      return;
+    }
+
     if (currentUser && userType) {
       loadProfile();
     }

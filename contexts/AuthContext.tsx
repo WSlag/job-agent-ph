@@ -88,6 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Profile not found - sign out the user to prevent issues
       console.error('User profile not found in database. User ID:', userId);
+      console.error('No profile document found in jobHunters, agencies, or admins collections.');
+      console.error('Please create a profile document in Firestore with this user ID.');
       await firebaseSignOut(auth);
       setUserProfile(null);
       setUserType(null);

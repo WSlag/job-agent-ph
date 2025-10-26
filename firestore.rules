@@ -44,10 +44,18 @@ service cloud.firestore {
       allow create: if isOwner(userId) &&
                       request.resource.data.keys().hasAll(['email', 'userType']) &&
                       validateEmail(request.resource.data.email) &&
-                      request.resource.data.userType in ['jobhunter', 'agency'];
+                      request.resource.data.userType in ['jobhunter', 'agency', 'admin'];
       allow update: if isOwner(userId) &&
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['email', 'userType', 'createdAt']);
       allow delete: if isOwner(userId);
+    }
+
+    // Admins collection
+    match /admins/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId); // Allow users to create their own admin profile
+      allow update: if isOwner(userId);
+      allow delete: if false;
     }
 
     // Job Hunters collection - extended profile
@@ -206,6 +214,36 @@ service cloud.firestore {
                         exists(/databases/$(database)/documents/jobs/$(jobId));
         allow delete: if isOwner(userId);
       }
+    }
+
+    // Featured Requests collection
+    match /featuredRequests/{requestId} {
+      // Admins can read all requests
+      // Agencies can read their own requests
+      allow read: if isAuthenticated();
+
+      // Only verified agencies can create featured requests
+      allow create: if isVerifiedAgency() &&
+                      request.resource.data.keys().hasAll([
+                        'jobId', 'agencyId', 'status',
+                        'paymentMethod', 'paymentReference',
+                        'paymentAmount', 'currency', 'createdAt', 'updatedAt'
+                      ]) &&
+                      request.resource.data.agencyId == request.auth.uid &&
+                      request.resource.data.status == 'pending' &&
+                      request.resource.data.paymentAmount > 0 &&
+                      request.resource.data.paymentMethod in ['gcash', 'paymaya', 'bank_transfer', 'paypal'] &&
+                      validateStringLength(request.resource.data.paymentReference, 1, 100) &&
+                      // Validate job exists and belongs to agency
+                      exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)) &&
+                      get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.agencyId == request.auth.uid;
+
+      // Agencies can update their own pending requests
+      // Admins can update any request (approve/reject)
+      allow update: if isAuthenticated();
+
+      // No deletion of featured requests
+      allow delete: if false;
     }
 
     // Deny all other access

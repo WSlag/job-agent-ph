@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -75,14 +76,17 @@ export default function AdminSidebar() {
         <div className="flex flex-col h-full">
           {/* Logo/Header */}
           <div className="p-6 border-b border-gray-800">
-            <Link href="/admin/dashboard" className="flex items-center gap-3">
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <LayoutDashboard size={24} />
+            <Link href="/" className="flex flex-col items-center gap-2 group">
+              <div className="relative w-full h-12 transition-opacity group-hover:opacity-80">
+                <Image
+                  src="/job.agent.ph.png"
+                  alt="Job Agent PH"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
-              <div>
-                <h1 className="text-lg font-bold">Job Agent PH</h1>
-                <p className="text-xs text-gray-400">Admin Panel</p>
-              </div>
+              <p className="text-xs text-gray-400 text-center">Admin Panel</p>
             </Link>
           </div>
 
