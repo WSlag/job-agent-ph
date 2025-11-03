@@ -5,8 +5,6 @@ import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp } from 'lucid
 import Logo from '@/components/ui/Logo';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, query, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 /**
  * LANDING NAV 3 ENHANCED: Beautiful App-Style Navigation
@@ -23,29 +21,24 @@ import { db } from '@/lib/firebase';
 export default function LandingNav3Enhanced() {
   const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [savedJobsCount, setSavedJobsCount] = useState(0);
+  const [showSearchBar, setShowSearchBar] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      loadSavedJobsCount();
-    } else {
-      setSavedJobsCount(0);
-    }
-  }, [user]);
+    const handleScroll = () => {
+      // Only show search bar on scroll for mobile devices (screen width < 768px)
+      const isMobile = window.innerWidth < 768;
+      setShowSearchBar(isMobile && window.scrollY > 50);
+    };
 
-  const loadSavedJobsCount = async () => {
-    if (!user) return;
-
-    try {
-      const savedJobsRef = collection(db, 'savedJobs', user.uid, 'jobs');
-      const savedJobsSnapshot = await getDocs(query(savedJobsRef));
-      setSavedJobsCount(savedJobsSnapshot.size);
-    } catch (error) {
-      console.error('Error loading saved jobs count:', error);
-    }
-  };
+    handleScroll(); // Check on mount
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,29 +82,6 @@ export default function LandingNav3Enhanced() {
 
             {/* Quick Action Icons */}
             <div className="flex items-center gap-2">
-              {/* Search - Mobile */}
-              <button
-                onClick={() => setShowSearch(!showSearch)}
-                className="md:hidden p-2 hover:bg-blue-50 rounded-xl transition-colors group"
-                aria-label="Search"
-              >
-                <Search className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
-              </button>
-
-              {/* Saved Jobs */}
-              <Link
-                href="/saved-jobs"
-                className="relative p-2 hover:bg-red-50 rounded-xl transition-colors group"
-                aria-label="Saved Jobs"
-              >
-                <Heart className="w-5 h-5 text-gray-600 group-hover:text-red-500 group-hover:fill-red-100 transition-all" />
-                {savedJobsCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold shadow-lg">
-                    {savedJobsCount}
-                  </span>
-                )}
-              </Link>
-
               {/* Notifications */}
               <Link
                 href="/notifications"
@@ -145,73 +115,69 @@ export default function LandingNav3Enhanced() {
               </button>
             </div>
           </div>
-
-          {/* Mobile Search Bar - Expandable */}
-          {showSearch && (
-            <div className="md:hidden pb-3 animate-fadeIn">
-              <form onSubmit={handleSearch} className="relative group">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Search jobs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent focus:bg-white transition-all text-sm"
-                  autoFocus
-                />
-              </form>
-            </div>
-          )}
         </div>
       </nav>
 
-      {/* Beautiful Category Pills Navigation */}
-      <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b border-gray-100 shadow-sm">
+      {/* Category Pills Navigation / Search Bar */}
+      <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
-          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide py-2 sm:py-3">
-            <Link
-              href="/jobs?location=remote"
-              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border border-blue-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              <span className="text-[11px] sm:text-sm">🌏</span>
-              <span>Remote</span>
-            </Link>
-            <Link
-              href="/jobs?type=full-time"
-              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-            >
-              <span className="text-[11px] sm:text-sm">💼</span>
-              <span>Full</span>
-            </Link>
-            <Link
-              href="/jobs?location=dubai"
-              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-orange-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-            >
-              <span className="text-[11px] sm:text-sm">🇦🇪</span>
-              <span>Dub</span>
-            </Link>
-            <Link
-              href="/jobs?location=singapore"
-              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 hover:text-red-700 border border-gray-200 hover:border-red-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-            >
-              <span className="text-[11px] sm:text-sm">🇸🇬</span>
-              <span>Sing</span>
-            </Link>
-            <Link
-              href="/jobs?featured=true"
-              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border border-yellow-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              <Sparkles className="w-2 h-2 sm:w-3 sm:h-3" />
-              <span>Feat</span>
-            </Link>
-            <Link
-              href="/jobs?salary=high"
-              className="flex items-center gap-0.5 sm:gap-1.5 px-2 sm:px-4 py-0.5 sm:py-2 bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300 rounded-full text-[10px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-            >
-              <span className="text-[11px] sm:text-sm">💰</span>
-              <span>High</span>
-            </Link>
-          </div>
+          {showSearchBar ? (
+            /* Search Bar on Scroll */
+            <div className="py-3 animate-fadeIn">
+              <Link href="/search" className="block">
+                <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all shadow-sm hover:shadow-md max-w-2xl mx-auto">
+                  <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-400 text-sm flex-1">Job title, skills</span>
+                </div>
+              </Link>
+            </div>
+          ) : (
+            /* Category Pills */
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 snap-x snap-mandatory animate-fadeIn">
+              <Link
+                href="/jobs?location=remote"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border border-blue-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+              >
+                <span className="text-base leading-none">🌏</span>
+                <span className="leading-none">Remote</span>
+              </Link>
+              <Link
+                href="/jobs?type=full-time"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+              >
+                <span className="text-base leading-none">💼</span>
+                <span className="leading-none">Full</span>
+              </Link>
+              <Link
+                href="/jobs?location=dubai"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-orange-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+              >
+                <span className="text-base leading-none">🇦🇪</span>
+                <span className="leading-none">Dubai</span>
+              </Link>
+              <Link
+                href="/jobs?location=singapore"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 hover:text-red-700 border border-gray-200 hover:border-red-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+              >
+                <span className="text-base leading-none">🇸🇬</span>
+                <span className="leading-none">Singapore</span>
+              </Link>
+              <Link
+                href="/jobs?featured=true"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border border-yellow-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+              >
+                <span className="text-base leading-none">✨</span>
+                <span className="leading-none">Featured</span>
+              </Link>
+              <Link
+                href="/jobs?salary=high"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+              >
+                <span className="text-base leading-none">💰</span>
+                <span className="leading-none">High Salary</span>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 

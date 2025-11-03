@@ -9,7 +9,7 @@ interface LogoProps {
 
 export default function Logo({ className = '', size = 'md', showText = true }: LogoProps) {
   const sizes = {
-    sm: { height: 28, width: 112 },   // Smaller for header - better mobile fit
+    sm: { height: 18, width: 70 },    // Smaller for header - compact size
     md: { height: 50, width: 200 },   // Medium for footer
     lg: { height: 60, width: 240 },   // Large for hero sections
   };
@@ -18,9 +18,9 @@ export default function Logo({ className = '', size = 'md', showText = true }: L
 
   // Responsive classes based on size
   const responsiveClasses = {
-    sm: 'h-5 w-auto md:h-7',     // Mobile: 20px, Desktop: 28px
-    md: 'h-10 w-auto md:h-12',   // Mobile: 40px, Desktop: 48px
-    lg: 'h-12 w-auto md:h-14',   // Mobile: 48px, Desktop: 56px
+    sm: 'h-5 w-auto',                // Mobile: 20px height
+    md: 'h-10 w-auto md:h-12',       // Mobile: 40px, Desktop: 48px
+    lg: 'h-12 w-auto md:h-14',       // Mobile: 48px, Desktop: 56px
   };
 
   return (
