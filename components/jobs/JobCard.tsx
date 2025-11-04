@@ -149,7 +149,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         <div className="absolute top-3 right-3">
           <span className="bg-white/95 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">
             <Clock size={12} className="hidden sm:inline" />
-            {getTimeAgo(job.postedAt?.toDate ? job.postedAt.toDate() : new Date(job.postedAt))} ago
+            {getTimeAgo(job.postedAt instanceof Date ? job.postedAt : (job.postedAt as any)?.toDate?.() || new Date())} ago
           </span>
         </div>
       </div>

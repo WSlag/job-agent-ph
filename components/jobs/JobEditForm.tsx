@@ -81,7 +81,7 @@ export default function JobEditForm({ job }: JobEditFormProps) {
     expiresAt: job.expiresAt ? (() => {
       try {
         // Handle Firebase Timestamp or Date object
-        const date = job.expiresAt.toDate ? job.expiresAt.toDate() : new Date(job.expiresAt);
+        const date = job.expiresAt instanceof Date ? job.expiresAt : (job.expiresAt as any)?.toDate?.() || new Date(job.expiresAt);
         return date.toISOString().split('T')[0];
       } catch {
         return '';

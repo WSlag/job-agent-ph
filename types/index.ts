@@ -67,6 +67,17 @@ export interface Job {
   featuredPriority?: number; // 1-5, determines carousel order (1 = first)
   featuredRequestId?: string; // Links to FeaturedJobRequest
   featuredAt?: Date; // When job was featured
+  // Enhanced job details fields
+  contractDuration?: string; // e.g., "2 years", "6 months"
+  vacancies?: number; // Number of open positions
+  requirements?: string[]; // Array of job requirements
+  benefits?: string[]; // Array of benefits offered
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  viewCount?: number; // Cached view count for performance
+  applicationCount?: number; // Cached application count
 }
 
 // Message Types
@@ -155,4 +166,54 @@ export interface FeaturedJobRequest {
 export interface FeaturedJobRequestWithDetails extends FeaturedJobRequest {
   job?: Job;
   agency?: Agency;
+}
+
+// Job View Types (for analytics)
+export interface JobView {
+  id: string;
+  jobId: string;
+  userId?: string | null;
+  viewedAt: Date;
+  userAgent?: string;
+  source?: string; // 'search', 'similar', 'direct', 'featured'
+}
+
+// Agency Stats Types
+export interface AgencyStats {
+  agencyId: string;
+  totalJobs: number;
+  activeJobs: number;
+  totalApplications: number;
+  totalHired: number;
+  averageResponseTime: number; // in hours
+  rating: number; // 1-5
+  reviewCount: number;
+  lastUpdated: Date;
+}
+
+export interface AgencyStatsData {
+  rating: number;
+  reviewCount: number;
+  responseTime: string; // formatted string like "2 hours"
+  totalPlacements: string; // formatted string like "1,500+"
+  verificationBadge: boolean;
+}
+
+// Agency Review Types
+export interface AgencyReview {
+  id: string;
+  agencyId: string;
+  jobHunterId: string;
+  rating: number; // 1-5
+  comment?: string;
+  createdAt: Date;
+  jobId?: string;
+  verified: boolean; // Only from actually hired candidates
+}
+
+// Job Match Types
+export interface JobMatch {
+  percentage: number;
+  matchingSkills: string[];
+  missingSkills: string[];
 }

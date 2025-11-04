@@ -23,6 +23,9 @@ export const COLLECTIONS = {
   APPLICATIONS: 'applications',
   SAVED_JOBS: 'savedJobs',
   FEATURED_REQUESTS: 'featuredRequests',
+  JOB_VIEWS: 'jobViews', // For analytics
+  AGENCY_STATS: 'agencyStats', // Cached agency statistics
+  AGENCY_REVIEWS: 'agencyReviews', // Agency ratings and reviews
 } as const;
 
 // Helper to get collection paths
@@ -39,6 +42,9 @@ export const getCollectionPath = {
   savedJobs: (userId: string) =>
     `${COLLECTIONS.USERS}/${userId}/${COLLECTIONS.SAVED_JOBS}`,
   featuredRequests: () => COLLECTIONS.FEATURED_REQUESTS,
+  jobViews: () => COLLECTIONS.JOB_VIEWS,
+  agencyStats: () => COLLECTIONS.AGENCY_STATS,
+  agencyReviews: () => COLLECTIONS.AGENCY_REVIEWS,
 };
 
 // Firestore indexes needed (create in Firebase Console)

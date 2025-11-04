@@ -165,7 +165,9 @@ export default function ConversationPage() {
       : `${conversationDetails?.jobHunter?.firstName} ${conversationDetails?.jobHunter?.lastName}`;
 
   const groupedMessages = groupMessagesByDate();
-  const templates = userType ? messageTemplates[userType] : [];
+  const templates = userType && (userType === 'jobhunter' || userType === 'agency')
+    ? messageTemplates[userType]
+    : [];
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 flex flex-col">

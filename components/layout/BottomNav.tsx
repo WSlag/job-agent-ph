@@ -9,8 +9,8 @@ export default function BottomNav() {
   const pathname = usePathname()
   const { user, userType } = useAuth()
 
-  // Don't show bottom nav on auth pages
-  if (pathname.startsWith('/auth')) {
+  // Don't show bottom nav on auth pages or job details pages
+  if (pathname.startsWith('/auth') || pathname.match(/^\/jobs\/[^\/]+$/)) {
     return null
   }
 

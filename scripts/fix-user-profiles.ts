@@ -38,7 +38,7 @@ async function fixUserProfiles() {
         // Check if profile exists in jobHunters collection
         const jobHunterDoc = await db.collection('jobHunters').doc(userId).get();
 
-        if (!jobHunterDoc.exists()) {
+        if (!jobHunterDoc.exists) {
           console.log(`  ❌ Missing jobHunter profile for ${userData.email}`);
           console.log(`  Creating jobHunter profile...`);
 
@@ -65,7 +65,7 @@ async function fixUserProfiles() {
         // Check if profile exists in agencies collection
         const agencyDoc = await db.collection('agencies').doc(userId).get();
 
-        if (!agencyDoc.exists()) {
+        if (!agencyDoc.exists) {
           console.log(`  ❌ Missing agency profile for ${userData.email}`);
           console.log(`  Creating agency profile...`);
 

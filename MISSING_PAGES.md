@@ -1,8 +1,9 @@
 # Missing Pages & Implementation Plan - Job Agent PH
 
 **Last Updated:** January 2025
-**Application Status:** ~75% Complete (29 existing pages)
+**Application Status:** ~75% Complete (29 existing pages, 1 page being enhanced)
 **Missing Pages:** 22 pages across different priority levels
+**Active Enhancements:** Job Details page (/jobs/[id])
 
 ---
 
@@ -53,11 +54,38 @@ This document outlines the missing pages/screens needed to complete the Job Agen
 ### Public Pages (7 pages)
 - `/` - Homepage with hero carousel
 - `/jobs` - Browse/search jobs
-- `/jobs/[id]` - Job detail page
+- `/jobs/[id]` - Job detail page ✅ **BEING ENHANCED** (see below)
 - `/about` - About the platform
 - `/contact` - Contact form
 - `/privacy` - Privacy policy
 - `/companies` - Browse agencies
+
+#### `/jobs/[id]` - Job Details Page Enhancement 🔄
+**Status:** ✅ Basic page exists, 🔄 Enhancements in progress
+**Current Features:** Basic job info, apply/save/share buttons, application modal
+**Missing Features (10 enhancements):**
+1. ⭐ **Match Badge** - Skill matching percentage for job hunters
+2. 📊 **Enhanced Overview** - Add contract duration, vacancies, application count
+3. ✅ **Requirements Section** - Structured list with user matching highlights
+4. 🎁 **Benefits Section** - Icon-based benefits list
+5. 🏢 **Agency Info Card** - Logo, rating, stats, profile link
+6. 🗺️ **Location Map** - Interactive map with geocoding (React-Leaflet)
+7. 🔄 **Similar Jobs Carousel** - 4-6 related jobs horizontal scroll
+8. 📌 **Sticky Action Buttons** - Fixed bottom bar on mobile
+9. ⬆️ **Scroll-to-Top Button** - Floating button after scroll
+10. 📖 **Expandable Description** - Read More/Less for long text
+
+**Backend Requirements:**
+- New Firestore collections: `jobViews`, `agencyStats`, `agencyReviews`
+- Updated `jobs` collection: 6 new optional fields (contractDuration, vacancies, requirements, benefits, coordinates, counts)
+- 8 new Firestore composite indexes for efficient queries
+- Secure Firestore rules for all collections
+- 4 new helper files: placeholder-data, job-view-helpers, agency-helpers, updated job-helpers
+- 7 new UI components
+
+**Estimated Effort:** 16-23 hours
+**Priority:** HIGH (completes core user experience)
+**Dependencies:** react-leaflet, leaflet
 
 ### Job Hunter Pages (3 pages)
 - `/profile` - View/edit profile

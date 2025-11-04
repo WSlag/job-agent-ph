@@ -73,7 +73,8 @@ service cloud.firestore {
 
     // Agencies collection - company info
     match /agencies/{userId} {
-      allow read: if isAuthenticated();
+      // Allow public read access so anyone can view agency profiles
+      allow read: if true;
       allow create: if isOwner(userId) &&
                       request.resource.data.keys().hasAll(['email', 'userType']) &&
                       validateEmail(request.resource.data.email) &&
@@ -85,11 +86,37 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    // Jobs collection
+    // Jobs collection - SECURE RULES
     match /jobs/{jobId} {
-      // TEMPORARY: Wide open for debugging - MUST RESTRICT LATER
-      allow read: if true; // Allow public read for development
-      allow write: if isAuthenticated();
+      // Public read access for browsing jobs
+      allow read: if true;
+
+      // Only agencies can create jobs
+      allow create: if isAgency() &&
+                      request.resource.data.keys().hasAll([
+                        'agencyId', 'title', 'description', 'companyName',
+                        'location', 'country', 'locationType', 'jobType',
+                        'currency', 'experienceRequired', 'skills',
+                        'postedAt', 'isActive'
+                      ]) &&
+                      request.resource.data.agencyId == request.auth.uid &&
+                      validateStringLength(request.resource.data.title, 5, 200) &&
+                      validateStringLength(request.resource.data.description, 50, 10000) &&
+                      request.resource.data.skills is list &&
+                      request.resource.data.skills.size() <= 50 &&
+                      request.resource.data.experienceRequired >= 0 &&
+                      request.resource.data.experienceRequired <= 50 &&
+                      request.resource.data.postedAt is timestamp;
+
+      // Only job owner can update
+      allow update: if isAgency() &&
+                      resource.data.agencyId == request.auth.uid &&
+                      // Cannot change owner
+                      request.resource.data.agencyId == resource.data.agencyId;
+
+      // Only job owner can delete
+      allow delete: if isAgency() &&
+                      resource.data.agencyId == request.auth.uid;
     }
 
     // Applications collection
@@ -243,6 +270,54 @@ service cloud.firestore {
       allow update: if isAuthenticated();
 
       // No deletion of featured requests
+      allow delete: if false;
+    }
+
+    // Job Views collection (for analytics)
+    match /jobViews/{viewId} {
+      // Anyone can read view counts (aggregated)
+      allow read: if true;
+
+      // Anyone can create a view (track anonymous and authenticated views)
+      allow create: if request.resource.data.keys().hasAll(['jobId', 'viewedAt']) &&
+                      request.resource.data.viewedAt is timestamp &&
+                      exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)) &&
+                      // If userId field exists, it must match authenticated user
+                      (!request.resource.data.keys().hasAny(['userId']) ||
+                       request.resource.data.userId == null ||
+                       (isAuthenticated() && request.resource.data.userId == request.auth.uid));
+
+      // No updates or deletes
+      allow update, delete: if false;
+    }
+
+    // Agency Stats collection (cached aggregations)
+    match /agencyStats/{agencyId} {
+      // Anyone can read stats
+      allow read: if true;
+
+      // Only the agency or system can write
+      allow write: if isOwner(agencyId) || isAgency();
+    }
+
+    // Agency Reviews collection (future)
+    match /agencyReviews/{reviewId} {
+      // Anyone can read reviews
+      allow read: if true;
+
+      // Only job hunters who were hired can create reviews
+      allow create: if isJobHunter() &&
+                      request.resource.data.keys().hasAll(['agencyId', 'jobHunterId', 'rating', 'createdAt']) &&
+                      request.resource.data.jobHunterId == request.auth.uid &&
+                      request.resource.data.rating >= 1 &&
+                      request.resource.data.rating <= 5 &&
+                      request.resource.data.createdAt is timestamp;
+
+      // Only owner can update their review
+      allow update: if isAuthenticated() &&
+                      resource.data.jobHunterId == request.auth.uid;
+
+      // No deletes
       allow delete: if false;
     }
 

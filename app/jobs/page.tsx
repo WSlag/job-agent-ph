@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import JobList from '@/components/jobs/JobList';
 import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
-import { Search, Filter, MapPin, Briefcase, DollarSign } from 'lucide-react';
+import { Search, Filter, MapPin, Briefcase, DollarSign, X } from 'lucide-react';
 import { getCategoryNames } from '@/lib/categories';
 
 const COUNTRIES = [
@@ -30,6 +30,7 @@ const JOB_TYPES = ['full-time', 'part-time', 'contract'];
 
 export default function JobsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +41,8 @@ export default function JobsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
   // Read category from URL params on mount
   useEffect(() => {
@@ -107,6 +110,8 @@ export default function JobsPage() {
 
   const handleSearch = () => {
     loadJobs();
+    setShowFilters(false); // Close filters after search to show results
+    setSearchPerformed(true); // Hide filter/search buttons after search
   };
 
   const handleLoadMore = () => {
@@ -136,21 +141,94 @@ export default function JobsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Enhanced Header with Integrated Search, Filters, and Search Button */}
-      <HeaderDesign1Enhanced
-        searchPlaceholder="Search jobs, companies, skills..."
-        showFiltersButton={true}
-        showSearchButton={true}
-        onFiltersClick={() => setShowFilters(!showFilters)}
-        onSearchButtonClick={handleSearch}
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        showNavigation={false}
-      />
+      {/* Desktop Header - Full Navigation */}
+      <div className="hidden md:block">
+        <HeaderDesign1Enhanced
+          searchPlaceholder="Search jobs, companies, skills..."
+          showFiltersButton={true}
+          showSearchButton={true}
+          onFiltersClick={() => setShowFilters(!showFilters)}
+          onSearchButtonClick={handleSearch}
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          showNavigation={false}
+        />
+      </div>
+
+      {/* Mobile Search Bar - Expandable & Sticky */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-4 py-3">
+          {!mobileSearchExpanded ? (
+            // Collapsed state - Shows placeholder button
+            <button
+              onClick={() => setMobileSearchExpanded(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-left active:bg-gray-100 transition-colors"
+            >
+              <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
+              <span className="text-gray-500">Job title, skills</span>
+            </button>
+          ) : (
+            // Expanded state - Shows actual input with close button
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setSearchPerformed(false); // Show buttons again when user starts typing
+                    }}
+                    placeholder="Job title, skills"
+                    autoFocus
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setMobileSearchExpanded(false);
+                    setSearchTerm('');
+                  }}
+                  className="p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close search"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Quick action buttons - Hidden after search is performed */}
+              {!searchPerformed && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                      showFilters
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="text-sm font-medium">Filters</span>
+                  </button>
+                  {searchTerm && (
+                    <button
+                      onClick={handleSearch}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      Search
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Filters Panel - Below Header */}
       {showFilters && (
-        <div className="fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md">
+        <div className="fixed top-[140px] md:top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-md">
           <div className="container mx-auto px-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Category Filter */}
@@ -233,7 +311,7 @@ export default function JobsPage() {
       )}
 
       {/* Jobs List */}
-      <div className={`container mx-auto px-4 py-8 ${showFilters ? 'mt-[200px] md:mt-[140px]' : 'mt-20'}`}>
+      <div className={`container mx-auto px-4 py-8 ${showFilters ? 'mt-[340px] md:mt-[140px]' : 'mt-[72px] md:mt-20'}`}>
         <div className="mb-6">
           <p className="text-gray-600">
             Showing {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}

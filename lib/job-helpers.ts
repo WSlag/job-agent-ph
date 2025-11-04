@@ -221,3 +221,71 @@ export function formatSalaryRange(
 
   return 'Negotiable'
 }
+
+/**
+ * Get similar jobs based on category, location, or country
+ * @param currentJobId The current job ID to exclude from results
+ * @param category Optional category to filter by
+ * @param country Optional country to filter by
+ * @param limit Maximum number of results (default 6)
+ * @returns Promise with array of similar jobs
+ */
+export async function getSimilarJobs(
+  currentJobId: string,
+  category?: string,
+  country?: string,
+  limit: number = 6
+): Promise<Job[]> {
+  const { collection, query, where, orderBy, getDocs, limit: firestoreLimit } = await import('firebase/firestore')
+  const { db } = await import('./firebase')
+  const { COLLECTIONS } = await import('./collections')
+
+  try {
+    let q
+
+    // Priority 1: Same category
+    if (category) {
+      q = query(
+        collection(db, COLLECTIONS.JOBS),
+        where('category', '==', category),
+        where('isActive', '==', true),
+        orderBy('postedAt', 'desc'),
+        firestoreLimit(limit + 5) // Fetch extra to filter out current job
+      )
+    }
+    // Priority 2: Same country
+    else if (country) {
+      q = query(
+        collection(db, COLLECTIONS.JOBS),
+        where('country', '==', country),
+        where('isActive', '==', true),
+        orderBy('postedAt', 'desc'),
+        firestoreLimit(limit + 5)
+      )
+    }
+    // Fallback: Just get recent active jobs
+    else {
+      q = query(
+        collection(db, COLLECTIONS.JOBS),
+        where('isActive', '==', true),
+        orderBy('postedAt', 'desc'),
+        firestoreLimit(limit + 5)
+      )
+    }
+
+    const snapshot = await getDocs(q)
+    const jobs = snapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        postedAt: doc.data().postedAt?.toDate() || new Date(),
+      }))
+      .filter(job => job.id !== currentJobId) // Exclude current job
+      .slice(0, limit) as Job[]
+
+    return jobs
+  } catch (error) {
+    console.error('Error fetching similar jobs:', error)
+    return []
+  }
+}
