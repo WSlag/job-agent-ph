@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, limit, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -98,12 +99,14 @@ export default function Home() {
     }
   };
 
+  const router = useRouter();
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (searchQuery) params.append('q', searchQuery);
     if (location) params.append('location', location);
-    window.location.href = `/jobs${params.toString() ? '?' + params.toString() : ''}`;
+    router.push(`/jobs${params.toString() ? '?' + params.toString() : ''}`);
   };
 
   const loadSavedJobs = async () => {
@@ -122,7 +125,7 @@ export default function Home() {
   const handleSave = async (jobId: string) => {
     if (!user) {
       alert('Please log in to save jobs');
-      window.location.href = '/auth/login';
+      router.push('/auth/login');
       return;
     }
 
@@ -553,7 +556,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
-                href="/auth/register"
+                href="/auth/signup"
                 className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl inline-flex items-center justify-center gap-2"
               >
                 Create Free Account
@@ -588,7 +591,7 @@ export default function Home() {
               <h3 className="text-gray-900 font-semibold mb-4">For Job Seekers</h3>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/jobs" className="text-gray-600 hover:text-blue-600 transition-colors">Browse Jobs</Link></li>
-                <li><Link href="/auth/register" className="text-gray-600 hover:text-blue-600 transition-colors">Create Account</Link></li>
+                <li><Link href="/auth/signup" className="text-gray-600 hover:text-blue-600 transition-colors">Create Account</Link></li>
                 <li><Link href="/profile" className="text-gray-600 hover:text-blue-600 transition-colors">My Profile</Link></li>
               </ul>
             </div>

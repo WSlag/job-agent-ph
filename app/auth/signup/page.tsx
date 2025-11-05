@@ -96,7 +96,17 @@ function SignUpForm() {
       await signUp(email, password, userType, profileData);
       router.push(redirectUrl);
     } catch (err: any) {
-      setError(err.message || 'Failed to sign up');
+      const errorMessage = err.message || 'Failed to sign up';
+      setError(errorMessage);
+
+      // If email already in use, suggest login
+      if (errorMessage.includes('already registered')) {
+        setTimeout(() => {
+          if (confirm('This email is already registered. Would you like to go to the login page?')) {
+            router.push(`/auth/login?redirect=${redirectUrl}`);
+          }
+        }, 100);
+      }
     } finally {
       setLoading(false);
     }
@@ -158,7 +168,15 @@ function SignUpForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
+                <p>{error}</p>
+                {error.includes('already registered') && (
+                  <Link
+                    href={`/auth/login?redirect=${redirectUrl}`}
+                    className="inline-block mt-2 text-sm font-semibold text-red-800 hover:text-red-900 underline"
+                  >
+                    Go to Login Page →
+                  </Link>
+                )}
               </div>
             )}
 

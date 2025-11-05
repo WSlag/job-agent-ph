@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useState, useEffect } from 'react';
@@ -20,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function LandingNav3Enhanced() {
   const { user } = useAuth();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchBar, setShowSearchBar] = useState(false);
@@ -43,9 +45,9 @@ export default function LandingNav3Enhanced() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/jobs?q=${encodeURIComponent(searchQuery)}`;
+      router.push(`/jobs?q=${encodeURIComponent(searchQuery)}`);
     } else {
-      window.location.href = '/jobs';
+      router.push('/jobs');
     }
   };
 

@@ -213,7 +213,6 @@ export default function JobDetailsPage() {
         jobId: job!.id,
         jobHunterId: user.uid,
         agencyId: job!.agencyId,
-        jobTitle: job!.title,
         coverLetter: '', // Quick apply doesn't require cover letter
         resumeUrl: userProfile.resumeUrl,
       });

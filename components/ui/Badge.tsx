@@ -2,9 +2,10 @@ import React from 'react';
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'gold' | 'verified';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  icon?: React.ReactNode;
 }
 
 export default function Badge({
@@ -12,16 +13,19 @@ export default function Badge({
   variant = 'default',
   size = 'md',
   className = '',
+  icon,
 }: BadgeProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full';
+  const baseStyles = 'inline-flex items-center justify-center gap-1 font-medium rounded-full';
 
   const variantStyles = {
     default: 'bg-gray-100 text-gray-700',
-    primary: 'bg-blue-100 text-blue-700',
-    success: 'bg-green-100 text-green-700',
-    warning: 'bg-yellow-100 text-yellow-700',
-    danger: 'bg-red-100 text-red-700',
-    info: 'bg-purple-100 text-purple-700',
+    primary: 'bg-primary-100 text-primary-700',
+    success: 'bg-success-100 text-success-700',
+    warning: 'bg-warning-100 text-warning-700',
+    danger: 'bg-error-100 text-error-700',
+    info: 'bg-info-100 text-info-700',
+    gold: 'bg-gold-100 text-gold-800 border border-gold-400',
+    verified: 'bg-success-500 text-white shadow-sm',
   };
 
   const sizeStyles = {
@@ -32,6 +36,7 @@ export default function Badge({
 
   return (
     <span className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}>
+      {icon && <span className="flex items-center">{icon}</span>}
       {children}
     </span>
   );

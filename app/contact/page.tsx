@@ -263,12 +263,12 @@ export default function ContactPage() {
                 Check out our FAQ section for answers to common questions about job searching,
                 posting jobs, and using our platform.
               </p>
-              <a
+              <Link
                 href="/#faq"
                 className="text-blue-600 hover:text-blue-700 font-medium text-sm"
               >
                 View FAQ →
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -284,9 +284,9 @@ export default function ContactPage() {
               <p className="text-gray-600 text-sm mb-4">
                 Questions about finding jobs, creating applications, or managing your profile?
               </p>
-              <a href="/jobs" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+              <Link href="/jobs" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
                 Browse Jobs →
-              </a>
+              </Link>
             </Card>
 
             <Card className="p-6">
@@ -294,9 +294,9 @@ export default function ContactPage() {
               <p className="text-gray-600 text-sm mb-4">
                 Need help posting jobs, reviewing applications, or managing your agency account?
               </p>
-              <a href="/agency/dashboard" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+              <Link href="/agency/dashboard" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
                 Agency Dashboard →
-              </a>
+              </Link>
             </Card>
 
             <Card className="p-6">

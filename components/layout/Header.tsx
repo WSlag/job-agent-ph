@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, LogOut, Menu, X, MessageCircle, Briefcase, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -10,6 +11,7 @@ import { subscribeToJobHunterApplications } from '@/lib/application-helpers';
 
 export default function Header() {
   const { user, userType, signOut } = useAuth();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingApplications, setPendingApplications] = useState(0);
@@ -57,7 +59,7 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      window.location.href = '/jobs';
+      router.push('/jobs');
     } catch (error) {
       console.error('Sign out error:', error);
     }

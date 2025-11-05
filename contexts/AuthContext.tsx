@@ -177,7 +177,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loadUserProfile(userId);
     } catch (error: any) {
       console.error('Signup error:', error);
-      throw new Error(error.message || 'Failed to sign up');
+
+      // Provide user-friendly error messages
+      if (error.code === 'auth/email-already-in-use') {
+        throw new Error('This email is already registered. Please login instead.');
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('Invalid email address format.');
+      } else if (error.code === 'auth/weak-password') {
+        throw new Error('Password is too weak. Use at least 6 characters.');
+      } else if (error.code === 'auth/network-request-failed') {
+        throw new Error('Network error. Please check your internet connection.');
+      } else {
+        throw new Error(error.message || 'Failed to sign up. Please try again.');
+      }
     }
   };
 
@@ -186,7 +198,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
       console.error('Login error:', error);
-      throw new Error(error.message || 'Failed to sign in');
+
+      // Provide user-friendly error messages
+      if (error.code === 'auth/user-not-found') {
+        throw new Error('No account found with this email. Please sign up first.');
+      } else if (error.code === 'auth/wrong-password') {
+        throw new Error('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('Invalid email address format.');
+      } else if (error.code === 'auth/user-disabled') {
+        throw new Error('This account has been disabled. Contact support.');
+      } else if (error.code === 'auth/network-request-failed') {
+        throw new Error('Network error. Please check your internet connection.');
+      } else {
+        throw new Error(error.message || 'Failed to sign in. Please try again.');
+      }
     }
   };
 

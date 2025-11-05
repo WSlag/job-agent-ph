@@ -153,19 +153,19 @@ export default function AboutPage() {
             we're here to help you succeed.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+            <Link
               href="/jobs"
               className="inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
               <Briefcase className="w-5 h-5 mr-2" />
               Browse Jobs
-            </a>
-            <a
+            </Link>
+            <Link
               href="/contact"
               className="inline-flex items-center justify-center px-8 py-3 bg-white text-blue-600 border-2 border-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
             >
               Get in Touch
-            </a>
+            </Link>
           </div>
         </div>
       </Section>
