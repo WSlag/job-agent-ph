@@ -7,7 +7,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { updateJob } from '@/lib/job-helpers';
 import { Job } from '@/types';
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import JobEditForm from '@/components/jobs/JobEditForm';
@@ -65,20 +64,16 @@ export default function EditJobPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <HeaderDesign1Enhanced hideSearch />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <HeaderDesign1Enhanced hideSearch />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <p className="text-red-800 font-semibold mb-4">{error}</p>
             <Link
@@ -99,9 +94,8 @@ export default function EditJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <HeaderDesign1Enhanced hideSearch />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="mb-6">
           <Link
             href="/agency/dashboard"

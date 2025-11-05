@@ -12,7 +12,7 @@ import { Bookmark, MapPin, DollarSign, Clock, Trash2, ExternalLink } from 'lucid
 import { Job } from '@/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 
 export default function SavedJobsPage() {
   const { user: currentUser, userType, loading: authLoading } = useAuth();
@@ -50,37 +50,53 @@ export default function SavedJobsPage() {
       const jobIds = savedJobsSnapshot.docs.map(doc => doc.id);
 
       if (jobIds.length === 0) {
-        // Also check localStorage for migration
+        // Also check localStorage for migration (only if no jobs in Firestore)
         const localSavedJobs = localStorage.getItem('savedJobs');
         if (localSavedJobs) {
-          const localJobIds = JSON.parse(localSavedJobs);
-          // Migrate from localStorage to Firestore
-          for (const jobId of localJobIds) {
-            await setDoc(doc(db, 'savedJobs', currentUser.uid, 'jobs', jobId), {
-              savedAt: new Date(),
-            });
+          try {
+            const localJobIds = JSON.parse(localSavedJobs);
+            // Migrate from localStorage to Firestore
+            const migrationPromises = localJobIds.map((jobId: string) =>
+              setDoc(doc(db, 'savedJobs', currentUser.uid, 'jobs', jobId), {
+                savedAt: new Date(),
+              }).catch((err) => {
+                console.warn(`Failed to migrate job ${jobId}:`, err);
+              })
+            );
+            await Promise.all(migrationPromises);
+            localStorage.removeItem('savedJobs');
+            // Reload after migration
+            await loadSavedJobs();
+            return;
+          } catch (migrationError) {
+            console.error('Error migrating saved jobs from localStorage:', migrationError);
+            // Continue with empty list rather than failing completely
           }
-          localStorage.removeItem('savedJobs');
-          loadSavedJobs(); // Reload after migration
-        } else {
-          setSavedJobs([]);
-          setLoading(false);
         }
+        setSavedJobs([]);
+        setLoading(false);
         return;
       }
 
       // Fetch job details for each saved job
       const jobs: Job[] = [];
       for (const jobId of jobIds) {
-        const jobDoc = await getDoc(doc(db, 'jobs', jobId));
-        if (jobDoc.exists()) {
-          jobs.push({
-            id: jobDoc.id,
-            ...jobDoc.data(),
-          } as Job);
-        } else {
-          // Remove from saved jobs if job no longer exists
-          await deleteDoc(doc(db, 'savedJobs', currentUser.uid, 'jobs', jobId));
+        try {
+          const jobDoc = await getDoc(doc(db, 'jobs', jobId));
+          if (jobDoc.exists()) {
+            const jobData = jobDoc.data();
+            jobs.push({
+              id: jobDoc.id,
+              ...jobData,
+              // Ensure postedAt is a valid Date object
+              postedAt: jobData.postedAt?.toDate ? jobData.postedAt.toDate() : new Date(jobData.postedAt || Date.now()),
+            } as Job);
+          } else {
+            // Remove from saved jobs if job no longer exists
+            await deleteDoc(doc(db, 'savedJobs', currentUser.uid, 'jobs', jobId)).catch(() => {});
+          }
+        } catch (jobError) {
+          console.error(`Error fetching job ${jobId}:`, jobError);
         }
       }
 
@@ -142,10 +158,15 @@ export default function SavedJobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 pt-24">
-      <HeaderDesign1Enhanced hideSearch />
+    <div className="min-h-screen bg-gray-50">
+      <MobileNativeHeader
+        title="Saved Jobs"
+        onBack={() => router.back()}
+        hideOnScroll
+        showShadowOnScroll
+      />
 
-      <div className="container mx-auto px-4 max-w-6xl">
+      <div className="container mx-auto px-4 max-w-6xl pt-20 pb-8">
         <div className="mb-8">
           <div className="flex items-center gap-3">
             <Bookmark className="w-8 h-8 text-blue-600" />
@@ -225,7 +246,9 @@ export default function SavedJobsPage() {
                     </div>
 
                     <div className="text-xs text-gray-500">
-                      Posted {format(job.postedAt, 'MMM d, yyyy')}
+                      Posted {job.postedAt && !isNaN(new Date(job.postedAt).getTime())
+                        ? format(new Date(job.postedAt), 'MMM d, yyyy')
+                        : 'Recently'}
                     </div>
                   </div>
 

@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Geocode API: Processing query:', query);
 
+    // Create AbortController for timeout (more compatible than AbortSignal.timeout)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
       {
@@ -33,10 +37,11 @@ export async function GET(request: NextRequest) {
           // Respect Nominatim usage policy
           'Accept': 'application/json',
         },
-        // Add timeout to prevent hanging
-        signal: AbortSignal.timeout(10000), // 10 second timeout
+        signal: controller.signal,
       }
-    );
+    ).finally(() => {
+      clearTimeout(timeoutId);
+    });
 
     if (!response.ok) {
       console.error('Geocode API: Nominatim error:', response.status, response.statusText);

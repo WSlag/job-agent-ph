@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToJobHunterApplications } from '@/lib/application-helpers'
 import { JobApplication, ApplicationStatus } from '@/types'
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced'
 import ApplicationCard from '@/components/applications/ApplicationCard'
-import { Loader2, Briefcase, Filter } from 'lucide-react'
+import { Loader2, Briefcase, Filter, ArrowLeft } from 'lucide-react'
 
 export default function ApplicationsPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -51,11 +50,8 @@ export default function ApplicationsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <HeaderDesign1Enhanced hideSearch />
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-blue-600" size={48} />
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="animate-spin text-blue-600" size={48} />
       </div>
     )
   }
@@ -65,10 +61,16 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <HeaderDesign1Enhanced hideSearch />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4 pt-8">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
+        >
+          <ArrowLeft size={20} />
+          <span className="font-medium">Back</span>
+        </button>
 
-      <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Applications</h1>

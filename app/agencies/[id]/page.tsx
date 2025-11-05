@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { doc, getDoc, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/collections';
+import toast from 'react-hot-toast';
 import {
   Building2,
   Star,
@@ -19,6 +23,7 @@ import {
   CheckCircle2,
   Award,
   TrendingUp,
+  ArrowLeft,
 } from 'lucide-react';
 import { Badge, StatCard, StatCardGrid, Timeline } from '@/components/ui';
 import { Job } from '@/types';
@@ -53,36 +58,112 @@ interface Agency {
  */
 export default function AgencyProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
+  const [agency, setAgency] = useState<Agency | null>(null);
+  const [activeJobs, setActiveJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - in production, fetch from Firestore
-  const agency: Agency = {
-    id: params.id as string,
-    name: 'Global Manpower Services Inc.',
-    description:
-      'Leading recruitment agency specializing in healthcare and hospitality placements to the Middle East. With over 15 years of experience, we have successfully placed thousands of Filipino professionals in top international companies.',
-    rating: 4.8,
-    reviewCount: 342,
-    isDMWVerified: true,
-    isPOEALicensed: true,
-    responseTime: '2-4 hours',
-    placementsCount: 5420,
-    yearsEstablished: 15,
-    address: 'Makati City, Metro Manila',
-    phone: '+63 2 8888 9999',
-    email: 'info@globalmps.ph',
-    website: 'www.globalmps.ph',
-    specializations: ['Healthcare', 'Hospitality', 'Engineering', 'IT'],
-    certifications: [
-      'POEA Licensed (2024-2026)',
-      'DMW Verified',
-      'ISO 9001:2015 Certified',
-      'PhilHealth Accredited',
-    ],
-    activeJobs: 45,
-  };
+  useEffect(() => {
+    const loadAgencyData = async () => {
+      try {
+        setLoading(true);
+        const agencyId = params.id as string;
 
-  const activeJobs: Job[] = []; // Would load from Firestore
+        // Fetch agency profile from Firestore
+        const agencyDoc = await getDoc(doc(db, COLLECTIONS.USERS, agencyId));
+
+        if (!agencyDoc.exists()) {
+          setError('Agency not found');
+          return;
+        }
+
+        const agencyData = agencyDoc.data();
+
+        // Check if this is actually an agency
+        if (agencyData.userType !== 'agency') {
+          setError('This is not an agency profile');
+          return;
+        }
+
+        // Map Firestore data to Agency interface
+        setAgency({
+          id: agencyDoc.id,
+          name: agencyData.companyName || 'Unknown Agency',
+          description: agencyData.description || 'No description available',
+          rating: agencyData.rating || 0,
+          reviewCount: agencyData.reviewCount || 0,
+          isDMWVerified: agencyData.isDMWVerified ?? false,
+          isPOEALicensed: agencyData.isPOEALicensed ?? false,
+          responseTime: agencyData.responseTime || 'Not available',
+          placementsCount: agencyData.placementsCount || 0,
+          yearsEstablished: agencyData.yearsEstablished || new Date().getFullYear() - (agencyData.createdAt?.toDate()?.getFullYear() || new Date().getFullYear()),
+          address: agencyData.address || agencyData.location || 'Not specified',
+          phone: agencyData.phone || 'Not available',
+          email: agencyData.email || '',
+          website: agencyData.website,
+          specializations: agencyData.specializations || [],
+          certifications: agencyData.certifications || [],
+          activeJobs: 0, // Will be updated from jobs query
+          logo: agencyData.logoUrl,
+          coverImage: agencyData.coverImage,
+        });
+
+        // Fetch active jobs posted by this agency
+        const jobsQuery = query(
+          collection(db, COLLECTIONS.JOBS),
+          where('agencyId', '==', agencyId),
+          where('status', '==', 'open'),
+          firestoreLimit(10)
+        );
+
+        const jobsSnapshot = await getDocs(jobsQuery);
+        const jobs: Job[] = jobsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        } as Job));
+
+        setActiveJobs(jobs);
+
+        // Update agency active jobs count
+        if (agency) {
+          setAgency({ ...agency, activeJobs: jobs.length });
+        }
+
+      } catch (err) {
+        console.error('Error loading agency data:', err);
+        setError('Failed to load agency information');
+        toast.error('Failed to load agency information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAgencyData();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !agency) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{error || 'Agency not found'}</h2>
+          <p className="text-gray-600 mb-4">The agency you're looking for doesn't exist or has been removed.</p>
+          <Link href="/companies" className="text-blue-600 hover:text-blue-700 font-medium">
+            Browse all agencies
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const deploymentTimeline = [
     {
@@ -124,6 +205,19 @@ export default function AgencyProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Back Button */}
+      <div className="bg-white border-b sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span className="font-medium">Back</span>
+          </button>
+        </div>
+      </div>
+
       {/* Cover Image */}
       <div className="relative h-64 bg-gradient-to-br from-primary-600 to-purple-600 overflow-hidden">
         {agency.coverImage ? (

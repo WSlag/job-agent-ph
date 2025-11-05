@@ -362,7 +362,7 @@ export default function JobDetailsPage() {
         <div className="flex items-center justify-between px-4 py-3">
           {/* Back Button */}
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/jobs')}
             className="flex items-center gap-1 text-gray-700 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft size={20} />
@@ -427,7 +427,7 @@ export default function JobDetailsPage() {
         <motion.button
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          onClick={() => router.back()}
+          onClick={() => router.push('/jobs')}
           className="hidden md:flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <ArrowLeft size={20} />

@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { getAgencyJobs } from '@/lib/job-helpers'
 import { getAgencyApplications } from '@/lib/application-helpers'
 import { Job, JobApplication } from '@/types'
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced'
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader'
 import JobCard from '@/components/jobs/JobCard'
 import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit, Star } from 'lucide-react'
 import Link from 'next/link'
@@ -55,9 +55,9 @@ export default function AgencyDashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <HeaderDesign1Enhanced hideSearch />
-        <div className="flex items-center justify-center py-20">
+      <div className="min-h-screen bg-gray-50">
+        <MobileNativeHeader title="Dashboard" />
+        <div className="flex items-center justify-center py-20 pt-24">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
       </div>
@@ -70,10 +70,14 @@ export default function AgencyDashboardPage() {
   const hiredCandidates = applications.filter(app => app.status === 'hired').length
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <HeaderDesign1Enhanced hideSearch />
+    <div className="min-h-screen bg-gray-50">
+      <MobileNativeHeader
+        title="Dashboard"
+        hideOnScroll
+        showShadowOnScroll
+      />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-20 pb-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Agency Dashboard</h1>

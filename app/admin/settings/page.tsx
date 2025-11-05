@@ -7,6 +7,9 @@ import { Settings, Save, Bell, Mail, Shield, Database, Globe } from 'lucide-reac
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import toast from 'react-hot-toast';
 
 export default function AdminSettingsPage() {
   const { user, userType } = useAuth();
@@ -40,20 +43,60 @@ export default function AdminSettingsPage() {
       return;
     }
 
-    // TODO: Load settings from Firestore
+    // Load settings from Firestore
+    const loadSettings = async () => {
+      try {
+        const settingsDoc = await getDoc(doc(db, 'settings', 'platform'));
+        if (settingsDoc.exists()) {
+          const data = settingsDoc.data();
+          setSiteName(data.siteName || 'Job Agent PH');
+          setSiteDescription(data.siteDescription || '');
+          setContactEmail(data.contactEmail || '');
+          setEmailNotifications(data.emailNotifications ?? true);
+          setApplicationNotifications(data.applicationNotifications ?? true);
+          setJobPostNotifications(data.jobPostNotifications ?? true);
+          setRequireEmailVerification(data.requireEmailVerification ?? true);
+          setRequireAgencyVerification(data.requireAgencyVerification ?? true);
+          setMaxLoginAttempts(data.maxLoginAttempts || 5);
+          setEnableChat(data.enableChat ?? true);
+          setEnableAIAssistant(data.enableAIAssistant ?? true);
+          setMaintenanceMode(data.maintenanceMode ?? false);
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        toast.error('Failed to load settings');
+      }
+    };
+
+    loadSettings();
   }, [user, userType, router]);
 
   const handleSave = async () => {
     setSaving(true);
 
     try {
-      // TODO: Save settings to Firestore
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
+      // Save settings to Firestore
+      await setDoc(doc(db, 'settings', 'platform'), {
+        siteName,
+        siteDescription,
+        contactEmail,
+        emailNotifications,
+        applicationNotifications,
+        jobPostNotifications,
+        requireEmailVerification,
+        requireAgencyVerification,
+        maxLoginAttempts,
+        enableChat,
+        enableAIAssistant,
+        maintenanceMode,
+        updatedAt: new Date(),
+        updatedBy: user?.uid,
+      });
 
-      alert('Settings saved successfully!');
+      toast.success('Settings saved successfully!');
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('Failed to save settings. Please try again.');
+      toast.error('Failed to save settings. Please try again.');
     } finally {
       setSaving(false);
     }

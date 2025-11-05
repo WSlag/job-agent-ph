@@ -301,18 +301,6 @@ export default function HeaderDesign1Enhanced({
                 </button>
               )}
 
-              {/* Messages Icon - Mobile (for authenticated users) */}
-              {user && (
-                <Link
-                  href="/messages"
-                  className="md:hidden relative p-2 hover:bg-white/50 rounded-full transition-colors"
-                >
-                  <MessageCircle className="w-5 h-5 text-gray-700" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-gradient-to-r from-red-500 to-red-600 rounded-full border-2 border-white animate-pulse"></span>
-                  )}
-                </Link>
-              )}
 
               {/* User Avatar or Login */}
               {user ? (

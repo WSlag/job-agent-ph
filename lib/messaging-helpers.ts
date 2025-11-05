@@ -80,13 +80,10 @@ export async function sendMessage(
     );
 
     const newMessage = {
-      conversationId,
       senderId,
-      senderType,
       content,
-      attachments: attachments || [],
+      timestamp: serverTimestamp(),
       read: false,
-      createdAt: serverTimestamp(),
     };
 
     const docRef = await addDoc(messagesRef, newMessage);
@@ -96,8 +93,11 @@ export async function sendMessage(
     await updateDoc(conversationRef, {
       lastMessage: {
         id: docRef.id,
-        ...newMessage,
+        senderId,
+        senderType,
+        content,
         createdAt: new Date(), // Use Date for lastMessage preview
+        read: false,
       },
       updatedAt: serverTimestamp(),
     });
@@ -185,7 +185,7 @@ export function subscribeToMessages(
     getCollectionPath.messages(conversationId)
   );
 
-  const q = query(messagesRef, orderBy('createdAt', 'asc'));
+  const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
   const unsubscribe = onSnapshot(
     q,
@@ -195,7 +195,7 @@ export function subscribeToMessages(
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date(),
+          createdAt: data.timestamp?.toDate() || new Date(),
         } as Message;
       });
       onUpdate(messages);

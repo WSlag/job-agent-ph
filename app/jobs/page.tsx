@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot } from 'firebase/firestore';
+import { useSearchParams } from 'next/navigation';
+import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot, startAfter } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
@@ -30,7 +30,6 @@ const JOB_TYPES = ['full-time', 'part-time', 'contract'];
 
 export default function JobsPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,6 +53,9 @@ export default function JobsPage() {
   }, [searchParams]);
 
   useEffect(() => {
+    // Reset pagination when filters change
+    setLastDoc(null);
+    setHasMore(true);
     loadJobs();
   }, [selectedCountry, selectedJobType, selectedCategory]);
 
@@ -80,6 +82,11 @@ export default function JobsPage() {
         constraints.push(where('category', '==', selectedCategory));
       }
 
+      // Add pagination cursor if loading more
+      if (loadMore && lastDoc) {
+        constraints.push(startAfter(lastDoc));
+      }
+
       const q = query(jobsRef, ...constraints);
       const querySnapshot = await getDocs(q);
 
@@ -90,7 +97,10 @@ export default function JobsPage() {
       })) as Job[];
 
       if (loadMore) {
-        setJobs([...jobs, ...jobsData]);
+        // Create a Set of existing job IDs to prevent duplicates
+        const existingIds = new Set(jobs.map(j => j.id));
+        const uniqueNewJobs = jobsData.filter(job => !existingIds.has(job.id));
+        setJobs([...jobs, ...uniqueNewJobs]);
       } else {
         setJobs(jobsData);
       }

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 import { Conversation, Job, Agency, JobHunter } from '@/types';
 import { subscribeToConversations, getOrCreateConversation } from '@/lib/messaging-helpers';
 import { doc, getDoc } from 'firebase/firestore';
@@ -72,8 +72,8 @@ function MessagesContent() {
           agencyId
         );
 
-        // Navigate to the conversation
-        router.push(`/messages/${conversationId}`);
+        // Navigate to the conversation (replace to avoid navigation loop)
+        router.replace(`/messages/${conversationId}`);
       } else {
         alert('Only job hunters can message agencies about jobs');
       }
@@ -113,9 +113,9 @@ function MessagesContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <HeaderDesign1Enhanced hideSearch />
-        <div className="flex items-center justify-center py-20">
+      <div className="min-h-screen bg-gray-50">
+        <MobileNativeHeader title="Messages" />
+        <div className="flex items-center justify-center py-20 pt-24">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
       </div>
@@ -123,10 +123,14 @@ function MessagesContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <HeaderDesign1Enhanced hideSearch />
+    <div className="min-h-screen bg-gray-50">
+      <MobileNativeHeader
+        title="Messages"
+        hideOnScroll
+        showShadowOnScroll
+      />
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 pt-20 pb-8 max-w-4xl">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white">
@@ -193,7 +197,8 @@ function MessagesContent() {
                                 {convo.job?.title || 'Job position'}
                               </p>
                             </div>
-                            {convo.lastMessage && (
+                            {convo.lastMessage && convo.lastMessage.createdAt &&
+                             !isNaN(new Date(convo.lastMessage.createdAt).getTime()) && (
                               <span className="text-xs text-gray-500 whitespace-nowrap">
                                 {formatDistanceToNow(
                                   new Date(convo.lastMessage.createdAt),
@@ -234,9 +239,9 @@ export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-50 pt-16">
-          <HeaderDesign1Enhanced hideSearch />
-          <div className="flex items-center justify-center py-20">
+        <div className="min-h-screen bg-gray-50">
+          <MobileNativeHeader title="Messages" />
+          <div className="flex items-center justify-center py-20 pt-24">
             <Loader2 className="animate-spin text-blue-600" size={48} />
           </div>
         </div>

@@ -7,6 +7,10 @@ import { Bell, Check, Trash2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { NoNotificationsEmptyState } from '@/components/ui/EmptyState';
+import { collection, query, where, orderBy, onSnapshot, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/collections';
+import toast from 'react-hot-toast';
 
 interface Notification {
   id: string;
@@ -31,58 +35,78 @@ export default function NotificationsPage() {
       return;
     }
 
-    // TODO: Load notifications from Firestore
-    // For now, using mock data
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'job_match',
-        title: 'New Job Match!',
-        message: '5 new jobs match your profile and preferences',
-        read: false,
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        actionUrl: '/jobs',
-      },
-      {
-        id: '2',
-        type: 'message',
-        title: 'New Message',
-        message: 'ABC Recruitment Agency sent you a message',
-        read: false,
-        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-        actionUrl: '/messages',
-      },
-      {
-        id: '3',
-        type: 'application_update',
-        title: 'Application Viewed',
-        message: 'Your application for Registered Nurse in Dubai has been viewed',
-        read: true,
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        actionUrl: '/profile/applications',
-      },
-    ];
+    // Load notifications from Firestore with real-time updates
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(
+      notificationsRef,
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
 
-    setNotifications(mockNotifications);
-    setLoading(false);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const loadedNotifications: Notification[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          type: data.type || 'system',
+          title: data.title,
+          message: data.message,
+          read: data.read ?? false,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          actionUrl: data.actionUrl,
+        };
+      });
+
+      setNotifications(loadedNotifications);
+      setLoading(false);
+    }, (error) => {
+      console.error('Error loading notifications:', error);
+      toast.error('Failed to load notifications');
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [user, router]);
 
-  const handleMarkAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-    // TODO: Update in Firestore
+  const handleMarkAllRead = async () => {
+    if (!user) return;
+
+    try {
+      const batch = writeBatch(db);
+      const unreadNotifications = notifications.filter(n => !n.read);
+
+      unreadNotifications.forEach((notification) => {
+        const notifRef = doc(db, 'notifications', notification.id);
+        batch.update(notifRef, { read: true });
+      });
+
+      await batch.commit();
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+      toast.error('Failed to mark notifications as read');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setNotifications(notifications.filter(n => n.id !== id));
-    // TODO: Delete from Firestore
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'notifications', id));
+      toast.success('Notification deleted');
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      toast.error('Failed to delete notification');
+    }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
-      setNotifications(notifications.map(n =>
-        n.id === notification.id ? { ...n, read: true } : n
-      ));
-      // TODO: Update in Firestore
+      try {
+        await updateDoc(doc(db, 'notifications', notification.id), {
+          read: true,
+        });
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
     }
 
     if (notification.actionUrl) {

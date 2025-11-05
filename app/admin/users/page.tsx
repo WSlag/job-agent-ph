@@ -7,6 +7,10 @@ import { Users, Search, Filter, MoreVertical, Mail, Ban, CheckCircle } from 'luc
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/collections';
+import toast from 'react-hot-toast';
 
 interface User {
   id: string;
@@ -34,48 +38,37 @@ export default function AdminUsersPage() {
       return;
     }
 
-    // TODO: Load users from Firestore
-    // Mock data for now
-    const mockUsers: User[] = [
-      {
-        id: '1',
-        name: 'Juan Dela Cruz',
-        email: 'juan@example.com',
-        role: 'jobhunter',
-        status: 'active',
-        createdAt: new Date('2024-01-15'),
-        lastActive: new Date(),
-      },
-      {
-        id: '2',
-        name: 'ABC Recruitment Agency',
-        email: 'info@abcrecruitment.com',
-        role: 'agency',
-        status: 'active',
-        createdAt: new Date('2024-02-01'),
-        lastActive: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: '3',
-        name: 'Maria Santos',
-        email: 'maria@example.com',
-        role: 'jobhunter',
-        status: 'active',
-        createdAt: new Date('2024-03-10'),
-        lastActive: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      },
-      {
-        id: '4',
-        name: 'XYZ Manpower Services',
-        email: 'contact@xyzmanpower.com',
-        role: 'agency',
-        status: 'pending',
-        createdAt: new Date('2024-11-01'),
-      },
-    ];
+    // Load users from Firestore
+    const loadUsers = async () => {
+      try {
+        setLoading(true);
+        const usersRef = collection(db, COLLECTIONS.USERS);
+        const q = query(usersRef, orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
 
-    setUsers(mockUsers);
-    setLoading(false);
+        const loadedUsers: User[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.fullName || data.companyName || data.name || 'Unknown',
+            email: data.email,
+            role: data.userType || 'jobhunter',
+            status: data.status || 'active',
+            createdAt: data.createdAt?.toDate() || new Date(),
+            lastActive: data.lastActive?.toDate(),
+          };
+        });
+
+        setUsers(loadedUsers);
+      } catch (error) {
+        console.error('Error loading users:', error);
+        toast.error('Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUsers();
   }, [user, userType, router]);
 
   const filteredUsers = users.filter((user) => {

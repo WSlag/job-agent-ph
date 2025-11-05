@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Message } from '@/types';
 import {
   subscribeToMessages,
@@ -17,16 +16,17 @@ import {
   ArrowLeft,
   Send,
   Loader2,
-  Paperclip,
-  Smile,
-  MoreVertical,
   Sparkles,
+  MoreVertical,
+  Briefcase,
+  User,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ConversationPage() {
   const params = useParams();
-  const router = useRouter();
+  const router = useRouter(); // Used for auth redirect
   const { user, userType } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -34,8 +34,10 @@ export default function ConversationPage() {
   const [sending, setSending] = useState(false);
   const [conversationDetails, setConversationDetails] = useState<any>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -75,6 +77,23 @@ export default function ConversationPage() {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
     }
   }, [newMessage]);
+
+  useEffect(() => {
+    // Click outside handler to close menu
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
 
   const loadConversationDetails = async () => {
     try {
@@ -146,11 +165,8 @@ export default function ConversationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-16">
-        <HeaderDesign1Enhanced hideSearch />
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-blue-600" size={48} />
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="animate-spin text-blue-600" size={48} />
       </div>
     );
   }
@@ -170,16 +186,14 @@ export default function ConversationPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16 flex flex-col">
-      <HeaderDesign1Enhanced hideSearch />
-
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Chat Header */}
       <div className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.back()}
+                onClick={() => router.push('/messages')}
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft size={24} />
@@ -194,27 +208,69 @@ export default function ConversationPage() {
                     {otherPartyName}
                   </h2>
                   {conversationDetails?.job && (
-                    <Link
-                      href={`/jobs/${conversationDetails.job.id}`}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
+                    <p className="text-sm text-gray-600">
                       {conversationDetails.job.title}
-                    </Link>
+                    </p>
                   )}
                 </div>
               </div>
             </div>
 
-            <button className="text-gray-600 hover:text-gray-900 transition-colors">
-              <MoreVertical size={20} />
-            </button>
+            {/* Three-dot Menu */}
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="text-gray-600 hover:text-gray-900 transition-colors p-2 hover:bg-gray-100 rounded-full"
+              >
+                <MoreVertical size={20} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  {conversationDetails?.job && (
+                    <Link
+                      href={`/jobs/${conversationDetails.job.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      <Briefcase size={18} className="text-gray-600" />
+                      <span className="text-sm text-gray-700 flex-1">View Job Details</span>
+                      <ExternalLink size={14} className="text-gray-400" />
+                    </Link>
+                  )}
+
+                  {otherParty && (
+                    <Link
+                      href={
+                        userType === 'jobhunter'
+                          ? `/companies/${conversationDetails?.agency?.id}`
+                          : `/profile/${conversationDetails?.jobHunter?.id}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      <User size={18} className="text-gray-600" />
+                      <span className="text-sm text-gray-700 flex-1">
+                        View {userType === 'jobhunter' ? 'Agency' : 'Profile'}
+                      </span>
+                      <ExternalLink size={14} className="text-gray-400" />
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto bg-gray-50">
-        <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="container mx-auto px-4 py-4 max-w-4xl">
           {Object.keys(groupedMessages).length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">No messages yet. Start the conversation!</p>
@@ -298,14 +354,14 @@ export default function ConversationPage() {
             </div>
           )}
 
-          <form onSubmit={handleSendMessage} className="flex items-end gap-3">
+          <form onSubmit={handleSendMessage} className="flex items-end gap-2">
             <button
               type="button"
               onClick={() => setShowTemplates(!showTemplates)}
-              className="flex-shrink-0 p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="flex-shrink-0 p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               title="Use template message"
             >
-              <Sparkles size={20} />
+              <Sparkles size={18} className="md:w-5 md:h-5" />
             </button>
 
             <div className="flex-1 relative">
@@ -319,8 +375,8 @@ export default function ConversationPage() {
                     handleSendMessage(e);
                   }
                 }}
-                placeholder="Type your message..."
-                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[48px] max-h-[200px]"
+                placeholder="Type a message"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[44px] max-h-[200px] text-sm md:text-base md:px-4 md:py-3"
                 rows={1}
               />
             </div>
@@ -328,17 +384,17 @@ export default function ConversationPage() {
             <button
               type="submit"
               disabled={!newMessage.trim() || sending}
-              className="flex-shrink-0 bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-shrink-0 bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed md:p-3"
             >
               {sending ? (
-                <Loader2 size={20} className="animate-spin" />
+                <Loader2 size={18} className="animate-spin md:w-5 md:h-5" />
               ) : (
-                <Send size={20} />
+                <Send size={18} className="md:w-5 md:h-5" />
               )}
             </button>
           </form>
 
-          <p className="text-xs text-gray-500 mt-2 text-center">
+          <p className="text-xs text-gray-500 mt-2 text-center hidden md:block">
             Press Enter to send, Shift+Enter for new line
           </p>
         </div>

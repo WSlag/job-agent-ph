@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import JobPostingForm from '@/components/jobs/JobPostingForm'
 import Card from '@/components/ui/Card'
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced'
+import { ArrowLeft } from 'lucide-react'
 
 export default function PostJobPage() {
   const { user, userProfile, loading } = useAuth()
@@ -34,10 +34,16 @@ export default function PostJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 pt-24">
-      <HeaderDesign1Enhanced hideSearch />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
+        >
+          <ArrowLeft size={20} />
+          <span className="font-medium">Back</span>
+        </button>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Post a New Job</h1>
           <p className="mt-2 text-gray-600">
