@@ -80,10 +80,12 @@ export default function CompaniesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <HeaderDesign1Enhanced />
+      <div className="hidden md:block">
+        <HeaderDesign1Enhanced />
+      </div>
 
       {/* Hero Section */}
-      <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 mt-16">
+      <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 md:mt-16">
         <div className="max-w-4xl mx-auto text-center">
           <Building2 className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-5xl font-bold mb-6">Browse Companies</h1>

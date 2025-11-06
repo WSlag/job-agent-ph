@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import Section from '@/components/ui/Section';
 import { Users, Target, Heart, Award, Briefcase, TrendingUp } from 'lucide-react';

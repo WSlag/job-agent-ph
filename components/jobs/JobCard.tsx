@@ -139,7 +139,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         {job.isFeatured && (
           <div className="absolute top-3 left-3">
             <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-lg flex items-center gap-1">
-              <Star size={12} className="fill-current" />
+              <Star size={10} className="fill-current sm:w-3 sm:h-3" />
               FEATURED
             </span>
           </div>
