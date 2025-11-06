@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types';
 import { Loader2, Briefcase, Building2 } from 'lucide-react';
+import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirect';
 
 function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signUp, user } = useAuth();
+  const { signUp, user, userType: contextUserType, loading: authLoading } = useAuth();
 
   const [userType, setUserType] = useState<UserType>('jobhunter');
   const [email, setEmail] = useState('');
@@ -31,18 +32,39 @@ function SignUpForm() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
 
-  const redirectUrl = searchParams.get('redirect') || '/jobs';
-
+  // Handle redirect after authentication
   useEffect(() => {
-    if (user) {
-      router.push(redirectUrl);
-    }
+    if (user && contextUserType && !authLoading) {
+      const redirectParam = searchParams.get('redirect');
+      const jobId = searchParams.get('jobId');
+      const agencyId = searchParams.get('agencyId');
+      const action = searchParams.get('action');
 
+      let finalRedirect: string;
+
+      if (redirectParam) {
+        // Use specified redirect with preserved query params
+        finalRedirect = buildRedirectUrl(redirectParam, {
+          jobId,
+          agencyId,
+          action
+        });
+      } else {
+        // Use role-based default redirect
+        finalRedirect = getDefaultRouteForUserType(contextUserType);
+      }
+
+      router.push(finalRedirect);
+    }
+  }, [user, contextUserType, authLoading, router, searchParams]);
+
+  // Set user type from query parameter
+  useEffect(() => {
     const type = searchParams.get('type');
     if (type === 'jobhunter' || type === 'agency') {
       setUserType(type);
     }
-  }, [user, searchParams, router, redirectUrl]);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,16 +116,27 @@ function SignUpForm() {
       }
 
       await signUp(email, password, userType, profileData);
-      router.push(redirectUrl);
+      // Redirect is handled by useEffect after userType is loaded
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to sign up';
       setError(errorMessage);
 
       // If email already in use, suggest login
       if (errorMessage.includes('already registered')) {
+        const redirectParam = searchParams.get('redirect');
+        const jobId = searchParams.get('jobId');
+        const agencyId = searchParams.get('agencyId');
+        const action = searchParams.get('action');
+
+        const loginParams = new URLSearchParams();
+        if (redirectParam) loginParams.append('redirect', redirectParam);
+        if (jobId) loginParams.append('jobId', jobId);
+        if (agencyId) loginParams.append('agencyId', agencyId);
+        if (action) loginParams.append('action', action);
+
         setTimeout(() => {
           if (confirm('This email is already registered. Would you like to go to the login page?')) {
-            router.push(`/auth/login?redirect=${redirectUrl}`);
+            router.push(`/auth/login?${loginParams.toString()}`);
           }
         }, 100);
       }
@@ -169,14 +202,26 @@ function SignUpForm() {
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 <p>{error}</p>
-                {error.includes('already registered') && (
-                  <Link
-                    href={`/auth/login?redirect=${redirectUrl}`}
-                    className="inline-block mt-2 text-sm font-semibold text-red-800 hover:text-red-900 underline"
-                  >
-                    Go to Login Page →
-                  </Link>
-                )}
+                {error.includes('already registered') && (() => {
+                  const redirectParam = searchParams.get('redirect');
+                  const jobId = searchParams.get('jobId');
+                  const agencyId = searchParams.get('agencyId');
+                  const action = searchParams.get('action');
+                  const loginParams = new URLSearchParams();
+                  if (redirectParam) loginParams.append('redirect', redirectParam);
+                  if (jobId) loginParams.append('jobId', jobId);
+                  if (agencyId) loginParams.append('agencyId', agencyId);
+                  if (action) loginParams.append('action', action);
+
+                  return (
+                    <Link
+                      href={`/auth/login?${loginParams.toString()}`}
+                      className="inline-block mt-2 text-sm font-semibold text-red-800 hover:text-red-900 underline"
+                    >
+                      Go to Login Page →
+                    </Link>
+                  );
+                })()}
               </div>
             )}
 

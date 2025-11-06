@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
@@ -53,7 +53,8 @@ import {
 export default function JobDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, userType } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, userType, loading: authLoading } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -67,10 +68,26 @@ export default function JobDetailsPage() {
   const [expandedDescription, setExpandedDescription] = useState(false);
   const [userProfile, setUserProfile] = useState<JobHunter | null>(null);
   const [isQuickApplying, setIsQuickApplying] = useState(false);
+  const [authActionHandled, setAuthActionHandled] = useState(false);
+  const [authPromptAction, setAuthPromptAction] = useState<'apply' | 'message'>('apply');
 
   useEffect(() => {
     loadJob();
   }, [params.id]);
+
+  // Handle post-authentication actions (apply or message)
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'apply' && user && userType === 'jobhunter' && !authActionHandled && !authLoading && job && !checkingApplication) {
+      setAuthActionHandled(true);
+      // Small delay to ensure all data is loaded
+      setTimeout(() => {
+        if (!hasApplied) {
+          setShowApplicationModal(true);
+        }
+      }, 300);
+    }
+  }, [searchParams, user, userType, authActionHandled, authLoading, job, hasApplied, checkingApplication]);
 
   useEffect(() => {
     checkApplicationStatus();
@@ -160,7 +177,8 @@ export default function JobDetailsPage() {
 
   const handleApply = () => {
     if (!user) {
-      // Show login prompt
+      // Show login prompt for apply action
+      setAuthPromptAction('apply');
       setShowAuthPrompt(true);
     } else if (userType === 'jobhunter') {
       if (hasApplied) {
@@ -280,6 +298,8 @@ export default function JobDetailsPage() {
 
   const handleMessageAgency = () => {
     if (!user) {
+      // Show login prompt for message action
+      setAuthPromptAction('message');
       setShowAuthPrompt(true);
     } else if (userType === 'jobhunter' && job) {
       router.push(`/messages?jobId=${job.id}&agencyId=${job.agencyId}`);
@@ -491,15 +511,15 @@ export default function JobDetailsPage() {
               {/* Job Details */}
               <div className="p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                  <h1 className="text-3xl font-bold text-gray-900 flex-1">{job.title}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex-1">{job.title}</h1>
                   {jobMatch && (
                     <JobMatchBadge match={jobMatch} />
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 text-xl text-gray-700 mb-2">
-                  <Building2 size={24} />
-                  {job.companyName}
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 size={20} className="text-gray-400" />
+                  <span className="text-base md:text-lg font-normal text-gray-600">{job.companyName}</span>
                 </div>
 
                 {job.category && (
@@ -525,10 +545,10 @@ export default function JobDetailsPage() {
 
                   {salary && (
                     <div className="flex items-center gap-3 text-gray-600">
-                      <DollarSign size={20} className="text-green-600" />
+                      <DollarSign size={20} className="text-blue-600" />
                       <div>
                         <p className="text-sm text-gray-500">Salary</p>
-                        <p className="font-semibold text-green-600">{salary}</p>
+                        <p className="text-base md:text-lg font-bold text-blue-600">{salary}</p>
                       </div>
                     </div>
                   )}
@@ -571,12 +591,12 @@ export default function JobDetailsPage() {
                 {/* Skills */}
                 {job.skills && job.skills.length > 0 && (
                   <div className="mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Required Skills</h2>
+                    <h2 className="text-lg md:text-xl font-semibold mb-4">Required Skills</h2>
                     <div className="flex flex-wrap gap-2">
                       {job.skills.map((skill, index) => (
                         <span
                           key={index}
-                          className="bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium"
+                          className="bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-xs md:text-sm font-normal"
                         >
                           {skill}
                         </span>
@@ -587,8 +607,8 @@ export default function JobDetailsPage() {
 
                 {/* Job Description */}
                 <div>
-                  <h2 className="text-xl font-semibold mb-4">Job Description</h2>
-                  <div className="prose max-w-none text-gray-700 whitespace-pre-wrap">
+                  <h2 className="text-lg md:text-xl font-semibold mb-4">Job Description</h2>
+                  <div className="prose max-w-none text-sm md:text-base text-gray-700 whitespace-pre-wrap">
                     {job.description.length > 300 && !expandedDescription
                       ? `${job.description.substring(0, 300)}...`
                       : job.description}
@@ -908,20 +928,36 @@ export default function JobDetailsPage() {
       {showAuthPrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Sign in to Apply</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              {authPromptAction === 'apply' ? 'Sign in to Apply' : 'Sign in to Message'}
+            </h2>
             <p className="text-gray-600 mb-6">
-              You need to create an account or sign in to apply for this job.
+              {authPromptAction === 'apply'
+                ? 'You need to create an account or sign in to apply for this job.'
+                : 'You need to create an account or sign in to message this agency.'}
             </p>
 
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => router.push(`/auth/signup?type=jobhunter&redirect=/jobs/${params.id}`)}
+                onClick={() => {
+                  if (authPromptAction === 'apply') {
+                    router.push(`/auth/signup?type=jobhunter&redirect=/jobs/${params.id}&action=apply`);
+                  } else {
+                    router.push(`/auth/signup?type=jobhunter&redirect=/messages&jobId=${job?.id}&agencyId=${job?.agencyId}`);
+                  }
+                }}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
                 Create Account
               </button>
               <button
-                onClick={() => router.push(`/auth/login?redirect=/jobs/${params.id}`)}
+                onClick={() => {
+                  if (authPromptAction === 'apply') {
+                    router.push(`/auth/login?redirect=/jobs/${params.id}&action=apply`);
+                  } else {
+                    router.push(`/auth/login?redirect=/messages&jobId=${job?.id}&agencyId=${job?.agencyId}`);
+                  }
+                }}
                 className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
               >
                 Login

@@ -193,7 +193,7 @@ export default function NotificationsPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleMarkAllRead}
-                icon={<Check size={16} />}
+                icon={Check}
               >
                 Mark All Read
               </Button>

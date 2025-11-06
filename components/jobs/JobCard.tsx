@@ -74,15 +74,24 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
   const formatSalary = () => {
     if (!job.salaryMin && !job.salaryMax) return null;
 
+    // Helper to format number to K format (e.g., 5000 -> 5K)
+    const toKFormat = (num: number) => {
+      if (num >= 1000) {
+        const k = num / 1000;
+        return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`;
+      }
+      return num.toString();
+    };
+
     if (job.salaryMin && job.salaryMax) {
-      return `${job.currency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
+      return `${job.currency}${toKFormat(job.salaryMin)} - ${toKFormat(job.salaryMax)}`;
     }
 
     if (job.salaryMin) {
-      return `${job.currency} ${job.salaryMin.toLocaleString()}+`;
+      return `${job.currency}${toKFormat(job.salaryMin)}+`;
     }
 
-    return `${job.currency} ${job.salaryMax?.toLocaleString()}`;
+    return `${job.currency}${toKFormat(job.salaryMax!)}`;
   };
 
   const salary = formatSalary();
@@ -158,16 +167,16 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
       <div className="p-3 sm:p-4 md:p-5">
         {/* Job Type & Category Tags */}
         <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
-          <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-medium">
+          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-normal">
             {job.locationType === 'remote' ? 'Remote' : job.locationType === 'on-site' ? 'On-site' : 'Hybrid'}
           </span>
           {job.category && (
-            <span className="bg-purple-50 text-purple-700 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-medium">
+            <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-normal">
               {job.category}
             </span>
           )}
           {job.jobType && (
-            <span className="bg-green-50 text-green-700 px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-medium">
+            <span className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-normal">
               {job.jobType.replace('-', ' ')}
             </span>
           )}
@@ -175,43 +184,42 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
 
         {/* Job Title */}
         <Link href={`/jobs/${job.id}`}>
-          <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors mb-1.5 sm:mb-2 line-clamp-2">
+          <h3 className="text-lg md:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors mb-2 line-clamp-2">
             {job.title}
           </h3>
         </Link>
 
+        {/* Salary - Prominent Display */}
+        {salary && (
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-base md:text-lg font-bold text-blue-600">{salary}</span>
+          </div>
+        )}
+
         {/* Company Name */}
-        <div className="flex items-center gap-1.5 text-gray-600 mb-1.5 sm:mb-2">
+        <div className="flex items-center gap-1.5 mb-2">
           <Building2 size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
-          <span className="text-xs sm:text-sm font-medium truncate">{job.companyName}</span>
+          <span className="text-sm font-normal text-gray-600 truncate">{job.companyName}</span>
         </div>
 
         {/* Job Tagline / Short Description */}
         {getTaglineOrPreview() && (
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-2 sm:mb-3 line-clamp-2 leading-relaxed">
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
             {getTaglineOrPreview()}
           </p>
         )}
 
         {/* Location */}
-        <div className="flex items-center gap-1.5 text-gray-600 mb-1.5 sm:mb-2">
+        <div className="flex items-center gap-1.5 text-gray-600 mb-2">
           <MapPin size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
-          <span className="text-xs sm:text-sm truncate">{job.location}, {job.country}</span>
+          <span className="text-sm font-normal truncate">{job.location}, {job.country}</span>
         </div>
-
-        {/* Salary */}
-        {salary && (
-          <div className="flex items-center gap-1.5 text-green-600 mb-1.5 sm:mb-2">
-            <DollarSign size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
-            <span className="text-xs sm:text-sm font-semibold">{salary}</span>
-          </div>
-        )}
 
         {/* Applicant Count */}
         {userType === 'agency' && user && job.agencyId === user.uid ? (
-          <div className="flex items-center gap-1.5 text-gray-600 mb-2 sm:mb-4">
+          <div className="flex items-center gap-1.5 text-gray-600 mb-4">
             <Users size={14} className="flex-shrink-0 sm:w-4 sm:h-4" />
-            <span className="text-xs sm:text-sm">{applicantCount !== null ? applicantCount : 0} applicants</span>
+            <span className="text-sm font-normal">{applicantCount !== null ? applicantCount : 0} applicants</span>
           </div>
         ) : null}
 

@@ -159,11 +159,21 @@ export default function Home() {
 
   const formatSalary = (job: Job) => {
     if (!job.salaryMin && !job.salaryMax) return 'Negotiable';
+
+    // Helper to format number to K format (e.g., 5000 -> 5K)
+    const toKFormat = (num: number) => {
+      if (num >= 1000) {
+        const k = num / 1000;
+        return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`;
+      }
+      return num.toString();
+    };
+
     if (job.salaryMin && job.salaryMax) {
-      return `${job.currency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
+      return `${job.currency}${toKFormat(job.salaryMin)} - ${toKFormat(job.salaryMax)}`;
     }
-    if (job.salaryMin) return `${job.currency} ${job.salaryMin.toLocaleString()}+`;
-    return `Up to ${job.currency} ${job.salaryMax?.toLocaleString()}`;
+    if (job.salaryMin) return `${job.currency}${toKFormat(job.salaryMin)}+`;
+    return `${job.currency}${toKFormat(job.salaryMax!)}`;
   };
 
   const getTimeAgo = (date: Date) => {
@@ -317,8 +327,8 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-6 md:mb-12"
           >
-            <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Featured Job Opportunities</h2>
-            <p className="text-sm md:text-base text-gray-600 px-4">Discover your next career move with top international employers</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">Featured Job Opportunities</h2>
+            <p className="text-base md:text-lg text-gray-600 px-4">Discover your next career move with top international employers</p>
           </motion.div>
           {loading ? (
             <div className="col-span-full text-center py-12">
@@ -370,20 +380,27 @@ export default function Home() {
                     <div className="p-3 md:p-6">
                       {/* Job Type Badge */}
                       <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold">
+                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-normal">
                           {job.jobType}
                         </span>
-                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-semibold truncate">
+                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-normal truncate">
                           {job.locationType}
                         </span>
                       </div>
 
-                      {/* Job Title & Company */}
-                      <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-1 md:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      {/* Job Title */}
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                         {job.title}
                       </h3>
-                      <p className="text-xs md:text-base text-gray-600 font-medium mb-2 md:mb-3 flex items-center gap-1 md:gap-2 line-clamp-1">
-                        <Building2 className="w-3 h-3 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
+
+                      {/* Salary - Prominent Display */}
+                      <div className="mb-2">
+                        <span className="text-base md:text-lg font-bold text-blue-600">{formatSalary(job)}</span>
+                      </div>
+
+                      {/* Company */}
+                      <p className="text-sm font-normal text-gray-600 mb-3 flex items-center gap-2 line-clamp-1">
+                        <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span className="truncate">{job.companyName}</span>
                       </p>
 
@@ -392,21 +409,17 @@ export default function Home() {
                         {job.description}
                       </p>
 
-                      {/* Location & Salary */}
-                      <div className="space-y-1 md:space-y-2 mb-2 md:mb-4">
-                        <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
-                          <MapPin className="w-3 h-3 md:w-4 md:h-4 text-blue-600 flex-shrink-0" />
-                          <span className="font-medium truncate">{job.location}, {job.country}</span>
-                        </div>
-                        <div className="flex items-center gap-1 md:gap-2 text-[11px] md:text-sm text-gray-700">
-                          <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
-                          <span className="font-semibold text-green-700 truncate">{formatSalary(job)}</span>
+                      {/* Location */}
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 flex-shrink-0" />
+                          <span className="font-normal truncate">{job.location}, {job.country}</span>
                         </div>
                       </div>
 
                       {/* Experience Required */}
-                      <div className="flex items-center gap-1 md:gap-2 text-[10px] md:text-xs text-gray-500 mb-2 md:mb-4 pb-2 md:pb-4 border-b border-gray-100">
-                        <UserCheck className="w-3 h-3 md:w-4 md:h-4" />
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-4 pb-4 border-b border-gray-100">
+                        <UserCheck className="w-4 h-4" />
                         <span>{job.experienceRequired} years experience</span>
                       </div>
 

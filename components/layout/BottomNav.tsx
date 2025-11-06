@@ -84,7 +84,7 @@ export default function BottomNav() {
               </div>
 
               {/* Label */}
-              <span className={`text-[10px] font-medium transition-colors ${
+              <span className={`text-xs font-medium transition-colors ${
                 active ? 'text-blue-600' : 'text-gray-500'
               }`}>
                 {item.label}

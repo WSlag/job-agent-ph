@@ -31,12 +31,12 @@ export default function NotFound() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link href="/">
-            <Button variant="primary" size="lg" icon={<Home size={20} />}>
+            <Button variant="primary" size="lg" icon={Home}>
               Go to Homepage
             </Button>
           </Link>
           <Link href="/jobs">
-            <Button variant="outline" size="lg" icon={<Search size={20} />}>
+            <Button variant="outline" size="lg" icon={Search}>
               Browse Jobs
             </Button>
           </Link>

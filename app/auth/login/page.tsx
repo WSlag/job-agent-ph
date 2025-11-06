@@ -5,24 +5,43 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirect';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signIn, user } = useAuth();
+  const { signIn, user, userType, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const redirectUrl = searchParams.get('redirect') || '/jobs';
-
+  // Handle redirect after authentication
   useEffect(() => {
-    if (user) {
-      router.push(redirectUrl);
+    if (user && userType && !authLoading) {
+      const redirectParam = searchParams.get('redirect');
+      const jobId = searchParams.get('jobId');
+      const agencyId = searchParams.get('agencyId');
+      const action = searchParams.get('action');
+
+      let finalRedirect: string;
+
+      if (redirectParam) {
+        // Use specified redirect with preserved query params
+        finalRedirect = buildRedirectUrl(redirectParam, {
+          jobId,
+          agencyId,
+          action
+        });
+      } else {
+        // Use role-based default redirect
+        finalRedirect = getDefaultRouteForUserType(userType);
+      }
+
+      router.push(finalRedirect);
     }
-  }, [user, router, redirectUrl]);
+  }, [user, userType, authLoading, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +50,7 @@ function LoginForm() {
 
     try {
       await signIn(email, password);
-      router.push(redirectUrl);
+      // Redirect is handled by useEffect after userType is loaded
     } catch (err: any) {
       setError(err.message || 'Failed to login');
     } finally {

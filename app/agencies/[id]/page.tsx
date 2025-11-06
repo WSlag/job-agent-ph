@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { doc, getDoc, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
+import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import {
   Building2,
@@ -59,6 +60,7 @@ interface Agency {
 export default function AgencyProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const { user, userType } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [agency, setAgency] = useState<Agency | null>(null);
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
@@ -142,6 +144,22 @@ export default function AgencyProfilePage() {
 
     loadAgencyData();
   }, [params.id]);
+
+  const handleMessage = () => {
+    if (!user) {
+      // Redirect to login with preserved context
+      const loginParams = new URLSearchParams({
+        redirect: '/messages',
+        agencyId: params.id as string
+      });
+      router.push(`/auth/login?${loginParams.toString()}`);
+    } else if (userType === 'jobhunter') {
+      // Navigate to messages with agency ID
+      router.push(`/messages?agencyId=${params.id}`);
+    } else {
+      toast.error('Only job hunters can message agencies');
+    }
+  };
 
   if (loading) {
     return (
@@ -304,13 +322,13 @@ export default function AgencyProfilePage() {
                   >
                     {isFollowing ? 'Following' : 'Follow'}
                   </button>
-                  <Link
-                    href={`/messages?agencyId=${agency.id}`}
+                  <button
+                    onClick={handleMessage}
                     className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
                   >
                     <MessageCircle size={18} />
                     Message
-                  </Link>
+                  </button>
                 </div>
               </div>
 

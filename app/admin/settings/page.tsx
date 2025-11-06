@@ -327,7 +327,7 @@ export default function AdminSettingsPage() {
             variant="primary"
             onClick={handleSave}
             disabled={saving}
-            icon={<Save size={18} />}
+            icon={Save}
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </Button>

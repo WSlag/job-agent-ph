@@ -15,7 +15,7 @@ export default function Badge({
   className = '',
   icon,
 }: BadgeProps) {
-  const baseStyles = 'inline-flex items-center justify-center gap-1 font-medium rounded-full';
+  const baseStyles = 'inline-flex items-center justify-center gap-1 font-normal rounded-full';
 
   const variantStyles = {
     default: 'bg-gray-100 text-gray-700',
@@ -29,7 +29,7 @@ export default function Badge({
   };
 
   const sizeStyles = {
-    sm: 'px-2 py-0.5 text-xs',
+    sm: 'px-2 py-1 text-xs',
     md: 'px-3 py-1 text-sm',
     lg: 'px-4 py-1.5 text-base',
   };

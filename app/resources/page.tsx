@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { BookOpen, FileText, Video, ExternalLink, Download, Shield, Globe, TrendingUp } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
@@ -159,7 +160,7 @@ const resources: Resource[] = [
 const categories = ['All', 'Guides', 'Country Guides', 'Downloads', 'Career', 'Government'];
 
 export default function ResourcesPage() {
-  const [activeCategory, setActiveCategory] = React.useState('All');
+  const [activeCategory, setActiveCategory] = useState('All');
 
   const filteredResources = resources.filter(
     (resource) => activeCategory === 'All' || resource.category === activeCategory

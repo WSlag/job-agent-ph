@@ -118,6 +118,35 @@ body {
 }
 
 @layer components {
+  /* Typography Utilities */
+  .text-job-title {
+    @apply text-lg md:text-xl font-bold text-gray-900;
+  }
+
+  .text-salary {
+    @apply text-base md:text-lg font-bold text-blue-600;
+  }
+
+  .text-company {
+    @apply text-sm font-normal text-gray-600;
+  }
+
+  .text-tag {
+    @apply text-xs font-normal;
+  }
+
+  .text-recruiter-name {
+    @apply text-sm font-semibold text-gray-900;
+  }
+
+  .text-recruiter-role {
+    @apply text-sm font-normal text-gray-500;
+  }
+
+  .text-job-detail {
+    @apply text-sm font-normal text-gray-600;
+  }
+
   /* Gradient Text */
   .gradient-text {
     @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;

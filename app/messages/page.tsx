@@ -23,7 +23,13 @@ function MessagesContent() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/auth/login?redirect=/messages');
+      // Preserve query parameters when redirecting to login
+      const jobId = searchParams.get('jobId');
+      const agencyId = searchParams.get('agencyId');
+      const params = new URLSearchParams({ redirect: '/messages' });
+      if (jobId) params.append('jobId', jobId);
+      if (agencyId) params.append('agencyId', agencyId);
+      router.push(`/auth/login?${params.toString()}`);
       return;
     }
 

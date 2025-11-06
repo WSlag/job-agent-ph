@@ -49,11 +49,21 @@ export default function SwipeableJobCard({
 
   const formatSalary = () => {
     if (!job.salaryMin && !job.salaryMax) return 'Negotiable';
+
+    // Helper to format number to K format (e.g., 5000 -> 5K)
+    const toKFormat = (num: number) => {
+      if (num >= 1000) {
+        const k = num / 1000;
+        return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`;
+      }
+      return num.toString();
+    };
+
     if (job.salaryMin && job.salaryMax) {
-      return `${job.currency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
+      return `${job.currency}${toKFormat(job.salaryMin)} - ${toKFormat(job.salaryMax)}`;
     }
-    if (job.salaryMin) return `${job.currency} ${job.salaryMin.toLocaleString()}+`;
-    return `Up to ${job.currency} ${job.salaryMax?.toLocaleString()}`;
+    if (job.salaryMin) return `${job.currency}${toKFormat(job.salaryMin)}+`;
+    return `${job.currency}${toKFormat(job.salaryMax!)}`;
   };
 
   const getTimeAgo = (date: Date) => {
@@ -177,28 +187,31 @@ export default function SwipeableJobCard({
               )}
             </div>
 
-            {/* Title & Company */}
-            <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+            {/* Title */}
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-2">
               {job.title}
             </h3>
-            <p className="text-base text-gray-700 font-medium mb-4 flex items-center gap-2">
-              <Building2 size={18} className="text-gray-400" />
-              {job.companyName}
-            </p>
 
-            {/* Location */}
-            <div className="flex items-center gap-2 text-sm text-gray-700 mb-2">
-              <MapPin size={16} className="text-primary-600 flex-shrink-0" />
-              <span className="truncate">
-                {job.location}, {job.country}
+            {/* Salary - Prominent Display */}
+            <div className="mb-2">
+              <span className="text-base md:text-lg font-bold text-blue-600">
+                {formatSalary()}
               </span>
             </div>
 
-            {/* Salary */}
-            <div className="flex items-center gap-2 text-sm text-gray-700 mb-4">
-              <DollarSign size={16} className="text-success-600 flex-shrink-0" />
-              <span className="font-semibold text-success-700 truncate">
-                {formatSalary()}
+            {/* Company */}
+            <div className="flex items-center gap-2 mb-3">
+              <Building2 size={14} className="text-gray-400 flex-shrink-0" />
+              <p className="text-sm font-normal text-gray-600 truncate">
+                {job.companyName}
+              </p>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-center gap-2 text-gray-600 mb-4">
+              <MapPin size={14} className="flex-shrink-0" />
+              <span className="text-sm font-normal truncate">
+                {job.location}, {job.country}
               </span>
             </div>
 
