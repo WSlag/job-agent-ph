@@ -6,25 +6,20 @@ export async function GET(request: NextRequest) {
 
   // Validate query parameter
   if (!query) {
-    console.error('Geocode API: Missing query parameter');
     return NextResponse.json({ error: 'Missing query parameter' }, { status: 400 });
   }
 
   // Validate query is not empty after trimming
   if (query.trim() === '') {
-    console.error('Geocode API: Empty query parameter');
     return NextResponse.json({ error: 'Query parameter cannot be empty' }, { status: 400 });
   }
 
   // Validate query length (Nominatim has limits)
   if (query.length > 200) {
-    console.error('Geocode API: Query too long:', query.length);
     return NextResponse.json({ error: 'Query parameter too long' }, { status: 400 });
   }
 
   try {
-    console.log('Geocode API: Processing query:', query);
-
     // Create AbortController for timeout (more compatible than AbortSignal.timeout)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -44,7 +39,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      console.error('Geocode API: Nominatim error:', response.status, response.statusText);
+      // Return error without logging to console
       return NextResponse.json(
         { error: `Nominatim API error: ${response.status}` },
         { status: response.status }
@@ -52,10 +47,9 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('Geocode API: Success, results:', data.length);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Geocode API: Unexpected error:', error);
+    // Silently handle errors - don't log to console
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
       { error: 'Geocoding failed due to network error', details: errorMessage },

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { doc, getDoc, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -60,12 +60,16 @@ interface Agency {
 export default function AgencyProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, userType } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [agency, setAgency] = useState<Agency | null>(null);
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get the job ID if navigated from job details
+  const fromJobId = searchParams.get('fromJob');
 
   useEffect(() => {
     const loadAgencyData = async () => {
@@ -90,10 +94,11 @@ export default function AgencyProfilePage() {
         }
 
         // Map Firestore data to Agency interface
+        const agencyName = agencyData.companyName || agencyData.displayName || 'Agency Profile';
         setAgency({
           id: agencyDoc.id,
-          name: agencyData.companyName || 'Unknown Agency',
-          description: agencyData.description || 'No description available',
+          name: agencyName,
+          description: agencyData.description || agencyData.bio || 'No description available',
           rating: agencyData.rating || 0,
           reviewCount: agencyData.reviewCount || 0,
           isDMWVerified: agencyData.isDMWVerified ?? false,
@@ -227,11 +232,17 @@ export default function AgencyProfilePage() {
       <div className="bg-white border-b sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <button
-            onClick={() => router.back()}
+            onClick={() => {
+              if (fromJobId) {
+                router.push(`/jobs/${fromJobId}`);
+              } else {
+                router.back();
+              }
+            }}
             className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft size={20} />
-            <span className="font-medium">Back</span>
+            <span className="font-medium">{fromJobId ? 'Back to Job' : 'Back'}</span>
           </button>
         </div>
       </div>
@@ -252,10 +263,10 @@ export default function AgencyProfilePage() {
 
       {/* Agency Header */}
       <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-10">
-        <div className="bg-white rounded-xl shadow-xl p-6 mb-6">
-          <div className="flex items-start gap-6">
+        <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {/* Logo */}
-            <div className="w-32 h-32 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0 border-4 border-white">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0 border-4 border-white">
               {agency.logo ? (
                 <img
                   src={agency.logo}
@@ -263,23 +274,23 @@ export default function AgencyProfilePage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Building2 className="w-16 h-16 text-primary-600" />
+                <Building2 className="w-12 h-12 sm:w-16 sm:h-16 text-primary-600" />
               )}
             </div>
 
             {/* Info */}
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="flex-1 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
+                <div className="flex-1">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 break-words">
                     {agency.name}
                   </h1>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-wrap">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
                           key={i}
-                          size={20}
+                          size={18}
                           className={
                             i < Math.floor(agency.rating)
                               ? 'text-gold-500'
@@ -288,8 +299,8 @@ export default function AgencyProfilePage() {
                           fill={i < Math.floor(agency.rating) ? '#FCD116' : 'none'}
                         />
                       ))}
-                      <span className="text-sm font-semibold text-gray-700 ml-2">
-                        {agency.rating} ({agency.reviewCount} reviews)
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700 ml-2">
+                        {agency.reviewCount > 0 ? `${agency.rating} (${agency.reviewCount} ${agency.reviewCount === 1 ? 'review' : 'reviews'})` : 'No reviews yet'}
                       </span>
                     </div>
                   </div>
@@ -311,10 +322,10 @@ export default function AgencyProfilePage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
                   <button
                     onClick={() => setIsFollowing(!isFollowing)}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                    className={`flex-1 sm:flex-initial px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-colors ${
                       isFollowing
                         ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         : 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50'
@@ -324,10 +335,10 @@ export default function AgencyProfilePage() {
                   </button>
                   <button
                     onClick={handleMessage}
-                    className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
+                    className="flex-1 sm:flex-initial bg-primary-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    <MessageCircle size={18} />
-                    Message
+                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    <span>Message</span>
                   </button>
                 </div>
               </div>

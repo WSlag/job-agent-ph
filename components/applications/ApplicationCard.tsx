@@ -103,9 +103,9 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
     <div className={`bg-white rounded-lg shadow-md border-2 ${statusConfig.bgColor} hover:shadow-lg transition-shadow`}>
       <div className="p-6">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4 gap-3">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer" onClick={handleViewJob}>
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer line-clamp-2" onClick={handleViewJob}>
               {job.title}
             </h3>
             <div className="flex items-center gap-2 text-gray-600 mb-2">
@@ -119,7 +119,7 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
           </div>
 
           {/* Status Badge */}
-          <div data-tour="status-badge" className={`px-4 py-2 rounded-full text-sm font-semibold ${statusConfig.color} bg-white border-2`}>
+          <div data-tour="status-badge" className={`px-4 py-2 rounded-full text-sm font-semibold ${statusConfig.color} bg-white border-2 self-start md:self-auto`}>
             {statusConfig.label}
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
               <FileText size={16} className="text-gray-600" />
               <span className="text-sm font-medium text-gray-700">Cover Letter</span>
             </div>
-            <p className="text-sm text-gray-700 line-clamp-3">
+            <p className="text-sm text-gray-700 line-clamp-2 md:line-clamp-3">
               {application.coverLetter}
             </p>
           </div>
@@ -181,24 +181,25 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
         </div>
 
         {/* Actions */}
-        <div data-tour="application-actions" className="flex items-center gap-3 pt-4 border-t border-gray-200">
+        <div data-tour="application-actions" className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-4 border-t border-gray-200">
           {application.resumeUrl && (
             <a
               href={application.resumeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium w-full sm:w-auto"
             >
               <FileText size={16} />
-              View Resume
-              <ExternalLink size={14} />
+              <span className="hidden sm:inline">View Resume</span>
+              <span className="sm:hidden">Resume</span>
+              <ExternalLink size={14} className="hidden sm:inline" />
             </a>
           )}
 
           {application.conversationId && (
             <button
               onClick={handleViewConversation}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium w-full sm:w-auto"
             >
               <MessageSquare size={16} />
               Message
@@ -207,7 +208,7 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
 
           <button
             onClick={handleViewJob}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium ml-auto"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium sm:ml-auto w-full sm:w-auto"
           >
             <Briefcase size={16} />
             View Job

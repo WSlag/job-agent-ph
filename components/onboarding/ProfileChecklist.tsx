@@ -72,15 +72,32 @@ export default function ProfileChecklist() {
 
   const scrollToSection = (link: string) => {
     if (link.startsWith('#')) {
-      const element = document.querySelector(link)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        // Add a brief highlight effect
-        element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2')
-        setTimeout(() => {
-          element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2')
-        }, 2000)
+      // Try to find and scroll to the element with retries
+      const attemptScroll = (retriesLeft: number = 5) => {
+        const element = document.querySelector(link) as HTMLElement
+
+        if (element) {
+          // Scroll to element with smooth behavior
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+          // Add a brief highlight effect
+          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2')
+
+          // Remove highlight after 2 seconds
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2')
+          }, 2000)
+
+          console.log(`Scrolled to section: ${link}`)
+        } else if (retriesLeft > 0) {
+          // Element not found yet, retry after a short delay
+          setTimeout(() => attemptScroll(retriesLeft - 1), 200)
+        } else {
+          console.error(`Element not found for selector: ${link} after multiple attempts`)
+        }
       }
+
+      attemptScroll()
     }
   }
 

@@ -711,7 +711,7 @@ export default function JobDetailsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.35 }}
             >
-              <AgencyInfoCard agencyId={job.agencyId} onMessageClick={handleMessageAgency} />
+              <AgencyInfoCard agencyId={job.agencyId} jobId={params.id as string} onMessageClick={handleMessageAgency} />
             </motion.div>
 
             {/* Location Map Section */}

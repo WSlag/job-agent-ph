@@ -44,22 +44,22 @@ export default function JobLocationMap({ location, country, coordinates }: JobLo
     try {
       // Validate location and country before making API call
       if (!location || !country || location.trim() === '' || country.trim() === '') {
-        console.warn('JobLocationMap: Invalid location or country', { location, country });
+        // Silently fail for invalid location data
         setError(true);
         setLoading(false);
         return;
       }
 
       const query = `${location}, ${country}`;
-      console.log('JobLocationMap: Geocoding query:', query);
 
       // Use our API route to avoid CORS issues
       const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('JobLocationMap: Geocoding API error:', response.status, errorData);
-        throw new Error(`Geocoding failed: ${response.status}`);
+        // Silently handle API errors - don't log to console
+        setError(true);
+        setLoading(false);
+        return;
       }
 
       const data = await response.json();
@@ -69,13 +69,12 @@ export default function JobLocationMap({ location, country, coordinates }: JobLo
           lat: parseFloat(data[0].lat),
           lng: parseFloat(data[0].lon),
         });
-        console.log('JobLocationMap: Geocoding successful', { lat: data[0].lat, lng: data[0].lon });
       } else {
-        console.warn('JobLocationMap: No results found for query:', query);
+        // No results found - fail silently
         setError(true);
       }
     } catch (err) {
-      console.error('JobLocationMap: Geocoding error:', err);
+      // Silently handle geocoding errors
       setError(true);
     } finally {
       setLoading(false);

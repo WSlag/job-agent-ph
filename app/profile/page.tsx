@@ -22,13 +22,14 @@ import {
   validatePassword
 } from '@/lib/validation';
 import { User, Mail, Phone, MapPin, Briefcase, FileText, Lock, Upload, Save, ArrowLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface JobHunterProfile {
-  fullName: string;
+  fullName?: string;
   email: string;
-  location: string;
+  location?: string;
   phone?: string;
-  skills: string[];
+  skills?: string[];
   experience?: number;
   bio?: string;
   resumeUrl?: string;
@@ -54,8 +55,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<JobHunterProfile | AgencyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Form states
   const [skillInput, setSkillInput] = useState('');
@@ -100,7 +101,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      setMessage({ type: 'error', text: 'Failed to load profile' });
+      toast.error('Failed to load profile');
     } finally {
       setLoading(false);
     }
@@ -115,27 +116,83 @@ export default function ProfilePage() {
 
     const sanitized = sanitizeString(skillInput, 100);
     if (!sanitized || sanitized.length === 0) {
-      setMessage({ type: 'error', text: 'Skill cannot be empty' });
+      toast.error('Skill cannot be empty');
       return;
     }
 
-    if (profile.skills.includes(sanitized)) {
-      setMessage({ type: 'error', text: 'Skill already added' });
+    const currentSkills = profile.skills || [];
+
+    if (currentSkills.includes(sanitized)) {
+      toast.error('Skill already added');
       return;
     }
 
-    if (profile.skills.length >= 50) {
-      setMessage({ type: 'error', text: 'Maximum 50 skills allowed' });
+    if (currentSkills.length >= 50) {
+      toast.error('Maximum 50 skills allowed');
       return;
     }
 
-    handleInputChange('skills', [...profile.skills, sanitized]);
+    handleInputChange('skills', [...currentSkills, sanitized]);
     setSkillInput('');
   };
 
   const handleRemoveSkill = (skillToRemove: string) => {
     if (!profile || !('skills' in profile)) return;
-    handleInputChange('skills', profile.skills.filter(s => s !== skillToRemove));
+    const currentSkills = profile.skills || [];
+    handleInputChange('skills', currentSkills.filter(s => s !== skillToRemove));
+  };
+
+  // Field validation helper
+  const validateField = (fieldName: string, value: any): boolean => {
+    let error = '';
+
+    switch (fieldName) {
+      case 'fullName':
+        if (!value || value.length < 2) {
+          error = 'Full name must be at least 2 characters';
+        }
+        break;
+      case 'location':
+        const locValidation = validateLocation(value || '');
+        if (!locValidation.valid) error = locValidation.error!;
+        break;
+      case 'phone':
+        if (value && !validatePhone(value)) {
+          error = 'Invalid phone number format';
+        }
+        break;
+      case 'skills':
+        const skillsValidation = validateSkills(value || []);
+        if (!skillsValidation.valid) error = skillsValidation.error!;
+        break;
+      case 'experience':
+        if (value !== undefined && value !== '') {
+          const expValidation = validateExperience(value);
+          if (!expValidation.valid) error = expValidation.error!;
+        }
+        break;
+    }
+
+    setFieldErrors(prev => {
+      const newErrors = { ...prev };
+      if (error) {
+        newErrors[fieldName] = error;
+      } else {
+        delete newErrors[fieldName];
+      }
+      return newErrors;
+    });
+
+    return !error;
+  };
+
+  // Clear field error when user starts typing
+  const clearFieldError = (fieldName: string) => {
+    setFieldErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[fieldName];
+      return newErrors;
+    });
   };
 
   const handleFileChange = async (type: 'resume' | 'profilePicture', file: File | null) => {
@@ -150,7 +207,7 @@ export default function ProfilePage() {
     });
 
     if (!validation.valid) {
-      setMessage({ type: 'error', text: validation.error! });
+      toast.error(validation.error!);
       return;
     }
 
@@ -172,59 +229,74 @@ export default function ProfilePage() {
 
     try {
       setSaving(true);
-      setMessage(null);
+
+      // Collect all validation errors
+      const errors: Record<string, string> = {};
 
       // Validation
       if (userType === 'jobhunter') {
         const hunterProfile = profile as JobHunterProfile;
 
         if (!hunterProfile.fullName || hunterProfile.fullName.length < 2) {
-          setMessage({ type: 'error', text: 'Full name must be at least 2 characters' });
-          return;
+          errors.fullName = 'Full name must be at least 2 characters';
         }
 
-        const locationValidation = validateLocation(hunterProfile.location);
+        const locationValidation = validateLocation(hunterProfile.location || '');
         if (!locationValidation.valid) {
-          setMessage({ type: 'error', text: locationValidation.error! });
-          return;
+          errors.location = locationValidation.error!;
         }
 
         if (hunterProfile.phone && !validatePhone(hunterProfile.phone)) {
-          setMessage({ type: 'error', text: 'Invalid phone number format' });
-          return;
+          errors.phone = 'Invalid phone number format';
         }
 
-        const skillsValidation = validateSkills(hunterProfile.skills);
+        const skillsValidation = validateSkills(hunterProfile.skills || []);
         if (!skillsValidation.valid) {
-          setMessage({ type: 'error', text: skillsValidation.error! });
-          return;
+          errors.skills = skillsValidation.error!;
         }
 
         if (hunterProfile.experience !== undefined) {
           const expValidation = validateExperience(hunterProfile.experience);
           if (!expValidation.valid) {
-            setMessage({ type: 'error', text: expValidation.error! });
-            return;
+            errors.experience = expValidation.error!;
           }
         }
       } else {
         const agencyProfile = profile as AgencyProfile;
 
         if (!agencyProfile.companyName || agencyProfile.companyName.length < 2) {
-          setMessage({ type: 'error', text: 'Company name must be at least 2 characters' });
-          return;
+          errors.companyName = 'Company name must be at least 2 characters';
         }
 
         if (!agencyProfile.contactEmail || !validateEmail(agencyProfile.contactEmail)) {
-          setMessage({ type: 'error', text: 'Contact email is required and must be valid' });
-          return;
+          errors.contactEmail = 'Contact email is required and must be valid';
         }
 
         if (agencyProfile.phone && !validatePhone(agencyProfile.phone)) {
-          setMessage({ type: 'error', text: 'Invalid phone number format' });
-          return;
+          errors.phone = 'Invalid phone number format';
         }
       }
+
+      // If there are errors, display them and focus first invalid field
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        toast.error('Please fix the errors in the form');
+
+        // Auto-focus first invalid field
+        const firstErrorField = Object.keys(errors)[0];
+        setTimeout(() => {
+          const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLInputElement;
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.focus();
+          }
+        }, 100);
+
+        return;
+      }
+
+      // Clear all errors if validation passes
+      setFieldErrors({});
 
       // Upload files if any
       let resumeUrl = 'resumeUrl' in profile ? profile.resumeUrl : undefined;
@@ -272,7 +344,7 @@ export default function ProfilePage() {
         });
       }
 
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      toast.success('Profile updated successfully!');
       await loadProfile();
 
       // Update profile checklist for job hunters
@@ -287,7 +359,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error saving profile:', error);
-      setMessage({ type: 'error', text: 'Failed to save profile. Please try again.' });
+      toast.error('Failed to save profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -297,28 +369,28 @@ export default function ProfilePage() {
     if (!currentUser) return;
 
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match' });
+      toast.error('Passwords do not match');
       return;
     }
 
     const passwordValidation = validatePassword(newPassword);
     if (!passwordValidation.valid) {
-      setMessage({ type: 'error', text: passwordValidation.error! });
+      toast.error(passwordValidation.error!);
       return;
     }
 
     try {
       setSaving(true);
       await updatePassword(currentUser, newPassword);
-      setMessage({ type: 'success', text: 'Password updated successfully!' });
+      toast.success('Password updated successfully!');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
       console.error('Error changing password:', error);
       if (error.code === 'auth/requires-recent-login') {
-        setMessage({ type: 'error', text: 'Please log out and log in again to change your password' });
+        toast.error('Please log out and log in again to change your password');
       } else {
-        setMessage({ type: 'error', text: 'Failed to change password. Please try again.' });
+        toast.error('Failed to change password. Please try again.');
       }
     } finally {
       setSaving(false);
@@ -363,12 +435,6 @@ export default function ProfilePage() {
           <p className="text-gray-600 mt-2">Manage your account information and preferences</p>
         </div>
 
-        {message && (
-          <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-            {message.text}
-          </div>
-        )}
-
         {/* Tabs */}
         <div className="flex gap-4 mb-6 border-b">
           <button
@@ -401,7 +467,7 @@ export default function ProfilePage() {
             <Card className="p-6">
               <div className="space-y-6">
                 {/* Job Hunter Profile */}
-                {userType === 'jobhunter' && 'fullName' in profile && (
+                {userType === 'jobhunter' && profile && (
                   <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -410,11 +476,27 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value={profile.fullName}
-                      onChange={(e) => handleInputChange('fullName', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      name="fullName"
+                      value={profile.fullName || ''}
+                      onChange={(e) => {
+                        handleInputChange('fullName', e.target.value);
+                        clearFieldError('fullName');
+                      }}
+                      onBlur={(e) => validateField('fullName', e.target.value)}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                        fieldErrors.fullName
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
                       placeholder="John Doe"
+                      aria-invalid={!!fieldErrors.fullName}
+                      aria-describedby={fieldErrors.fullName ? 'fullName-error' : undefined}
                     />
+                    {fieldErrors.fullName && (
+                      <p id="fullName-error" className="text-red-600 text-sm mt-1 flex items-center gap-1" role="alert">
+                        <span>⚠️</span> {fieldErrors.fullName}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -437,11 +519,27 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value={profile.location}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      name="location"
+                      value={profile.location || ''}
+                      onChange={(e) => {
+                        handleInputChange('location', e.target.value);
+                        clearFieldError('location');
+                      }}
+                      onBlur={(e) => validateField('location', e.target.value)}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                        fieldErrors.location
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
                       placeholder="Manila, Philippines"
+                      aria-invalid={!!fieldErrors.location}
+                      aria-describedby={fieldErrors.location ? 'location-error' : undefined}
                     />
+                    {fieldErrors.location && (
+                      <p id="location-error" className="text-red-600 text-sm mt-1 flex items-center gap-1" role="alert">
+                        <span>⚠️</span> {fieldErrors.location}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -451,11 +549,27 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="tel"
+                      name="phone"
                       value={profile.phone || ''}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => {
+                        handleInputChange('phone', e.target.value);
+                        clearFieldError('phone');
+                      }}
+                      onBlur={(e) => validateField('phone', e.target.value)}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                        fieldErrors.phone
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
                       placeholder="+63 912 345 6789"
+                      aria-invalid={!!fieldErrors.phone}
+                      aria-describedby={fieldErrors.phone ? 'phone-error' : undefined}
                     />
+                    {fieldErrors.phone && (
+                      <p id="phone-error" className="text-red-600 text-sm mt-1 flex items-center gap-1" role="alert">
+                        <span>⚠️</span> {fieldErrors.phone}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -465,18 +579,39 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="number"
+                      name="experience"
                       value={profile.experience || 0}
-                      onChange={(e) => handleInputChange('experience', parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => {
+                        handleInputChange('experience', parseInt(e.target.value) || 0);
+                        clearFieldError('experience');
+                      }}
+                      onBlur={(e) => validateField('experience', parseInt(e.target.value))}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                        fieldErrors.experience
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
                       min="0"
                       max="70"
+                      aria-invalid={!!fieldErrors.experience}
+                      aria-describedby={fieldErrors.experience ? 'experience-error' : undefined}
                     />
+                    {fieldErrors.experience && (
+                      <p id="experience-error" className="text-red-600 text-sm mt-1 flex items-center gap-1" role="alert">
+                        <span>⚠️</span> {fieldErrors.experience}
+                      </p>
+                    )}
                   </div>
 
                   <div id="skills-section">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Skills *
                     </label>
+                    {fieldErrors.skills && (
+                      <p className="text-red-600 text-sm mb-2 flex items-center gap-1" role="alert">
+                        <span>⚠️</span> {fieldErrors.skills}
+                      </p>
+                    )}
                     <div className="flex gap-2 mb-3">
                       <input
                         type="text"
@@ -489,7 +624,7 @@ export default function ProfilePage() {
                       <Button onClick={handleAddSkill} type="button">Add</Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {profile.skills.map((skill, index) => (
+                      {(profile.skills || []).map((skill, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"

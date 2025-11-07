@@ -269,7 +269,7 @@ export default function ConversationPage() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50">
+      <div className="flex-1 overflow-y-auto bg-gray-50 pb-32 md:pb-0">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
           {Object.keys(groupedMessages).length === 0 ? (
             <div className="text-center py-12">
@@ -329,7 +329,7 @@ export default function ConversationPage() {
       </div>
 
       {/* Message Input */}
-      <div className="bg-white border-t shadow-lg">
+      <div className="bg-white border-t shadow-lg md:relative fixed bottom-0 left-0 right-0 z-40">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
           {/* Template Suggestions */}
           {showTemplates && (

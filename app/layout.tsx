@@ -12,6 +12,8 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -47,7 +49,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className={`${inter.className} antialiased pb-16 md:pb-0`}>
+      <body className={`${inter.className} antialiased pb-14 md:pb-0`}>
         <AuthProvider>
           <OnboardingProvider>
             {children}

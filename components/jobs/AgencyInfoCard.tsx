@@ -9,10 +9,11 @@ import Image from 'next/image';
 
 interface AgencyInfoCardProps {
   agencyId: string;
+  jobId?: string;
   onMessageClick?: () => void;
 }
 
-export default function AgencyInfoCard({ agencyId, onMessageClick }: AgencyInfoCardProps) {
+export default function AgencyInfoCard({ agencyId, jobId, onMessageClick }: AgencyInfoCardProps) {
   const router = useRouter();
   const [agency, setAgency] = useState<Agency | null>(null);
   const [stats, setStats] = useState<AgencyStatsData | null>(null);
@@ -124,7 +125,12 @@ export default function AgencyInfoCard({ agencyId, onMessageClick }: AgencyInfoC
         {/* Action Buttons */}
         <div className="pt-4 border-t">
           <button
-            onClick={() => router.push(`/agencies/${agencyId}`)}
+            onClick={() => {
+              const url = jobId
+                ? `/agencies/${agencyId}?fromJob=${jobId}`
+                : `/agencies/${agencyId}`;
+              router.push(url);
+            }}
             className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             View Agency Profile

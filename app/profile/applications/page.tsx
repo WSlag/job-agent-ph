@@ -74,7 +74,7 @@ export default function ApplicationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 pt-8">
+      <div className="container mx-auto px-3 md:px-4 pt-4 md:pt-8">
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
@@ -85,14 +85,14 @@ export default function ApplicationsPage() {
 
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
           <p className="text-gray-600">
             Track the status of all your job applications
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
           <div className="bg-white rounded-lg shadow-md p-4">
             <p className="text-sm text-gray-600 mb-1">Total</p>
             <p className="text-2xl font-bold text-gray-900">{applications.length}</p>
@@ -117,13 +117,15 @@ export default function ApplicationsPage() {
 
         {/* Filter Bar */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex items-center gap-4">
-            <Filter size={20} className="text-gray-600" />
-            <label className="text-sm font-medium text-gray-700">Filter by status:</label>
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+            <div className="flex items-center gap-2">
+              <Filter size={20} className="text-gray-600" />
+              <label className="text-sm font-medium text-gray-700">Filter by status:</label>
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as ApplicationStatus | 'all')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 md:flex-initial px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Applications</option>
               <option value="pending">Pending</option>
@@ -132,7 +134,7 @@ export default function ApplicationsPage() {
               <option value="rejected">Rejected</option>
               <option value="hired">Hired</option>
             </select>
-            <span className="text-sm text-gray-600 ml-auto">
+            <span className="text-xs md:text-sm text-gray-600 hidden md:inline md:ml-auto">
               Showing {filteredApplications.length} of {applications.length} applications
             </span>
           </div>
@@ -140,7 +142,7 @@ export default function ApplicationsPage() {
 
         {/* Applications List */}
         {filteredApplications.length > 0 ? (
-          <div className="grid gap-6">
+          <div className="grid gap-4 md:gap-6">
             {filteredApplications.map((application) => (
               <ApplicationCard
                 key={application.id}

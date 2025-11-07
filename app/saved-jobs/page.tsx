@@ -166,12 +166,12 @@ export default function SavedJobsPage() {
         showShadowOnScroll
       />
 
-      <div className="container mx-auto px-4 max-w-6xl pt-20 pb-8">
-        <div className="mb-8">
+      <div className="container mx-auto px-3 md:px-4 max-w-6xl pt-16 md:pt-20 pb-8">
+        <div className="mb-8 hidden md:block">
           <div className="flex items-center gap-3">
             <Bookmark className="w-8 h-8 text-blue-600" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Saved Jobs</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Saved Jobs</h1>
               <p className="text-gray-600 mt-1">
                 {savedJobs.length} {savedJobs.length === 1 ? 'job' : 'jobs'} saved for later
               </p>
@@ -180,9 +180,9 @@ export default function SavedJobsPage() {
         </div>
 
         {savedJobs.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">No saved jobs yet</h2>
+          <Card className="p-8 md:p-12 text-center">
+            <Bookmark className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">No saved jobs yet</h2>
             <p className="text-gray-600 mb-6">
               Start saving jobs that interest you to easily find them later
             </p>
@@ -193,8 +193,8 @@ export default function SavedJobsPage() {
         ) : (
           <div className="space-y-4">
             {savedJobs.map((job) => (
-              <Card key={job.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start gap-4">
+              <Card key={job.id} className="p-4 md:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -252,9 +252,9 @@ export default function SavedJobsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <Link href={`/jobs/${job.id}`}>
-                      <Button variant="primary" className="whitespace-nowrap">
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full md:w-auto">
+                    <Link href={`/jobs/${job.id}`} className="w-full md:w-auto">
+                      <Button variant="primary" className="whitespace-nowrap w-full md:w-auto" size="sm">
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View Job
                       </Button>
@@ -263,7 +263,8 @@ export default function SavedJobsPage() {
                       variant="secondary"
                       onClick={() => handleRemoveSavedJob(job.id)}
                       disabled={removingJobId === job.id}
-                      className="whitespace-nowrap"
+                      className="whitespace-nowrap w-full md:w-auto"
+                      size="sm"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       {removingJobId === job.id ? 'Removing...' : 'Remove'}

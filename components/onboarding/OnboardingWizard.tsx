@@ -196,7 +196,7 @@ const STEPS = [
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-4 h-4 text-purple-600 mt-0.5" />
-                <span>Get real-time responses from recruiters</span>
+                <span>Get real-time responses from Recruitment officers</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-4 h-4 text-purple-600 mt-0.5" />
