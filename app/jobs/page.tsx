@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot, startAfter } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -10,6 +10,7 @@ import JobList from '@/components/jobs/JobList';
 import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Search, Filter, MapPin, Briefcase, DollarSign, X } from 'lucide-react';
 import { getCategoryNames } from '@/lib/categories';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const COUNTRIES = [
   { code: 'AE', name: 'UAE (Middle East)' },
@@ -28,8 +29,9 @@ const COUNTRIES = [
 
 const JOB_TYPES = ['full-time', 'part-time', 'contract'];
 
-export default function JobsPage() {
+function JobsPageContent() {
   const searchParams = useSearchParams();
+  const { onboardingData, startTour } = useOnboarding();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +44,16 @@ export default function JobsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
+
+  // Start search-filters tour for first-time users
+  useEffect(() => {
+    if (onboardingData && !onboardingData.featuresTours['search-filters'] && !loading && jobs.length > 0) {
+      const timer = setTimeout(() => {
+        startTour('search-filters');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [onboardingData, loading, jobs.length, startTour]);
 
   // Read category from URL params on mount
   useEffect(() => {
@@ -172,6 +184,7 @@ export default function JobsPage() {
             // Collapsed state - Shows placeholder button
             <button
               onClick={() => setMobileSearchExpanded(true)}
+              data-tour="search-bar"
               className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-left active:bg-gray-100 transition-colors"
             >
               <Search className="text-gray-400 w-5 h-5 flex-shrink-0" />
@@ -212,6 +225,7 @@ export default function JobsPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
+                    data-tour="filter-button"
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                       showFilters
                         ? 'bg-blue-50 border-blue-500 text-blue-700'
@@ -336,5 +350,17 @@ export default function JobsPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    }>
+      <JobsPageContent />
+    </Suspense>
   );
 }

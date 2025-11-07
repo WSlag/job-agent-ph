@@ -15,20 +15,13 @@ import {
   CheckCircle,
   MessageCircle,
   Sparkles,
-  Clock,
-  DollarSign,
-  UserCheck,
-  Bookmark,
   Globe,
-  Users,
-  Star,
-  Briefcase,
-  Building2,
 } from 'lucide-react';
 import HeroCarousel from '@/components/ui/HeroCarousel';
 import LandingNav3Enhanced from '@/components/layout/LandingNav3Enhanced';
 import Logo from '@/components/ui/Logo';
 import Modal from '@/components/ui/Modal';
+import JobCard from '@/components/jobs/JobCard';
 import { motion } from 'framer-motion';
 import { staggerContainer, listItemAnimation } from '@/lib/animations';
 import { CATEGORIES } from '@/lib/categories';
@@ -157,37 +150,6 @@ export default function Home() {
     }
   };
 
-  const formatSalary = (job: Job) => {
-    if (!job.salaryMin && !job.salaryMax) return 'Negotiable';
-
-    // Helper to format number to K format (e.g., 5000 -> 5K)
-    const toKFormat = (num: number) => {
-      if (num >= 1000) {
-        const k = num / 1000;
-        return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`;
-      }
-      return num.toString();
-    };
-
-    if (job.salaryMin && job.salaryMax) {
-      return `${job.currency}${toKFormat(job.salaryMin)} - ${toKFormat(job.salaryMax)}`;
-    }
-    if (job.salaryMin) return `${job.currency}${toKFormat(job.salaryMin)}+`;
-    return `${job.currency}${toKFormat(job.salaryMax!)}`;
-  };
-
-  const getTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return `${Math.floor(diffDays / 7)}w ago`;
-  };
 
   const features = [
     {
@@ -353,100 +315,12 @@ export default function Home() {
                     key={job.id}
                     variants={listItemAnimation}
                     transition={{ delay: index * 0.05 }}
-                    whileHover={{ y: -6, scale: 1.02 }}
-                    className="bg-white border border-gray-200 rounded-xl md:rounded-2xl overflow-hidden hover:shadow-2xl transition-shadow duration-300 group"
                   >
-                    {/* Job Image */}
-                    <div className="relative h-32 md:h-48 overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
-                      {job.imageUrl ? (
-                        <img
-                          src={job.imageUrl}
-                          alt={job.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
-                          <Briefcase className="w-16 h-16 text-blue-300" />
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-md px-2 py-1 rounded-full text-[10px] md:text-xs font-semibold text-blue-600 flex items-center gap-1 shadow-lg border border-blue-100">
-                        <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                        <span className="hidden md:inline">{getTimeAgo(job.postedAt)}</span>
-                        <span className="md:hidden">{getTimeAgo(job.postedAt).split(' ')[0]}</span>
-                      </div>
-                    </div>
-
-                    {/* Job Details */}
-                    <div className="p-3 md:p-6">
-                      {/* Job Type Badge */}
-                      <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3">
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-normal">
-                          {job.jobType}
-                        </span>
-                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-normal truncate">
-                          {job.locationType}
-                        </span>
-                      </div>
-
-                      {/* Job Title */}
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
-                        {job.title}
-                      </h3>
-
-                      {/* Salary - Prominent Display */}
-                      <div className="mb-2">
-                        <span className="text-base md:text-lg font-bold text-blue-600">{formatSalary(job)}</span>
-                      </div>
-
-                      {/* Company */}
-                      <p className="text-sm font-normal text-gray-600 mb-3 flex items-center gap-2 line-clamp-1">
-                        <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="truncate">{job.companyName}</span>
-                      </p>
-
-                      {/* Description */}
-                      <p className="hidden md:block text-sm text-gray-600 mb-4 line-clamp-2">
-                        {job.description}
-                      </p>
-
-                      {/* Location */}
-                      <div className="mb-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <MapPin className="w-4 h-4 flex-shrink-0" />
-                          <span className="font-normal truncate">{job.location}, {job.country}</span>
-                        </div>
-                      </div>
-
-                      {/* Experience Required */}
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-4 pb-4 border-b border-gray-100">
-                        <UserCheck className="w-4 h-4" />
-                        <span>{job.experienceRequired} years experience</span>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-1.5 md:gap-2">
-                        <Link
-                          href={`/jobs/${job.id}`}
-                          className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1 md:gap-2 group/btn"
-                        >
-                          <span className="hidden md:inline">View Details</span>
-                          <span className="md:hidden">View</span>
-                          <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover/btn:translate-x-1 transition-transform" />
-                        </Link>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleSave(job.id)}
-                          className={`px-2 md:px-4 border-2 rounded-lg md:rounded-xl text-xs md:text-base font-semibold transition-all ${
-                            savedJobs.has(job.id)
-                              ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'
-                              : 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                          }`}
-                        >
-                          {savedJobs.has(job.id) ? 'Saved' : 'Save'}
-                        </motion.button>
-                      </div>
-                    </div>
+                    <JobCard
+                      job={job}
+                      onSave={handleSave}
+                      isSaved={savedJobs.has(job.id)}
+                    />
                   </motion.div>
                 ))}
               </motion.div>

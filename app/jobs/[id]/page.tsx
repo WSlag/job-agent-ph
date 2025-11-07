@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 import { hasAppliedToJob } from '@/lib/application-helpers';
 import { calculateJobMatch, getPlaceholderJobData } from '@/lib/placeholder-data';
 import { trackJobView } from '@/lib/job-view-helpers';
@@ -55,6 +56,7 @@ export default function JobDetailsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, userType, loading: authLoading } = useAuth();
+  const { onboardingData, startTour } = useOnboarding();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -122,6 +124,16 @@ export default function JobDetailsPage() {
       trackJobView(job.id, user?.uid);
     }
   }, [job, user]);
+
+  // Trigger quick-apply tour for first-time users
+  useEffect(() => {
+    if (onboardingData && !onboardingData.featuresTours['quick-apply'] && job && userType === 'jobhunter' && !loading) {
+      const timer = setTimeout(() => {
+        startTour('quick-apply');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [onboardingData, job, userType, loading, startTour]);
 
   const loadJob = async () => {
     try {
@@ -770,6 +782,7 @@ export default function JobDetailsPage() {
                     <button
                       onClick={handleQuickApply}
                       disabled={checkingApplication || isQuickApplying}
+                      data-tour="quick-apply"
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                     >
                       {isQuickApplying ? (
@@ -790,6 +803,7 @@ export default function JobDetailsPage() {
                   <button
                     onClick={handleApply}
                     disabled={checkingApplication || isQuickApplying}
+                    data-tour="apply-button"
                     className={`w-full ${
                       userProfile?.resumeUrl
                         ? 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
@@ -802,6 +816,7 @@ export default function JobDetailsPage() {
                   {/* Message Agency Button - Always Visible */}
                   <button
                     onClick={handleMessageAgency}
+                    data-tour="message-button"
                     className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition-colors flex items-center justify-center gap-2"
                   >
                     <MessageCircle size={20} />

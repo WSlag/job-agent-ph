@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useOnboarding } from '@/contexts/OnboardingContext'
 import { subscribeToJobHunterApplications } from '@/lib/application-helpers'
 import { JobApplication, ApplicationStatus } from '@/types'
 import ApplicationCard from '@/components/applications/ApplicationCard'
@@ -10,6 +11,7 @@ import { Loader2, Briefcase, Filter, ArrowLeft } from 'lucide-react'
 
 export default function ApplicationsPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
+  const { onboardingData, startTour } = useOnboarding()
   const router = useRouter()
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [filteredApplications, setFilteredApplications] = useState<JobApplication[]>([])
@@ -47,6 +49,16 @@ export default function ApplicationsPage() {
       setFilteredApplications(applications.filter(app => app.status === statusFilter))
     }
   }, [applications, statusFilter])
+
+  // Trigger application-status tour for first-time users
+  useEffect(() => {
+    if (onboardingData && !onboardingData.featuresTours['application-status'] && !loading && applications.length > 0) {
+      const timer = setTimeout(() => {
+        startTour('application-status');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [onboardingData, loading, applications.length, startTour])
 
   if (authLoading || loading) {
     return (

@@ -122,6 +122,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
+      data-tour="job-card"
       className={`bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden ${
         job.isFeatured
           ? 'border-2 border-yellow-400 ring-2 ring-yellow-100'
@@ -166,18 +167,18 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
       {/* Content Section */}
       <div className="p-3 sm:p-4 md:p-5">
         {/* Job Type & Category Tags */}
-        <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+        <div className="flex flex-wrap gap-2 sm:gap-2.5 mb-2 sm:mb-3">
           <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-normal">
             {job.locationType === 'remote' ? 'Remote' : job.locationType === 'on-site' ? 'On-site' : 'Hybrid'}
           </span>
-          {job.category && (
-            <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-normal">
-              {job.category}
-            </span>
-          )}
           {job.jobType && (
             <span className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-normal">
               {job.jobType.replace('-', ' ')}
+            </span>
+          )}
+          {job.category && (
+            <span className="hidden md:inline-flex bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-normal">
+              {job.category}
             </span>
           )}
         </div>
@@ -204,7 +205,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
 
         {/* Job Tagline / Short Description */}
         {getTaglineOrPreview() && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+          <p className="hidden md:block text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
             {getTaglineOrPreview()}
           </p>
         )}
@@ -255,6 +256,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
               </Link>
               <button
                 onClick={handleSave}
+                data-tour="save-button"
                 className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg font-semibold border-2 transition-colors text-xs sm:text-sm ${
                   saved
                     ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'

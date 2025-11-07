@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
@@ -9,6 +10,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile, updatePassword } from 'firebase/auth';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import ProfileChecklist from '@/components/onboarding/ProfileChecklist';
 import {
   validateEmail,
   validatePhone,
@@ -47,6 +49,7 @@ interface AgencyProfile {
 
 export default function ProfilePage() {
   const { user: currentUser, userType, loading: authLoading } = useAuth();
+  const { updateProfileChecklist } = useOnboarding();
   const router = useRouter();
   const [profile, setProfile] = useState<JobHunterProfile | AgencyProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -271,6 +274,17 @@ export default function ProfilePage() {
 
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       await loadProfile();
+
+      // Update profile checklist for job hunters
+      if (userType === 'jobhunter') {
+        const hunterProfile = profile as JobHunterProfile;
+        updateProfileChecklist({
+          resumeUploaded: !!resumeUrl,
+          skillsAdded: (hunterProfile.skills || []).length > 0,
+          locationSet: !!(hunterProfile.location && hunterProfile.location.length > 0),
+          bioAdded: !!(hunterProfile.bio && hunterProfile.bio.length > 0),
+        });
+      }
     } catch (error) {
       console.error('Error saving profile:', error);
       setMessage({ type: 'error', text: 'Failed to save profile. Please try again.' });
@@ -380,11 +394,15 @@ export default function ProfilePage() {
         </div>
 
         {activeTab === 'profile' ? (
-          <Card className="p-6">
-            <div className="space-y-6">
-              {/* Job Hunter Profile */}
-              {userType === 'jobhunter' && 'fullName' in profile && (
-                <>
+          <>
+            {/* Profile Checklist - Only for job hunters */}
+            {userType === 'jobhunter' && <ProfileChecklist />}
+
+            <Card className="p-6">
+              <div className="space-y-6">
+                {/* Job Hunter Profile */}
+                {userType === 'jobhunter' && 'fullName' in profile && (
+                  <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <User className="inline w-4 h-4 mr-2" />
@@ -412,7 +430,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  <div>
+                  <div id="location-section">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <MapPin className="inline w-4 h-4 mr-2" />
                       Location *
@@ -455,7 +473,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  <div>
+                  <div id="skills-section">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Skills *
                     </label>
@@ -488,7 +506,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div>
+                  <div id="bio-section">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Bio
                     </label>
@@ -502,7 +520,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  <div>
+                  <div id="resume-section">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FileText className="inline w-4 h-4 mr-2" />
                       Resume
@@ -717,6 +735,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </Card>
+          </>
         ) : (
           <Card className="p-6">
             <div className="space-y-6">

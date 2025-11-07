@@ -119,7 +119,7 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
           </div>
 
           {/* Status Badge */}
-          <div className={`px-4 py-2 rounded-full text-sm font-semibold ${statusConfig.color} bg-white border-2`}>
+          <div data-tour="status-badge" className={`px-4 py-2 rounded-full text-sm font-semibold ${statusConfig.color} bg-white border-2`}>
             {statusConfig.label}
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+        <div data-tour="application-actions" className="flex items-center gap-3 pt-4 border-t border-gray-200">
           {application.resumeUrl && (
             <a
               href={application.resumeUrl}

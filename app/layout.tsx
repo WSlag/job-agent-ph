@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import BottomNav from "@/components/layout/BottomNav";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import FeatureTour from "@/components/onboarding/FeatureTour";
 import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({
@@ -46,33 +49,37 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} antialiased pb-16 md:pb-0`}>
         <AuthProvider>
-          {children}
-          <BottomNav />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#fff',
-                color: '#363636',
-                borderRadius: '12px',
-                padding: '16px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
+          <OnboardingProvider>
+            {children}
+            <BottomNav />
+            <OnboardingWizard />
+            <FeatureTour />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#fff',
+                  color: '#363636',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                success: {
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff',
+                  },
                 },
-              },
-            }}
-          />
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+          </OnboardingProvider>
         </AuthProvider>
       </body>
     </html>
