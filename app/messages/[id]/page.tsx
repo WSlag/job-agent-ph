@@ -45,6 +45,10 @@ export default function ConversationPage() {
       return;
     }
 
+    if (!params.id) {
+      return;
+    }
+
     loadConversationDetails();
 
     const conversationId = params.id as string;
@@ -60,15 +64,23 @@ export default function ConversationPage() {
         markMessagesAsRead(
           conversationId,
           unreadMessages.map((msg) => msg.id)
-        );
+        ).catch((error) => {
+          console.error('Failed to mark messages as read:', error);
+        });
       }
 
-      // Scroll to bottom
-      setTimeout(() => scrollToBottom(), 100);
+      // Scroll to bottom with better timing
+      requestAnimationFrame(() => {
+        setTimeout(() => scrollToBottom(), 150);
+      });
     });
 
-    return () => unsubscribe();
-  }, [user, params.id]);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user, params.id, router]);
 
   useEffect(() => {
     // Auto-resize textarea
@@ -114,8 +126,32 @@ export default function ConversationPage() {
     if (!newMessage.trim() || !user || !userType || sending) return;
 
     const messageText = newMessage.trim();
+
+    // Validate message length before sending
+    if (messageText.length > 2000) {
+      alert('Message is too long. Maximum 2000 characters allowed.');
+      return;
+    }
+
     setNewMessage('');
     setSending(true);
+
+    // Optimistic UI update - add temporary message
+    const tempMessage: Message = {
+      id: `temp-${Date.now()}`,
+      conversationId: params.id as string,
+      senderId: user.uid,
+      senderType: userType,
+      content: messageText,
+      createdAt: new Date(),
+      read: false,
+    };
+    setMessages((prev) => [...prev, tempMessage]);
+
+    // Scroll to bottom immediately
+    requestAnimationFrame(() => {
+      scrollToBottom();
+    });
 
     try {
       await sendMessage(
@@ -124,10 +160,19 @@ export default function ConversationPage() {
         userType,
         messageText
       );
+      // Message will be updated through real-time listener
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message');
-      setNewMessage(messageText); // Restore message on error
+
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+
+      // Show user-friendly error
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      alert(errorMessage);
+
+      // Restore message text
+      setNewMessage(messageText);
     } finally {
       setSending(false);
     }
@@ -177,8 +222,10 @@ export default function ConversationPage() {
       : conversationDetails?.jobHunter;
   const otherPartyName =
     userType === 'jobhunter'
-      ? conversationDetails?.agency?.companyName
-      : `${conversationDetails?.jobHunter?.firstName} ${conversationDetails?.jobHunter?.lastName}`;
+      ? conversationDetails?.agency?.companyName || 'Deleted Agency'
+      : conversationDetails?.jobHunter
+        ? `${conversationDetails.jobHunter.firstName || ''} ${conversationDetails.jobHunter.lastName || ''}`.trim() || 'Deleted User'
+        : 'Deleted User';
 
   const groupedMessages = groupMessagesByDate();
   const templates = userType && (userType === 'jobhunter' || userType === 'agency')
@@ -376,9 +423,15 @@ export default function ConversationPage() {
                   }
                 }}
                 placeholder="Type a message"
+                maxLength={2000}
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[44px] max-h-[200px] text-sm md:text-base md:px-4 md:py-3"
                 rows={1}
               />
+              {newMessage.length > 1800 && (
+                <div className={`absolute -top-6 right-0 text-xs ${newMessage.length >= 2000 ? 'text-red-500' : 'text-gray-500'}`}>
+                  {newMessage.length}/2000
+                </div>
+              )}
             </div>
 
             <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
@@ -20,6 +20,89 @@ function MessagesContent() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationsWithDetails, setConversationsWithDetails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const creatingConversation = useRef(false); // Prevent duplicate conversation creation
+
+  // Memoize handleCreateConversationFromJob to prevent recreation
+  const handleCreateConversationFromJob = useCallback(async (jobId: string) => {
+    // Prevent duplicate calls
+    if (creatingConversation.current) return;
+
+    creatingConversation.current = true;
+    try {
+      if (!user || !userType) return;
+
+      // Fetch job to get agency ID
+      const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId));
+      if (!jobDoc.exists()) {
+        alert('Job not found');
+        return;
+      }
+
+      const jobData = jobDoc.data();
+      const agencyId = jobData.agencyId;
+
+      if (userType === 'jobhunter') {
+        // Create or get conversation
+        const conversationId = await getOrCreateConversation(
+          jobId,
+          user.uid,
+          agencyId
+        );
+
+        // Navigate to the conversation (replace to avoid navigation loop)
+        router.replace(`/messages/${conversationId}`);
+      } else {
+        alert('Only job hunters can message agencies about jobs');
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      alert('Failed to start conversation');
+    } finally {
+      creatingConversation.current = false;
+    }
+  }, [user, userType, router]);
+
+  // Memoize loadConversationDetails with batching to reduce N+1 queries
+  const loadConversationDetails = useCallback(async (convos: Conversation[]) => {
+    try {
+      // Collect unique IDs to batch fetch
+      const uniqueJobIds = [...new Set(convos.map(c => c.jobId))];
+      const uniqueAgencyIds = [...new Set(convos.map(c => c.agencyId))];
+      const uniqueJobHunterIds = [...new Set(convos.map(c => c.jobHunterId))];
+
+      // Batch fetch all unique entities
+      const [jobDocs, agencyDocs, jobHunterDocs] = await Promise.all([
+        Promise.all(uniqueJobIds.map(id => getDoc(doc(db, COLLECTIONS.JOBS, id)))),
+        Promise.all(uniqueAgencyIds.map(id => getDoc(doc(db, COLLECTIONS.AGENCIES, id)))),
+        Promise.all(uniqueJobHunterIds.map(id => getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, id)))),
+      ]);
+
+      // Create lookup maps for O(1) access
+      const jobsMap = new Map(
+        jobDocs.map(d => [d.id, d.exists() ? { id: d.id, ...d.data() } : null])
+      );
+      const agenciesMap = new Map(
+        agencyDocs.map(d => [d.id, d.exists() ? { id: d.id, ...d.data() } : null])
+      );
+      const jobHuntersMap = new Map(
+        jobHunterDocs.map(d => [d.id, d.exists() ? { id: d.id, ...d.data() } : null])
+      );
+
+      // Map conversations with their details using lookup maps
+      const details = convos.map(convo => ({
+        ...convo,
+        job: jobsMap.get(convo.jobId) || null,
+        agency: agenciesMap.get(convo.agencyId) || null,
+        jobHunter: jobHuntersMap.get(convo.jobHunterId) || null,
+      }));
+
+      setConversationsWithDetails(details);
+    } catch (error) {
+      console.error('Error loading conversation details:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -54,68 +137,7 @@ function MessagesContent() {
     );
 
     return () => unsubscribe();
-  }, [user, userType]);
-
-  const handleCreateConversationFromJob = async (jobId: string) => {
-    try {
-      if (!user || !userType) return;
-
-      // Fetch job to get agency ID
-      const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId));
-      if (!jobDoc.exists()) {
-        alert('Job not found');
-        return;
-      }
-
-      const jobData = jobDoc.data();
-      const agencyId = jobData.agencyId;
-
-      if (userType === 'jobhunter') {
-        // Create or get conversation
-        const conversationId = await getOrCreateConversation(
-          jobId,
-          user.uid,
-          agencyId
-        );
-
-        // Navigate to the conversation (replace to avoid navigation loop)
-        router.replace(`/messages/${conversationId}`);
-      } else {
-        alert('Only job hunters can message agencies about jobs');
-      }
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-      alert('Failed to start conversation');
-    }
-  };
-
-  const loadConversationDetails = async (convos: Conversation[]) => {
-    try {
-      const detailsPromises = convos.map(async (convo) => {
-        const [jobDoc, agencyDoc, jobHunterDoc] = await Promise.all([
-          getDoc(doc(db, COLLECTIONS.JOBS, convo.jobId)),
-          getDoc(doc(db, COLLECTIONS.AGENCIES, convo.agencyId)),
-          getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, convo.jobHunterId)),
-        ]);
-
-        return {
-          ...convo,
-          job: jobDoc.exists() ? { id: jobDoc.id, ...jobDoc.data() } : null,
-          agency: agencyDoc.exists() ? { id: agencyDoc.id, ...agencyDoc.data() } : null,
-          jobHunter: jobHunterDoc.exists()
-            ? { id: jobHunterDoc.id, ...jobHunterDoc.data() }
-            : null,
-        };
-      });
-
-      const details = await Promise.all(detailsPromises);
-      setConversationsWithDetails(details);
-    } catch (error) {
-      console.error('Error loading conversation details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, userType, searchParams, router, handleCreateConversationFromJob, loadConversationDetails]);
 
   if (loading) {
     return (
@@ -176,8 +198,10 @@ function MessagesContent() {
                   userType === 'jobhunter' ? convo.agency : convo.jobHunter;
                 const otherPartyName =
                   userType === 'jobhunter'
-                    ? convo.agency?.companyName
-                    : `${convo.jobHunter?.firstName} ${convo.jobHunter?.lastName}`;
+                    ? convo.agency?.companyName || 'Deleted Agency'
+                    : convo.jobHunter
+                      ? `${convo.jobHunter.firstName || ''} ${convo.jobHunter.lastName || ''}`.trim() || 'Deleted User'
+                      : 'Deleted User';
 
                 return (
                   <Link
@@ -200,7 +224,7 @@ function MessagesContent() {
                                 {otherPartyName}
                               </h3>
                               <p className="text-sm text-gray-600 truncate">
-                                {convo.job?.title || 'Job position'}
+                                {convo.job?.title || 'Deleted Job'}
                               </p>
                             </div>
                             {convo.lastMessage && convo.lastMessage.createdAt &&

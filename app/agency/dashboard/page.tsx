@@ -8,10 +8,11 @@ import { getAgencyApplications } from '@/lib/application-helpers'
 import { Job, JobApplication } from '@/types'
 import MobileNativeHeader from '@/components/layout/MobileNativeHeader'
 import JobCard from '@/components/jobs/JobCard'
-import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit, Star } from 'lucide-react'
+import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit, Star, Home as HomeIcon, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { Agency } from '@/types'
 import FeaturedRequestModal from '@/components/modals/FeaturedRequestModal'
+import RecentMessagesWidget from '@/components/agency/RecentMessagesWidget'
 
 export default function AgencyDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -78,6 +79,16 @@ export default function AgencyDashboardPage() {
       />
 
       <div className="container mx-auto px-4 pt-20 pb-8">
+        {/* Breadcrumb Navigation - Desktop/Tablet only */}
+        <nav className="hidden md:flex items-center gap-2 text-sm mb-6">
+          <Link href="/" className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors">
+            <HomeIcon size={16} />
+            Home
+          </Link>
+          <ChevronRight size={16} className="text-gray-400" />
+          <span className="text-gray-900 font-medium">Dashboard</span>
+        </nav>
+
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Agency Dashboard</h1>
@@ -202,6 +213,11 @@ export default function AgencyDashboardPage() {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Recent Messages Widget */}
+        <div className="mb-8">
+          <RecentMessagesWidget />
         </div>
 
         {/* Active Job Postings */}

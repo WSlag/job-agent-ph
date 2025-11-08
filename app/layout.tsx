@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import BottomNav from "@/components/layout/BottomNav";
-import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import OnboardingWizardWrapper from "@/components/onboarding/OnboardingWizardWrapper";
 import FeatureTour from "@/components/onboarding/FeatureTour";
 import { Toaster } from 'react-hot-toast';
 
@@ -49,12 +49,12 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body className={`${inter.className} antialiased pb-14 md:pb-0`}>
+      <body className={`${inter.className} antialiased pb-14 md:pb-0 md:pt-16`}>
         <AuthProvider>
           <OnboardingProvider>
             {children}
             <BottomNav />
-            <OnboardingWizard />
+            <OnboardingWizardWrapper />
             <FeatureTour />
             <Toaster
               position="top-right"

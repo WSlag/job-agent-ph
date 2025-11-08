@@ -21,6 +21,7 @@ import { Conversation, Message, UserType } from '@/types';
 
 /**
  * Create or get existing conversation between job hunter and agency for a specific job
+ * Uses deterministic document ID to prevent race condition duplicates
  */
 export async function getOrCreateConversation(
   jobId: string,
@@ -28,24 +29,18 @@ export async function getOrCreateConversation(
   agencyId: string
 ): Promise<string> {
   try {
+    // Use composite key as document ID to ensure uniqueness
+    const conversationKey = `${jobId}_${jobHunterId}_${agencyId}`;
+    const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationKey);
+
     // Check if conversation already exists
-    const conversationsRef = collection(db, COLLECTIONS.CONVERSATIONS);
-    const q = query(
-      conversationsRef,
-      where('jobId', '==', jobId),
-      where('jobHunterId', '==', jobHunterId),
-      where('agencyId', '==', agencyId),
-      limit(1)
-    );
+    const conversationDoc = await getDoc(conversationRef);
 
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
-      // Conversation exists, return its ID
-      return querySnapshot.docs[0].id;
+    if (conversationDoc.exists()) {
+      return conversationDoc.id;
     }
 
-    // Create new conversation
+    // Create new conversation with setDoc for idempotency
     const newConversation = {
       jobId,
       jobHunterId,
@@ -55,8 +50,8 @@ export async function getOrCreateConversation(
       updatedAt: serverTimestamp(),
     };
 
-    const docRef = await addDoc(conversationsRef, newConversation);
-    return docRef.id;
+    await setDoc(conversationRef, newConversation);
+    return conversationRef.id;
   } catch (error) {
     console.error('Error getting or creating conversation:', error);
     throw error;
@@ -74,32 +69,57 @@ export async function sendMessage(
   attachments?: string[]
 ): Promise<string> {
   try {
+    // Validate message content
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
+      throw new Error('Message content cannot be empty');
+    }
+    if (trimmedContent.length > 2000) {
+      throw new Error('Message content cannot exceed 2000 characters');
+    }
+
+    // Sanitize content (basic sanitization)
+    const sanitizedContent = trimmedContent
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+      .substring(0, 2000); // Ensure max length
+
     const messagesRef = collection(
       db,
       getCollectionPath.messages(conversationId)
     );
 
+    const timestamp = serverTimestamp();
     const newMessage = {
+      conversationId, // Added for consistency with Message type
       senderId,
-      content,
-      timestamp: serverTimestamp(),
+      senderType, // Added senderType to message document
+      content: sanitizedContent,
+      timestamp,
       read: false,
     };
 
     const docRef = await addDoc(messagesRef, newMessage);
 
-    // Update conversation's lastMessage and updatedAt
+    // Get current conversation to calculate unreadCount
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
+    const conversationSnap = await getDoc(conversationRef);
+    const conversationData = conversationSnap.data();
+
+    // Increment unreadCount for the recipient
+    const currentUnreadCount = conversationData?.unreadCount || 0;
+
+    // Update conversation's lastMessage, unreadCount, and updatedAt
     await updateDoc(conversationRef, {
       lastMessage: {
         id: docRef.id,
         senderId,
         senderType,
-        content,
-        createdAt: new Date(), // Use Date for lastMessage preview
+        content: sanitizedContent.substring(0, 100), // Store preview in lastMessage
+        createdAt: new Date(), // Use Date for immediate display (serverTimestamp would be null)
         read: false,
       },
-      updatedAt: serverTimestamp(),
+      unreadCount: currentUnreadCount + 1, // Increment unread count
+      updatedAt: timestamp,
     });
 
     return docRef.id;
@@ -110,13 +130,15 @@ export async function sendMessage(
 }
 
 /**
- * Mark messages as read
+ * Mark messages as read and reset unreadCount
  */
 export async function markMessagesAsRead(
   conversationId: string,
   messageIds: string[]
 ): Promise<void> {
   try {
+    if (messageIds.length === 0) return;
+
     const messagesRef = collection(
       db,
       getCollectionPath.messages(conversationId)
@@ -128,6 +150,21 @@ export async function markMessagesAsRead(
     });
 
     await Promise.all(updatePromises);
+
+    // Reset unreadCount in conversation
+    const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
+    await updateDoc(conversationRef, {
+      unreadCount: 0,
+    });
+
+    // Update lastMessage read status if the last message was read
+    const conversationSnap = await getDoc(conversationRef);
+    const conversationData = conversationSnap.data();
+    if (conversationData?.lastMessage && messageIds.includes(conversationData.lastMessage.id)) {
+      await updateDoc(conversationRef, {
+        'lastMessage.read': true,
+      });
+    }
   } catch (error) {
     console.error('Error marking messages as read:', error);
     throw error;
@@ -140,7 +177,8 @@ export async function markMessagesAsRead(
 export function subscribeToConversations(
   userId: string,
   userType: UserType,
-  onUpdate: (conversations: Conversation[]) => void
+  onUpdate: (conversations: Conversation[]) => void,
+  limitCount: number = 20 // Default pagination limit
 ): () => void {
   const conversationsRef = collection(db, COLLECTIONS.CONVERSATIONS);
   const field = userType === 'jobhunter' ? 'jobHunterId' : 'agencyId';
@@ -148,7 +186,8 @@ export function subscribeToConversations(
   const q = query(
     conversationsRef,
     where(field, '==', userId),
-    orderBy('updatedAt', 'desc')
+    orderBy('updatedAt', 'desc'),
+    limit(limitCount) // Add pagination limit
   );
 
   const unsubscribe = onSnapshot(
@@ -178,14 +217,20 @@ export function subscribeToConversations(
  */
 export function subscribeToMessages(
   conversationId: string,
-  onUpdate: (messages: Message[]) => void
+  onUpdate: (messages: Message[]) => void,
+  limitCount: number = 100 // Default limit for initial message load
 ): () => void {
   const messagesRef = collection(
     db,
     getCollectionPath.messages(conversationId)
   );
 
-  const q = query(messagesRef, orderBy('timestamp', 'asc'));
+  // Get most recent messages first, then reverse for display
+  const q = query(
+    messagesRef,
+    orderBy('timestamp', 'desc'),
+    limit(limitCount)
+  );
 
   const unsubscribe = onSnapshot(
     q,
@@ -195,9 +240,11 @@ export function subscribeToMessages(
         return {
           id: doc.id,
           ...data,
+          conversationId,
           createdAt: data.timestamp?.toDate() || new Date(),
         } as Message;
-      });
+      }).reverse(); // Reverse to show oldest first
+
       onUpdate(messages);
     },
     (error) => {
@@ -259,6 +306,7 @@ export async function getConversationDetails(conversationId: string) {
 
 /**
  * Get total unread messages count for a user
+ * Optimized to use conversation's unreadCount field instead of querying all messages
  */
 export async function getUnreadMessagesCount(
   userId: string,
@@ -274,24 +322,16 @@ export async function getUnreadMessagesCount(
 
     let totalUnread = 0;
 
-    for (const doc of snapshot.docs) {
+    // Sum up unreadCount from all conversations
+    snapshot.docs.forEach((doc) => {
       const conversationData = doc.data();
-      const messagesRef = collection(
-        db,
-        getCollectionPath.messages(doc.id)
-      );
-
-      // Count unread messages from the other party
-      const otherPartyField = userType === 'jobhunter' ? 'agencyId' : 'jobHunterId';
-      const unreadQuery = query(
-        messagesRef,
-        where('read', '==', false),
-        where('senderId', '==', conversationData[otherPartyField])
-      );
-
-      const unreadSnapshot = await getDocs(unreadQuery);
-      totalUnread += unreadSnapshot.size;
-    }
+      // Only count unread messages sent by the other party
+      if (conversationData.lastMessage &&
+          conversationData.lastMessage.senderId !== userId &&
+          !conversationData.lastMessage.read) {
+        totalUnread += conversationData.unreadCount || 0;
+      }
+    });
 
     return totalUnread;
   } catch (error) {

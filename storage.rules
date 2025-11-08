@@ -70,7 +70,21 @@ service firebase.storage {
       allow update, delete: if isAuthenticated() && isOwner(userId);
     }
 
-    // Job images/banners uploaded by agencies (new path)
+    // Job images - 2-segment path (current upload code uses this)
+    match /jobs/{agencyId}/{fileName} {
+      // Agencies can upload images for their jobs
+      allow create: if isAuthenticated() &&
+                      isOwner(agencyId) &&
+                      isValidImageFile();
+
+      // Anyone can read job images (public)
+      allow read: if true;
+
+      // Only the agency owner can update/delete
+      allow update, delete: if isAuthenticated() && isOwner(agencyId);
+    }
+
+    // Job images/banners uploaded by agencies (3-segment path for future/legacy)
     match /jobs/{agencyId}/{jobId}/{fileName} {
       // Agencies can upload images for their jobs
       allow create: if isAuthenticated() &&

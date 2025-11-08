@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, FormEvent, ChangeEvent } from 'react'
+import { useState, FormEvent, ChangeEvent, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { createJob } from '@/lib/job-helpers'
 import Button from '@/components/ui/Button'
-import { Upload, X } from 'lucide-react'
+import { Upload, X, Info, AlertCircle, HelpCircle } from 'lucide-react'
 import type { JobType, JobLocation } from '@/types'
+import FieldHint from './FieldHint'
+import FormSectionHeader from './FormSectionHeader'
+import HelpTooltip from '@/components/onboarding/HelpTooltip'
+import { JOB_FORM_HINTS, JOB_FORM_TOOLTIPS, CHARACTER_LIMITS, VALIDATION_MESSAGES } from '@/lib/job-form-hints'
 
 interface FormData {
   title: string
@@ -62,6 +66,7 @@ export default function JobPostingForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [salaryError, setSalaryError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -80,6 +85,33 @@ export default function JobPostingForm() {
     expiresAt: '',
     imageFile: null,
   })
+
+  // Computed values
+  const skillsCount = useMemo(() => {
+    return formData.skills
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0).length
+  }, [formData.skills])
+
+  const titleCharCount = formData.title.length
+  const descriptionCharCount = formData.description.length
+
+  // Real-time salary validation
+  useMemo(() => {
+    const min = formData.salaryMin ? parseFloat(formData.salaryMin) : null
+    const max = formData.salaryMax ? parseFloat(formData.salaryMax) : null
+
+    if (min !== null && min < 0) {
+      setSalaryError(VALIDATION_MESSAGES.salaryInvalid)
+    } else if (max !== null && max < 0) {
+      setSalaryError(VALIDATION_MESSAGES.salaryInvalid)
+    } else if (min !== null && max !== null && min > max) {
+      setSalaryError(VALIDATION_MESSAGES.salaryMinGreaterThanMax)
+    } else {
+      setSalaryError(null)
+    }
+  }, [formData.salaryMin, formData.salaryMax])
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -198,11 +230,33 @@ export default function JobPostingForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-blue-900 mb-1">
+              Required fields are marked with <span className="text-red-500">*</span>
+            </h4>
+            <p className="text-sm text-blue-700">
+              Provide detailed, accurate information to attract qualified candidates. Jobs with complete information get 3x more applications.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-          {error}
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-2">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
         </div>
       )}
+
+      {/* Job Details Section */}
+      <FormSectionHeader
+        title="Job Details"
+        subtitle="Basic information about the position"
+      />
 
       {/* Job Title */}
       <div>
@@ -219,6 +273,15 @@ export default function JobPostingForm() {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="e.g., Senior Software Engineer"
         />
+        <FieldHint>{JOB_FORM_HINTS.title}</FieldHint>
+        <p className="text-xs text-gray-400 mt-1">
+          {titleCharCount}/{CHARACTER_LIMITS.title.max} characters
+          {titleCharCount < CHARACTER_LIMITS.title.min && (
+            <span className="text-yellow-600 ml-1">
+              (minimum {CHARACTER_LIMITS.title.min} characters)
+            </span>
+          )}
+        </p>
       </div>
 
       {/* Company Name */}
@@ -236,6 +299,7 @@ export default function JobPostingForm() {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Your company name"
         />
+        <FieldHint type="info">{JOB_FORM_HINTS.companyName}</FieldHint>
       </div>
 
       {/* Job Tagline */}
@@ -263,9 +327,19 @@ export default function JobPostingForm() {
 
       {/* Job Description */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-          Job Description <span className="text-red-500">*</span>
-        </label>
+        <div className="flex items-center gap-2 mb-1">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            Job Description <span className="text-red-500">*</span>
+          </label>
+          <HelpTooltip
+            title={JOB_FORM_TOOLTIPS.description.title}
+            content={
+              <div dangerouslySetInnerHTML={{ __html: JOB_FORM_TOOLTIPS.description.content }} />
+            }
+          >
+            <HelpCircle className="w-4 h-4 text-gray-400 hover:text-blue-600 cursor-help" />
+          </HelpTooltip>
+        </div>
         <textarea
           id="description"
           name="description"
@@ -276,10 +350,22 @@ export default function JobPostingForm() {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
           placeholder="Describe the job responsibilities, requirements, and benefits..."
         />
-        <p className="mt-1 text-sm text-gray-500">
-          Provide a detailed description of the role, responsibilities, and requirements
+        <FieldHint>{JOB_FORM_HINTS.description}</FieldHint>
+        <p className="text-xs text-gray-400 mt-1">
+          {descriptionCharCount}/{CHARACTER_LIMITS.description.max} characters
+          {descriptionCharCount < CHARACTER_LIMITS.description.min && (
+            <span className="text-yellow-600 ml-1">
+              (minimum {CHARACTER_LIMITS.description.min} characters)
+            </span>
+          )}
         </p>
       </div>
+
+      {/* Location & Work Type Section */}
+      <FormSectionHeader
+        title="Location & Work Type"
+        subtitle="Where and how the work will be performed"
+      />
 
       {/* Location & Country */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -297,6 +383,7 @@ export default function JobPostingForm() {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="e.g., Manila, Makati"
           />
+          <FieldHint>{JOB_FORM_HINTS.location}</FieldHint>
         </div>
 
         <div>
@@ -317,6 +404,7 @@ export default function JobPostingForm() {
               </option>
             ))}
           </select>
+          <FieldHint>{JOB_FORM_HINTS.country}</FieldHint>
         </div>
       </div>
 
@@ -338,6 +426,7 @@ export default function JobPostingForm() {
             <option value="part-time">Part-time</option>
             <option value="contract">Contract</option>
           </select>
+          <FieldHint>{JOB_FORM_HINTS.employmentType}</FieldHint>
         </div>
 
         <div>
@@ -356,14 +445,41 @@ export default function JobPostingForm() {
             <option value="remote">Remote</option>
             <option value="hybrid">Hybrid</option>
           </select>
+          <FieldHint>{JOB_FORM_HINTS.workLocation}</FieldHint>
+        </div>
+      </div>
+
+      {/* Compensation Section */}
+      <FormSectionHeader
+        title="Compensation"
+        subtitle="Salary information (recommended for attracting qualified candidates)"
+      />
+
+      {/* Salary Info Banner */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+        <div className="flex items-start gap-2">
+          <Info className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-yellow-800">
+            Jobs with salary ranges get 40% more applications. Be transparent to attract qualified candidates faster.
+          </p>
         </div>
       </div>
 
       {/* Salary Range */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Salary Range (Optional)
-        </label>
+        <div className="flex items-center gap-2 mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Salary Range (Optional)
+          </label>
+          <HelpTooltip
+            title={JOB_FORM_TOOLTIPS.salary.title}
+            content={
+              <div dangerouslySetInnerHTML={{ __html: JOB_FORM_TOOLTIPS.salary.content }} />
+            }
+          >
+            <HelpCircle className="w-4 h-4 text-gray-400 hover:text-blue-600 cursor-help" />
+          </HelpTooltip>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label htmlFor="salaryMin" className="block text-xs text-gray-600 mb-1">
@@ -376,9 +492,8 @@ export default function JobPostingForm() {
               value={formData.salaryMin}
               onChange={handleChange}
               min="0"
-              step="1000"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="20000"
+              placeholder="0"
             />
           </div>
 
@@ -393,7 +508,6 @@ export default function JobPostingForm() {
               value={formData.salaryMax}
               onChange={handleChange}
               min="0"
-              step="1000"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="50000"
             />
@@ -418,7 +532,20 @@ export default function JobPostingForm() {
             </select>
           </div>
         </div>
+        {salaryError && (
+          <div className="flex items-start gap-2 mt-2 text-sm text-red-600">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{salaryError}</span>
+          </div>
+        )}
+        <FieldHint type="tip">{JOB_FORM_HINTS.salary}</FieldHint>
       </div>
+
+      {/* Requirements Section */}
+      <FormSectionHeader
+        title="Requirements"
+        subtitle="Experience and skills needed for this position"
+      />
 
       {/* Experience Required */}
       <div>
@@ -437,13 +564,24 @@ export default function JobPostingForm() {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="e.g., 3"
         />
+        <FieldHint type="tip">{JOB_FORM_HINTS.experience}</FieldHint>
       </div>
 
       {/* Skills */}
       <div>
-        <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
-          Required Skills (Optional)
-        </label>
+        <div className="flex items-center gap-2 mb-1">
+          <label htmlFor="skills" className="block text-sm font-medium text-gray-700">
+            Required Skills (Optional)
+          </label>
+          <HelpTooltip
+            title={JOB_FORM_TOOLTIPS.skills.title}
+            content={
+              <div dangerouslySetInnerHTML={{ __html: JOB_FORM_TOOLTIPS.skills.content }} />
+            }
+          >
+            <HelpCircle className="w-4 h-4 text-gray-400 hover:text-blue-600 cursor-help" />
+          </HelpTooltip>
+        </div>
         <input
           type="text"
           id="skills"
@@ -453,10 +591,24 @@ export default function JobPostingForm() {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="e.g., JavaScript, React, Node.js"
         />
-        <p className="mt-1 text-sm text-gray-500">
-          Separate multiple skills with commas
-        </p>
+        <FieldHint>{JOB_FORM_HINTS.skills}</FieldHint>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-xs text-gray-400">
+            {skillsCount > 0 && (
+              <span>
+                {skillsCount} skill{skillsCount !== 1 ? 's' : ''} added
+                {skillsCount > 50 && <span className="text-red-600 ml-1">(maximum 50)</span>}
+              </span>
+            )}
+          </p>
+        </div>
       </div>
+
+      {/* Media & Deadline Section */}
+      <FormSectionHeader
+        title="Media & Deadline"
+        subtitle="Optional enhancements for your job posting"
+      />
 
       {/* Job Image */}
       <div>
@@ -507,6 +659,7 @@ export default function JobPostingForm() {
             </button>
           </div>
         )}
+        <FieldHint type="tip">{JOB_FORM_HINTS.image}</FieldHint>
       </div>
 
       {/* Expiration Date */}
@@ -523,9 +676,7 @@ export default function JobPostingForm() {
           min={new Date().toISOString().split('T')[0]}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
-        <p className="mt-1 text-sm text-gray-500">
-          Leave empty for no deadline
-        </p>
+        <FieldHint>{JOB_FORM_HINTS.deadline}</FieldHint>
       </div>
 
       {/* Submit Buttons */}

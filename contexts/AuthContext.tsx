@@ -204,6 +204,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('No account found with this email. Please sign up first.');
       } else if (error.code === 'auth/wrong-password') {
         throw new Error('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/invalid-credential') {
+        throw new Error('Invalid email or password. If you don\'t have an account, please sign up first.');
       } else if (error.code === 'auth/invalid-email') {
         throw new Error('Invalid email address format.');
       } else if (error.code === 'auth/user-disabled') {

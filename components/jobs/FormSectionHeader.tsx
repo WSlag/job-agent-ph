@@ -1,0 +1,14 @@
+interface FormSectionHeaderProps {
+  title: string
+  subtitle?: string
+  className?: string
+}
+
+export default function FormSectionHeader({ title, subtitle, className = '' }: FormSectionHeaderProps) {
+  return (
+    <div className={`mb-4 ${className}`}>
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+    </div>
+  )
+}
