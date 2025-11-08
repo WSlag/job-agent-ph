@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { getAgencyJobs } from '@/lib/job-helpers'
 import { getAgencyApplications } from '@/lib/application-helpers'
@@ -17,6 +17,8 @@ import RecentMessagesWidget from '@/components/agency/RecentMessagesWidget'
 export default function AgencyDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const searchQuery = searchParams.get('search') || ''
   const [jobs, setJobs] = useState<Job[]>([])
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,6 +71,20 @@ export default function AgencyDashboardPage() {
   const totalApplications = applications.length
   const pendingApplications = applications.filter(app => app.status === 'pending').length
   const hiredCandidates = applications.filter(app => app.status === 'hired').length
+
+  // Filter jobs based on search query
+  const filteredJobs = jobs.filter((job) => {
+    if (!searchQuery) return true
+
+    const search = searchQuery.toLowerCase()
+    return (
+      job.title.toLowerCase().includes(search) ||
+      job.location.toLowerCase().includes(search) ||
+      job.category?.toLowerCase().includes(search) ||
+      (job.companyName && job.companyName.toLowerCase().includes(search)) ||
+      job.skills.some((skill) => skill.toLowerCase().includes(search))
+    )
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -223,14 +239,43 @@ export default function AgencyDashboardPage() {
         {/* Active Job Postings */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Job Postings</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Your Job Postings
+              {searchQuery && (
+                <span className="text-base font-normal text-gray-600 ml-2">
+                  ({filteredJobs.length} {filteredJobs.length === 1 ? 'result' : 'results'} for "{searchQuery}")
+                </span>
+              )}
+            </h2>
+            {searchQuery && (
+              <button
+                onClick={() => router.push('/agency/dashboard')}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Clear search
+              </button>
+            )}
           </div>
 
-          {jobs.length > 0 ? (
+          {filteredJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {jobs.map((job) => (
+              {filteredJobs.map((job) => (
                 <JobCard key={job.id} job={job} />
               ))}
+            </div>
+          ) : searchQuery ? (
+            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <Briefcase size={64} className="mx-auto text-gray-300 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Results Found</h3>
+              <p className="text-gray-600 mb-6">
+                No jobs match your search for "{searchQuery}". Try a different search term.
+              </p>
+              <button
+                onClick={() => router.push('/agency/dashboard')}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Clear Search
+              </button>
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
