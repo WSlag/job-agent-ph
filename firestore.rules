@@ -180,11 +180,13 @@ service cloud.firestore {
                       // Validate job exists
                       exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId));
 
-      // Participants can update (to mark messages as read, update timestamp)
+      // Participants can update only specific fields (lastMessage, unreadCount, updatedAt)
       allow update: if isAuthenticated() && (
                       resource.data.jobHunterId == request.auth.uid ||
                       resource.data.agencyId == request.auth.uid
                     ) &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['lastMessage', 'unreadCount', 'updatedAt']) &&
                     !request.resource.data.diff(resource.data).affectedKeys()
                       .hasAny(['jobId', 'jobHunterId', 'agencyId', 'createdAt']);
 
@@ -199,12 +201,14 @@ service cloud.firestore {
                       get(/databases/$(database)/documents/conversations/$(conversationId)).data.agencyId == request.auth.uid
                     );
 
-        // Participants can create messages
+        // Participants can create messages with rate limiting
         allow create: if isAuthenticated() &&
                         request.resource.data.keys().hasAll([
-                          'senderId', 'content', 'timestamp', 'read'
+                          'senderId', 'senderType', 'conversationId', 'content', 'timestamp', 'read'
                         ]) &&
                         request.resource.data.senderId == request.auth.uid &&
+                        request.resource.data.conversationId == conversationId &&
+                        request.resource.data.senderType in ['jobhunter', 'agency'] &&
                         validateStringLength(request.resource.data.content, 1, 2000) &&
                         request.resource.data.timestamp is timestamp &&
                         request.resource.data.read is bool &&

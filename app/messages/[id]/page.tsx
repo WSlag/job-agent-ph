@@ -23,8 +23,9 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
-export default function ConversationPage() {
+function ConversationPageContent() {
   const params = useParams();
   const router = useRouter(); // Used for auth redirect
   const { user, userType } = useAuth();
@@ -208,6 +209,18 @@ export default function ConversationPage() {
     return grouped;
   };
 
+  // Helper to check if message should be grouped with previous
+  const shouldGroupWithPrevious = (currentMsg: Message, previousMsg?: Message) => {
+    if (!previousMsg) return false;
+
+    // Group if same sender
+    if (currentMsg.senderId !== previousMsg.senderId) return false;
+
+    // Group if within 5 minutes
+    const timeDiff = new Date(currentMsg.createdAt).getTime() - new Date(previousMsg.createdAt).getTime();
+    return timeDiff < 5 * 60 * 1000; // 5 minutes
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -337,33 +350,37 @@ export default function ConversationPage() {
                 </div>
 
                 {/* Messages */}
-                {msgs.map((message) => {
+                {msgs.map((message, index) => {
                   const isOwnMessage = message.senderId === user?.uid;
+                  const previousMessage = index > 0 ? msgs[index - 1] : undefined;
+                  const isGrouped = shouldGroupWithPrevious(message, previousMessage);
 
                   return (
                     <div
                       key={message.id}
-                      className={`flex mb-4 ${
+                      className={`flex ${isGrouped ? 'mb-1' : 'mb-4'} ${
                         isOwnMessage ? 'justify-end' : 'justify-start'
                       }`}
                     >
                       <div
                         className={`max-w-[70%] ${
                           isOwnMessage
-                            ? 'bg-blue-600 text-white rounded-l-2xl rounded-tr-2xl'
-                            : 'bg-white text-gray-900 rounded-r-2xl rounded-tl-2xl shadow-sm'
-                        } px-4 py-3`}
+                            ? 'bg-blue-600 text-white ' + (isGrouped ? 'rounded-l-2xl rounded-r-lg' : 'rounded-l-2xl rounded-tr-2xl')
+                            : 'bg-white text-gray-900 ' + (isGrouped ? 'rounded-r-2xl rounded-l-lg' : 'rounded-r-2xl rounded-tl-2xl') + ' shadow-sm'
+                        } px-4 ${isGrouped ? 'py-2' : 'py-3'}`}
                       >
                         <p className="whitespace-pre-wrap break-words">
                           {message.content}
                         </p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            isOwnMessage ? 'text-blue-100' : 'text-gray-500'
-                          }`}
-                        >
-                          {formatMessageTime(new Date(message.createdAt))}
-                        </p>
+                        {!isGrouped && (
+                          <p
+                            className={`text-xs mt-1 ${
+                              isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+                            }`}
+                          >
+                            {formatMessageTime(new Date(message.createdAt))}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
@@ -453,5 +470,13 @@ export default function ConversationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ConversationPage() {
+  return (
+    <ErrorBoundary>
+      <ConversationPageContent />
+    </ErrorBoundary>
   );
 }

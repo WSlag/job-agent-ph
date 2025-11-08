@@ -12,6 +12,7 @@ import { COLLECTIONS } from '@/lib/collections';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageCircle, Loader2, Inbox } from 'lucide-react';
 import Link from 'next/link';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 function MessagesContent() {
   const router = useRouter();
@@ -267,17 +268,19 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gray-50">
-          <MobileNativeHeader title="Messages" />
-          <div className="flex items-center justify-center py-20 pt-24">
-            <Loader2 className="animate-spin text-blue-600" size={48} />
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-gray-50">
+            <MobileNativeHeader title="Messages" />
+            <div className="flex items-center justify-center py-20 pt-24">
+              <Loader2 className="animate-spin text-blue-600" size={48} />
+            </div>
           </div>
-        </div>
-      }
-    >
-      <MessagesContent />
-    </Suspense>
+        }
+      >
+        <MessagesContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

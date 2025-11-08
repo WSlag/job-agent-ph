@@ -20,6 +20,44 @@ import { COLLECTIONS, getCollectionPath } from './collections';
 import { Conversation, Message, UserType } from '@/types';
 
 /**
+ * Retry helper with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+
+      // Don't retry on validation errors or permission errors
+      if (error instanceof Error &&
+          (error.message.includes('cannot be empty') ||
+           error.message.includes('exceed') ||
+           error.message.includes('permission'))) {
+        throw error;
+      }
+
+      // If this was the last attempt, throw
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+
+      // Wait with exponential backoff
+      const delay = initialDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
+/**
  * Create or get existing conversation between job hunter and agency for a specific job
  * Uses deterministic document ID to prevent race condition duplicates
  */
@@ -59,7 +97,7 @@ export async function getOrCreateConversation(
 }
 
 /**
- * Send a message in a conversation
+ * Send a message in a conversation with retry logic
  */
 export async function sendMessage(
   conversationId: string,
@@ -68,7 +106,8 @@ export async function sendMessage(
   content: string,
   attachments?: string[]
 ): Promise<string> {
-  try {
+  return retryWithBackoff(async () => {
+    try {
     // Validate message content
     const trimmedContent = content.trim();
     if (!trimmedContent) {
@@ -122,22 +161,25 @@ export async function sendMessage(
       updatedAt: timestamp,
     });
 
-    return docRef.id;
-  } catch (error) {
-    console.error('Error sending message:', error);
-    throw error;
-  }
+      return docRef.id;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  });
 }
 
 /**
- * Mark messages as read and reset unreadCount
+ * Mark messages as read and reset unreadCount with retry logic
  */
 export async function markMessagesAsRead(
   conversationId: string,
   messageIds: string[]
 ): Promise<void> {
-  try {
-    if (messageIds.length === 0) return;
+  if (messageIds.length === 0) return;
+
+  return retryWithBackoff(async () => {
+    try {
 
     const messagesRef = collection(
       db,
@@ -163,12 +205,13 @@ export async function markMessagesAsRead(
     if (conversationData?.lastMessage && messageIds.includes(conversationData.lastMessage.id)) {
       await updateDoc(conversationRef, {
         'lastMessage.read': true,
-      });
+        });
+      }
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      throw error;
     }
-  } catch (error) {
-    console.error('Error marking messages as read:', error);
-    throw error;
-  }
+  });
 }
 
 /**
