@@ -10,6 +10,8 @@ import {
   getConversationDetails,
   markMessagesAsRead,
   messageTemplates,
+  setTypingIndicator,
+  subscribeToTypingIndicators,
 } from '@/lib/messaging-helpers';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import {
@@ -36,9 +38,11 @@ function ConversationPageContent() {
   const [conversationDetails, setConversationDetails] = useState<any>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -53,6 +57,14 @@ function ConversationPageContent() {
     loadConversationDetails();
 
     const conversationId = params.id as string;
+
+    // Subscribe to typing indicators
+    const typingUnsubscribe = subscribeToTypingIndicators(
+      conversationId,
+      user.uid,
+      setOtherUserTyping
+    );
+
     const unsubscribe = subscribeToMessages(conversationId, (newMessages) => {
       setMessages(newMessages);
       setLoading(false);
@@ -80,8 +92,31 @@ function ConversationPageContent() {
       if (unsubscribe) {
         unsubscribe();
       }
+      if (typingUnsubscribe) {
+        typingUnsubscribe();
+      }
     };
   }, [user, params.id, router]);
+
+  // Handle typing indicator
+  const handleTyping = useCallback(() => {
+    if (!user || !params.id) return;
+
+    const conversationId = params.id as string;
+
+    // Set typing indicator
+    setTypingIndicator(conversationId, user.uid, true);
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout to clear typing indicator after 3 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      setTypingIndicator(conversationId, user.uid, false);
+    }, 3000);
+  }, [user, params.id]);
 
   useEffect(() => {
     // Auto-resize textarea
@@ -395,6 +430,18 @@ function ConversationPageContent() {
       {/* Message Input */}
       <div className="bg-white border-t shadow-lg md:relative fixed bottom-0 left-0 right-0 z-40">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
+          {/* Typing indicator */}
+          {otherUserTyping && (
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-2 animate-pulse">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+              <span>{otherPartyName} is typing...</span>
+            </div>
+          )}
+
           {/* Template Suggestions */}
           {showTemplates && (
             <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -432,7 +479,10 @@ function ConversationPageContent() {
               <textarea
                 ref={textareaRef}
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => {
+                  setNewMessage(e.target.value);
+                  handleTyping();
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();

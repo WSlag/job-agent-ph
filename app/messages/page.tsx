@@ -21,7 +21,10 @@ function MessagesContent() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationsWithDetails, setConversationsWithDetails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const creatingConversation = useRef(false); // Prevent duplicate conversation creation
+  const touchStartY = useRef(0);
+  const pullDistance = useRef(0);
 
   // Memoize handleCreateConversationFromJob to prevent recreation
   const handleCreateConversationFromJob = useCallback(async (jobId: string) => {
@@ -62,6 +65,23 @@ function MessagesContent() {
       creatingConversation.current = false;
     }
   }, [user, userType, router]);
+
+  // Pull to refresh handler
+  const handleRefresh = useCallback(async () => {
+    if (refreshing || !user || !userType) return;
+
+    setRefreshing(true);
+    try {
+      // Force reload conversations
+      if (conversations.length > 0) {
+        await loadConversationDetails(conversations);
+      }
+    } catch (error) {
+      console.error('Error refreshing conversations:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, user, userType, conversations]);
 
   // Memoize loadConversationDetails with batching to reduce N+1 queries
   const loadConversationDetails = useCallback(async (convos: Conversation[]) => {
@@ -160,7 +180,34 @@ function MessagesContent() {
       />
 
       <div className="container mx-auto px-4 pt-20 pb-8 max-w-4xl">
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        {/* Pull to refresh indicator */}
+        {refreshing && (
+          <div className="flex justify-center py-2">
+            <Loader2 className="animate-spin text-blue-600" size={24} />
+          </div>
+        )}
+
+        <div
+          className="bg-white rounded-xl shadow-md overflow-hidden"
+          onTouchStart={(e) => {
+            if (window.scrollY === 0) {
+              touchStartY.current = e.touches[0].clientY;
+            }
+          }}
+          onTouchMove={(e) => {
+            if (window.scrollY === 0 && touchStartY.current > 0) {
+              const currentY = e.touches[0].clientY;
+              pullDistance.current = Math.max(0, currentY - touchStartY.current);
+            }
+          }}
+          onTouchEnd={() => {
+            if (pullDistance.current > 80) {
+              handleRefresh();
+            }
+            touchStartY.current = 0;
+            pullDistance.current = 0;
+          }}
+        >
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white">
             <h1 className="text-3xl font-bold mb-2">Messages</h1>

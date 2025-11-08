@@ -384,6 +384,74 @@ export async function getUnreadMessagesCount(
 }
 
 /**
+ * Set typing indicator for a conversation
+ */
+export async function setTypingIndicator(
+  conversationId: string,
+  userId: string,
+  isTyping: boolean
+): Promise<void> {
+  try {
+    const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
+    const typingKey = `typing_${userId}`;
+
+    if (isTyping) {
+      // Set typing with timestamp
+      await updateDoc(conversationRef, {
+        [typingKey]: new Date(),
+      });
+    } else {
+      // Remove typing indicator
+      await updateDoc(conversationRef, {
+        [typingKey]: null,
+      });
+    }
+  } catch (error) {
+    console.error('Error setting typing indicator:', error);
+    // Don't throw - typing indicators are non-critical
+  }
+}
+
+/**
+ * Subscribe to typing indicators for a conversation
+ */
+export function subscribeToTypingIndicators(
+  conversationId: string,
+  currentUserId: string,
+  onUpdate: (isTyping: boolean) => void
+): () => void {
+  const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
+
+  const unsubscribe = onSnapshot(
+    conversationRef,
+    (snapshot) => {
+      if (!snapshot.exists()) return;
+
+      const data = snapshot.data();
+      const now = new Date().getTime();
+
+      // Check if anyone (except current user) is typing
+      // Typing indicator expires after 5 seconds
+      const isTyping = Object.keys(data)
+        .filter((key) => key.startsWith('typing_') && !key.endsWith(currentUserId))
+        .some((key) => {
+          const timestamp = data[key];
+          if (!timestamp) return false;
+          const typingTime = timestamp.toDate?.().getTime() || new Date(timestamp).getTime();
+          return now - typingTime < 5000; // 5 second timeout
+        });
+
+      onUpdate(isTyping);
+    },
+    (error) => {
+      console.error('Error subscribing to typing indicators:', error);
+    }
+  );
+
+  return unsubscribe;
+}
+
+/**
  * Template messages for job hunters
  */
 export const messageTemplates = {
