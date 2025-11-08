@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import BottomNav from "@/components/layout/BottomNav";
+import HeaderDesign1Enhanced from "@/components/layout/HeaderDesign1Enhanced";
 import OnboardingWizardWrapper from "@/components/onboarding/OnboardingWizardWrapper";
 import FeatureTour from "@/components/onboarding/FeatureTour";
 import { Toaster } from 'react-hot-toast';
@@ -52,6 +53,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased pb-14 md:pb-0 md:pt-16`}>
         <AuthProvider>
           <OnboardingProvider>
+            <HeaderDesign1Enhanced />
             {children}
             <BottomNav />
             <OnboardingWizardWrapper />

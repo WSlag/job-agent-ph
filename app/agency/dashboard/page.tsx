@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { getAgencyJobs } from '@/lib/job-helpers'
 import { getAgencyApplications } from '@/lib/application-helpers'
 import { Job, JobApplication } from '@/types'
-import MobileNativeHeader from '@/components/layout/MobileNativeHeader'
 import JobCard from '@/components/jobs/JobCard'
 import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit, Star, Home as HomeIcon, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -59,7 +58,6 @@ export default function AgencyDashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <MobileNativeHeader title="Dashboard" />
         <div className="flex items-center justify-center py-20 pt-24">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
@@ -88,12 +86,6 @@ export default function AgencyDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <MobileNativeHeader
-        title="Dashboard"
-        hideOnScroll
-        showShadowOnScroll
-      />
-
       <div className="container mx-auto px-4 pt-20 pb-8">
         {/* Breadcrumb Navigation - Desktop/Tablet only */}
         <nav className="hidden md:flex items-center gap-2 text-sm mb-6">
