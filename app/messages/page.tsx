@@ -66,6 +66,48 @@ function MessagesContent() {
     }
   }, [user, userType, router]);
 
+  // Memoize loadConversationDetails with batching to reduce N+1 queries
+  const loadConversationDetails = useCallback(async (convos: Conversation[]) => {
+    try {
+      // Collect unique IDs to batch fetch
+      const uniqueJobIds = [...new Set(convos.map(c => c.jobId))];
+      const uniqueAgencyIds = [...new Set(convos.map(c => c.agencyId))];
+      const uniqueJobHunterIds = [...new Set(convos.map(c => c.jobHunterId))];
+
+      // Batch fetch all unique entities
+      const [jobDocs, agencyDocs, jobHunterDocs] = await Promise.all([
+        Promise.all(uniqueJobIds.map(id => getDoc(doc(db, COLLECTIONS.JOBS, id)))),
+        Promise.all(uniqueAgencyIds.map(id => getDoc(doc(db, COLLECTIONS.AGENCIES, id)))),
+        Promise.all(uniqueJobHunterIds.map(id => getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, id)))),
+      ]);
+
+      // Create lookup maps for O(1) access
+      const jobsMap = new Map(
+        jobDocs.map(d => [d.id, d.exists() ? { id: d.id, ...d.data() } : null])
+      );
+      const agenciesMap = new Map(
+        agencyDocs.map(d => [d.id, d.exists() ? { id: d.id, ...d.data() } : null])
+      );
+      const jobHuntersMap = new Map(
+        jobHunterDocs.map(d => [d.id, d.exists() ? { id: d.id, ...d.data() } : null])
+      );
+
+      // Map conversations with their details using lookup maps
+      const details = convos.map(convo => ({
+        ...convo,
+        job: jobsMap.get(convo.jobId) || null,
+        agency: agenciesMap.get(convo.agencyId) || null,
+        jobHunter: jobHuntersMap.get(convo.jobHunterId) || null,
+      }));
+
+      setConversationsWithDetails(details);
+    } catch (error) {
+      console.error('Error loading conversation details:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Pull to refresh handler
   const handleRefresh = useCallback(async () => {
     if (refreshing || !user || !userType) return;
@@ -81,7 +123,7 @@ function MessagesContent() {
     } finally {
       setRefreshing(false);
     }
-  }, [refreshing, user, userType, conversations]);
+  }, [refreshing, user, userType, conversations, loadConversationDetails]);
 
   // Memoize loadConversationDetails with batching to reduce N+1 queries
   const loadConversationDetails = useCallback(async (convos: Conversation[]) => {
