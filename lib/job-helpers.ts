@@ -162,15 +162,25 @@ export async function deleteJob(jobId: string): Promise<void> {
  * @returns Promise with array of jobs
  */
 export async function getAgencyJobs(agencyId: string): Promise<Job[]> {
-  const { queryDocuments } = await import('./firestore-helpers')
-  const { where } = await import('firebase/firestore')
+  const { collection, query, where, orderBy, getDocs } = await import('firebase/firestore')
+  const { db } = await import('./firebase')
+  const { COLLECTIONS } = await import('./collections')
 
   try {
-    const { data: jobs } = await queryDocuments<Job>(
-      'jobs',
-      [where('agencyId', '==', agencyId)],
-      100
+    const q = query(
+      collection(db, COLLECTIONS.JOBS),
+      where('agencyId', '==', agencyId),
+      orderBy('postedAt', 'desc')
     )
+
+    const snapshot = await getDocs(q)
+    const jobs = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      postedAt: doc.data().postedAt?.toDate() || new Date(),
+      expiresAt: doc.data().expiresAt?.toDate?.() || doc.data().expiresAt,
+    })) as Job[]
+
     return jobs
   } catch (error) {
     console.error('Error fetching agency jobs:', error)

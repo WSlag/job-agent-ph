@@ -33,15 +33,23 @@ export async function GET(request: NextRequest) {
           'Accept': 'application/json',
         },
         signal: controller.signal,
+        // Add cache control to reduce API calls
+        next: { revalidate: 3600 }, // Cache for 1 hour
       }
     ).finally(() => {
       clearTimeout(timeoutId);
     });
 
     if (!response.ok) {
-      // Return error without logging to console
+      // For rate limiting (429) or server errors (5xx), return empty array instead of error
+      // This allows the frontend to gracefully fallback to showing location text
+      if (response.status === 429 || response.status >= 500) {
+        return NextResponse.json([]);
+      }
+
+      // For other errors, return error status
       return NextResponse.json(
-        { error: `Nominatim API error: ${response.status}` },
+        { error: `Geocoding service unavailable` },
         { status: response.status }
       );
     }
@@ -49,11 +57,12 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    // Silently handle errors - don't log to console
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { error: 'Geocoding failed due to network error', details: errorMessage },
-      { status: 500 }
-    );
+    // For timeout or network errors, return empty array for graceful degradation
+    if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) {
+      return NextResponse.json([]);
+    }
+
+    // For other errors, return 500 with empty array
+    return NextResponse.json([]);
   }
 }

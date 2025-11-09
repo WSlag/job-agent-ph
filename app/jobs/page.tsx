@@ -2,12 +2,12 @@
 
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot, startAfter } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot, startAfter, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import JobList from '@/components/jobs/JobList';
-import { Search, Filter, MapPin, Briefcase, DollarSign, X } from 'lucide-react';
+import { Search, Filter, MapPin, Briefcase, DollarSign, X, Building2 } from 'lucide-react';
 import { getCategoryNames } from '@/lib/categories';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import ListingHeader from '@/components/layout/ListingHeader';
@@ -46,6 +46,8 @@ function JobsPageContent() {
   const [hasMore, setHasMore] = useState(true);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
+  const [selectedAgency, setSelectedAgency] = useState('');
+  const [agencyName, setAgencyName] = useState('');
 
   // Start search-filters tour for first-time users
   useEffect(() => {
@@ -64,10 +66,30 @@ function JobsPageContent() {
     const typeParam = searchParams?.get('type');
     const featuredParam = searchParams?.get('featured');
     const salaryParam = searchParams?.get('salary');
+    const agencyParam = searchParams?.get('agency');
 
     if (categoryParam) {
       setSelectedCategory(categoryParam);
       setShowFilters(true);
+    }
+
+    // Handle agency filter
+    if (agencyParam) {
+      setSelectedAgency(agencyParam);
+      // Fetch agency name
+      const fetchAgencyName = async () => {
+        try {
+          const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, agencyParam));
+          if (agencyDoc.exists()) {
+            const agencyData = agencyDoc.data();
+            setAgencyName(agencyData.companyName || agencyData.displayName || 'Unknown Agency');
+          }
+        } catch (error) {
+          console.error('Error fetching agency name:', error);
+          setAgencyName('Unknown Agency');
+        }
+      };
+      fetchAgencyName();
     }
 
     // Map location parameter to country code or remote filter
@@ -122,7 +144,7 @@ function JobsPageContent() {
     setLastDoc(null);
     setHasMore(true);
     loadJobs();
-  }, [selectedCountry, selectedJobType, selectedCategory, filterRemote, filterFeatured]);
+  }, [selectedCountry, selectedJobType, selectedCategory, filterRemote, filterFeatured, selectedAgency]);
 
   const loadJobs = async (loadMore = false) => {
     try {
@@ -153,6 +175,10 @@ function JobsPageContent() {
 
       if (filterFeatured) {
         constraints.push(where('isFeatured', '==', true));
+      }
+
+      if (selectedAgency) {
+        constraints.push(where('agencyId', '==', selectedAgency));
       }
 
       // Add pagination cursor if loading more
@@ -397,6 +423,28 @@ function JobsPageContent() {
 
       {/* Jobs List */}
       <div className={`container mx-auto px-4 py-8 ${showFilters ? 'mt-[340px] md:mt-[140px]' : 'mt-[72px] md:mt-20'}`}>
+        {/* Agency Filter Badge */}
+        {selectedAgency && agencyName && (
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-2 bg-blue-50 border-2 border-blue-200 text-blue-700 px-4 py-2 rounded-lg">
+              <Building2 className="w-5 h-5" />
+              <span className="font-medium">Filtered by: {agencyName}</span>
+              <button
+                onClick={() => {
+                  setSelectedAgency('');
+                  setAgencyName('');
+                  // Update URL to remove agency parameter
+                  window.history.pushState({}, '', '/jobs');
+                }}
+                className="ml-2 p-1 hover:bg-blue-100 rounded-full transition-colors"
+                aria-label="Clear agency filter"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6">
           <p className="text-gray-600">
             Showing {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''}

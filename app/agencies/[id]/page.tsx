@@ -77,8 +77,8 @@ export default function AgencyProfilePage() {
         setLoading(true);
         const agencyId = params.id as string;
 
-        // Fetch agency profile from Firestore
-        const agencyDoc = await getDoc(doc(db, COLLECTIONS.USERS, agencyId));
+        // Fetch agency profile from Firestore agencies collection (has public read access)
+        const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, agencyId));
 
         if (!agencyDoc.exists()) {
           setError('Agency not found');
@@ -87,7 +87,7 @@ export default function AgencyProfilePage() {
 
         const agencyData = agencyDoc.data();
 
-        // Check if this is actually an agency
+        // Verify this is an agency (should always be true in agencies collection)
         if (agencyData.userType !== 'agency') {
           setError('This is not an agency profile');
           return;
