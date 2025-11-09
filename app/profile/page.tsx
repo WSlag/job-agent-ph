@@ -23,6 +23,7 @@ import {
 } from '@/lib/validation';
 import { User, Mail, Phone, MapPin, Briefcase, FileText, Lock, Upload, Save, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import UserDashboardHeader from '@/components/layout/UserDashboardHeader';
 
 interface JobHunterProfile {
   fullName?: string;
@@ -420,16 +421,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl pt-8">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
-        >
-          <ArrowLeft size={20} />
-          <span className="font-medium">Back</span>
-        </button>
-
+    <>
+      <UserDashboardHeader showNotifications={true} />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4 max-w-4xl pt-20 md:pt-24">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
           <p className="text-gray-600 mt-2">Manage your account information and preferences</p>
@@ -923,5 +918,6 @@ export default function ProfilePage() {
         )}
       </div>
     </div>
+    </>
   );
 }

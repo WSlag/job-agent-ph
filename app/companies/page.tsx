@@ -8,7 +8,7 @@ import Section from '@/components/ui/Section';
 import Badge from '@/components/ui/Badge';
 import { Building2, MapPin, Briefcase, CheckCircle, Search } from 'lucide-react';
 import Link from 'next/link';
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
+import ListingHeader from '@/components/layout/ListingHeader';
 
 interface Agency {
   id: string;
@@ -78,14 +78,23 @@ export default function CompaniesPage() {
     (agency.description && agency.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="hidden md:block">
-        <HeaderDesign1Enhanced />
-      </div>
+  const handleSearch = (query: string) => {
+    setSearchTerm(query);
+  };
 
-      {/* Hero Section */}
-      <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 md:mt-16">
+  return (
+    <>
+      <ListingHeader
+        breadcrumbs={[{ label: 'Companies' }]}
+        searchPlaceholder="Search companies..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSearchSubmit={handleSearch}
+        showSearchButton={true}
+      />
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Section */}
+        <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 md:mt-24 mt-14">
         <div className="max-w-4xl mx-auto text-center">
           <Building2 className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-5xl font-bold mb-6">Browse Companies</h1>
@@ -264,5 +273,6 @@ export default function CompaniesPage() {
         </div>
       </Section>
     </div>
+    </>
   );
 }

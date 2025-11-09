@@ -12,11 +12,19 @@ import { hasAppliedToJob } from '@/lib/application-helpers';
 import { calculateJobMatch, getPlaceholderJobData } from '@/lib/placeholder-data';
 import { trackJobView } from '@/lib/job-view-helpers';
 import type { JobMatch, JobHunter } from '@/types';
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
-import ApplicationModal from '@/components/applications/ApplicationModal';
+import dynamic from 'next/dynamic';
+
+// OPTIMIZATION: Lazy load heavy modal and map components to reduce initial bundle size
+const ApplicationModal = dynamic(() => import('@/components/applications/ApplicationModal'), {
+  ssr: false,
+});
+const JobLocationMap = dynamic(() => import('@/components/jobs/JobLocationMap'), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
+});
+
 import JobRequirementsList from '@/components/jobs/JobRequirementsList';
 import JobBenefitsList from '@/components/jobs/JobBenefitsList';
-import JobLocationMap from '@/components/jobs/JobLocationMap';
 import SimilarJobsCarousel from '@/components/jobs/SimilarJobsCarousel';
 import JobMatchBadge from '@/components/jobs/JobMatchBadge';
 import AgencyInfoCard from '@/components/jobs/AgencyInfoCard';
@@ -73,9 +81,70 @@ export default function JobDetailsPage() {
   const [authActionHandled, setAuthActionHandled] = useState(false);
   const [authPromptAction, setAuthPromptAction] = useState<'apply' | 'message'>('apply');
 
+  // OPTIMIZATION: Combine initial data loading into a single effect
   useEffect(() => {
-    loadJob();
-  }, [params.id]);
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        const jobId = params.id as string;
+
+        // Load job data
+        const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId));
+
+        if (jobDoc.exists()) {
+          const jobData = {
+            id: jobDoc.id,
+            ...jobDoc.data(),
+            postedAt: jobDoc.data().postedAt?.toDate() || new Date(),
+          } as Job;
+          setJob(jobData);
+
+          // OPTIMIZATION: Parallelize dependent data fetches
+          const promises = [];
+
+          // Check if job is saved (synchronous, quick operation)
+          const saved = localStorage.getItem('savedJobs');
+          if (saved) {
+            const savedJobs = JSON.parse(saved);
+            setIsSaved(savedJobs.includes(jobId));
+          }
+
+          // Load user-specific data in parallel
+          if (user && userType === 'jobhunter') {
+            promises.push(
+              // Check application status
+              hasAppliedToJob(jobId, user.uid).then(applied => setHasApplied(applied)),
+              // Load user profile
+              getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, user.uid)).then(profileDoc => {
+                if (profileDoc.exists()) {
+                  const profile = {
+                    id: profileDoc.id,
+                    ...profileDoc.data(),
+                  } as JobHunter;
+                  setUserProfile(profile);
+                  // Calculate job match
+                  const match = calculateJobMatch(profile, jobData);
+                  setJobMatch(match);
+                }
+              })
+            );
+          }
+
+          // Track job view
+          promises.push(trackJobView(jobData.id, user?.uid));
+
+          await Promise.all(promises);
+        }
+      } catch (error) {
+        console.error('Error loading job data:', error);
+      } finally {
+        setLoading(false);
+        setCheckingApplication(false);
+      }
+    };
+
+    loadInitialData();
+  }, [params.id, user, userType]);
 
   // Handle post-authentication actions (apply or message)
   useEffect(() => {
@@ -91,39 +160,7 @@ export default function JobDetailsPage() {
     }
   }, [searchParams, user, userType, authActionHandled, authLoading, job, hasApplied, checkingApplication]);
 
-  useEffect(() => {
-    checkApplicationStatus();
-  }, [params.id, user]);
-
-  useEffect(() => {
-    loadUserProfile();
-  }, [user, userType]);
-
-  useEffect(() => {
-    // Check if job is saved
-    if (params.id) {
-      const saved = localStorage.getItem('savedJobs');
-      if (saved) {
-        const savedJobs = JSON.parse(saved);
-        setIsSaved(savedJobs.includes(params.id));
-      }
-    }
-  }, [params.id]);
-
-  useEffect(() => {
-    // Calculate job match for job hunters
-    if (job && userProfile) {
-      const match = calculateJobMatch(userProfile, job);
-      setJobMatch(match);
-    }
-  }, [job, userProfile]);
-
-  useEffect(() => {
-    // Track job view
-    if (job) {
-      trackJobView(job.id, user?.uid);
-    }
-  }, [job, user]);
+  // Job match and track view are now handled in the main loadInitialData effect
 
   // Trigger quick-apply tour for first-time users
   useEffect(() => {
@@ -342,7 +379,7 @@ export default function JobDetailsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <HeaderDesign1Enhanced hideSearch />
+        
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
@@ -353,7 +390,7 @@ export default function JobDetailsPage() {
   if (!job) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <HeaderDesign1Enhanced hideSearch />
+        
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Job Not Found</h1>
           <button
@@ -386,7 +423,7 @@ export default function JobDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50 pt-0 lg:pt-16 pb-24 lg:pb-8">
       <div className="hidden lg:block">
-        <HeaderDesign1Enhanced hideSearch />
+        
       </div>
 
       {/* Mobile Compact Header */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import JobCard from './JobCard';
@@ -19,29 +19,31 @@ export default function JobList({ jobs, loading = false, onLoadMore, hasMore = f
   const router = useRouter();
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
 
+  // OPTIMIZATION: Load saved jobs only once on mount
   useEffect(() => {
-    // Load saved jobs from localStorage
     const saved = localStorage.getItem('savedJobs');
     if (saved) {
       setSavedJobs(new Set(JSON.parse(saved)));
     }
   }, []);
 
-  const handleSave = (jobId: string) => {
-    const newSavedJobs = new Set(savedJobs);
-    if (newSavedJobs.has(jobId)) {
-      newSavedJobs.delete(jobId);
-    } else {
-      newSavedJobs.add(jobId);
-    }
-    setSavedJobs(newSavedJobs);
-    localStorage.setItem('savedJobs', JSON.stringify(Array.from(newSavedJobs)));
-  };
+  // OPTIMIZATION: Memoize event handlers to prevent unnecessary re-renders
+  const handleSave = useCallback((jobId: string) => {
+    setSavedJobs(prev => {
+      const newSavedJobs = new Set(prev);
+      if (newSavedJobs.has(jobId)) {
+        newSavedJobs.delete(jobId);
+      } else {
+        newSavedJobs.add(jobId);
+      }
+      localStorage.setItem('savedJobs', JSON.stringify(Array.from(newSavedJobs)));
+      return newSavedJobs;
+    });
+  }, []);
 
-  const handleMessage = (jobId: string) => {
-    // Use Next.js router for client-side navigation
+  const handleMessage = useCallback((jobId: string) => {
     router.push(`/messages?jobId=${jobId}`);
-  };
+  }, [router]);
 
   if (loading && jobs.length === 0) {
     return <JobListSkeleton count={6} />;

@@ -14,6 +14,13 @@ import { auth, db } from '@/lib/firebase';
 import { User, UserType, JobHunter, Agency, Admin } from '@/types';
 import { COLLECTIONS } from '@/lib/collections';
 
+// Type-safe profile data for signup
+type JobHunterProfileData = Omit<JobHunter, 'id' | 'email' | 'userType' | 'createdAt' | 'updatedAt'>;
+type AgencyProfileData = Omit<Agency, 'id' | 'email' | 'userType' | 'createdAt' | 'updatedAt' | 'verified'>;
+type AdminProfileData = Omit<Admin, 'id' | 'email' | 'userType' | 'createdAt' | 'updatedAt'>;
+
+type ProfileData = JobHunterProfileData | AgencyProfileData | AdminProfileData;
+
 interface AuthContextType {
   user: FirebaseUser | null;
   userProfile: JobHunter | Agency | Admin | null;
@@ -23,7 +30,7 @@ interface AuthContextType {
     email: string,
     password: string,
     userType: UserType,
-    profileData: any
+    profileData: ProfileData
   ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -57,8 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      // Check if user is admin first
-      const adminDoc = await getDoc(doc(db, COLLECTIONS.ADMINS, userId));
+      // OPTIMIZATION: Check all user types in parallel instead of sequential
+      const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
+        getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
+        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
+        getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
+      ]);
 
       if (adminDoc.exists()) {
         setUserProfile({ id: adminDoc.id, ...adminDoc.data() } as Admin);
@@ -66,19 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if user is job hunter
-      const jobHunterDoc = await getDoc(
-        doc(db, COLLECTIONS.JOB_HUNTERS, userId)
-      );
-
       if (jobHunterDoc.exists()) {
         setUserProfile({ id: jobHunterDoc.id, ...jobHunterDoc.data() } as JobHunter);
         setUserType('jobhunter');
         return;
       }
-
-      // Check if user is agency
-      const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, userId));
 
       if (agencyDoc.exists()) {
         setUserProfile({ id: agencyDoc.id, ...agencyDoc.data() } as Agency);
@@ -106,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     userType: UserType,
-    profileData: any
+    profileData: ProfileData
   ) => {
     try {
       // Create auth user

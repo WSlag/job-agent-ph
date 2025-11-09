@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { Agency } from '@/types'
 import FeaturedRequestModal from '@/components/modals/FeaturedRequestModal'
 import RecentMessagesWidget from '@/components/agency/RecentMessagesWidget'
+import AgencyDashboardHeader from '@/components/layout/AgencyDashboardHeader'
 
 export default function AgencyDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -84,18 +85,24 @@ export default function AgencyDashboardPage() {
     )
   })
 
+  const handleSearch = (query: string) => {
+    const params = new URLSearchParams();
+    params.set('search', query);
+    router.push(`/agency/dashboard?${params.toString()}`);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 pt-20 pb-8">
-        {/* Breadcrumb Navigation - Desktop/Tablet only */}
-        <nav className="hidden md:flex items-center gap-2 text-sm mb-6">
-          <Link href="/" className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors">
-            <HomeIcon size={16} />
-            Home
-          </Link>
-          <ChevronRight size={16} className="text-gray-400" />
-          <span className="text-gray-900 font-medium">Dashboard</span>
-        </nav>
+    <>
+      <AgencyDashboardHeader
+        breadcrumbs={[
+          { label: 'Dashboard' }
+        ]}
+        searchPlaceholder="Search your jobs..."
+        onSearch={handleSearch}
+        showPostJobButton={true}
+      />
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 pt-20 md:pt-32 pb-8">
 
         {/* Page Header */}
         <div className="mb-8">
@@ -297,5 +304,6 @@ export default function AgencyDashboardPage() {
         }}
       />
     </div>
+    </>
   )
 }

@@ -73,18 +73,24 @@ export default function Home() {
   const loadCategoryCounts = async () => {
     try {
       const jobsRef = collection(db, COLLECTIONS.JOBS);
-      const counts: { [key: string]: number } = {};
 
-      // Load counts for each category
-      for (const category of CATEGORIES) {
+      // OPTIMIZATION: Load all category counts in parallel instead of sequential
+      const countPromises = CATEGORIES.map(async (category) => {
         const q = query(
           jobsRef,
           where('isActive', '==', true),
           where('category', '==', category.name)
         );
         const snapshot = await getDocs(q);
-        counts[category.name] = snapshot.size;
-      }
+        return { name: category.name, count: snapshot.size };
+      });
+
+      const results = await Promise.all(countPromises);
+
+      const counts: { [key: string]: number } = {};
+      results.forEach(({ name, count }) => {
+        counts[name] = count;
+      });
 
       setCategoryCounts(counts);
     } catch (error) {

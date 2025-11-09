@@ -15,7 +15,7 @@ import {
   Star,
 } from 'lucide-react';
 import { Job } from '@/types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getJobApplicationCount } from '@/lib/application-helpers';
 import { motion } from 'framer-motion';
@@ -34,22 +34,22 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
   const [imageError, setImageError] = useState(false);
   const [applicantCount, setApplicantCount] = useState<number | null>(null);
 
-  useEffect(() => {
-    // Only load applicant count for agencies viewing their own jobs
-    if (userType === 'agency' && user && job.agencyId === user.uid) {
-      loadApplicantCount();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userType, user, job.agencyId, job.id]); // loadApplicantCount is stable
-
-  const loadApplicantCount = async () => {
+  // OPTIMIZATION: Memoize the loadApplicantCount function
+  const loadApplicantCount = useCallback(async () => {
     try {
       const count = await getJobApplicationCount(job.id);
       setApplicantCount(count);
     } catch (error) {
       console.error('Error loading applicant count:', error);
     }
-  };
+  }, [job.id]);
+
+  useEffect(() => {
+    // Only load applicant count for agencies viewing their own jobs
+    if (userType === 'agency' && user && job.agencyId === user.uid) {
+      loadApplicantCount();
+    }
+  }, [userType, user, job.agencyId, loadApplicantCount]);
 
   const handleSave = () => {
     setSaved(!saved);
@@ -58,9 +58,10 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
     }
   };
 
-  const getTimeAgo = (date: Date) => {
+  // OPTIMIZATION: Memoize time calculation
+  const timeAgo = useMemo(() => {
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = now.getTime() - job.postedAt.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -69,9 +70,10 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
     return `${Math.floor(diffDays / 7)}w`;
-  };
+  }, [job.postedAt]);
 
-  const formatSalary = () => {
+  // OPTIMIZATION: Memoize salary formatting
+  const salary = useMemo(() => {
     if (!job.salaryMin && !job.salaryMax) return null;
 
     // Helper to format number to K format (e.g., 5000 -> 5K)
@@ -92,9 +94,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
     }
 
     return `${job.currency}${toKFormat(job.salaryMax!)}`;
-  };
-
-  const salary = formatSalary();
+  }, [job.salaryMin, job.salaryMax, job.currency]);
 
   // Get tagline or fallback to brief description preview
   const getTaglineOrPreview = () => {
@@ -159,7 +159,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
         <div className="absolute top-3 right-3">
           <span className="bg-white/95 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">
             <Clock size={12} className="hidden sm:inline" />
-            {getTimeAgo(job.postedAt instanceof Date ? job.postedAt : (job.postedAt as any)?.toDate?.() || new Date())} ago
+            {timeAgo} ago
           </span>
         </div>
       </div>

@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot, startAfter } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import JobList from '@/components/jobs/JobList';
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced';
 import { Search, Filter, MapPin, Briefcase, DollarSign, X } from 'lucide-react';
 import { getCategoryNames } from '@/lib/categories';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import ListingHeader from '@/components/layout/ListingHeader';
 
 const COUNTRIES = [
   { code: 'AE', name: 'UAE (Middle East)' },
@@ -40,6 +40,8 @@ function JobsPageContent() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [minSalary, setMinSalary] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [filterRemote, setFilterRemote] = useState(false);
+  const [filterFeatured, setFilterFeatured] = useState(false);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);
@@ -55,12 +57,63 @@ function JobsPageContent() {
     }
   }, [onboardingData, loading, jobs.length, startTour]);
 
-  // Read category from URL params on mount
+  // Read all filter params from URL on mount
   useEffect(() => {
     const categoryParam = searchParams?.get('category');
+    const locationParam = searchParams?.get('location');
+    const typeParam = searchParams?.get('type');
+    const featuredParam = searchParams?.get('featured');
+    const salaryParam = searchParams?.get('salary');
+
     if (categoryParam) {
       setSelectedCategory(categoryParam);
-      setShowFilters(true); // Auto-show filters when category is selected
+      setShowFilters(true);
+    }
+
+    // Map location parameter to country code or remote filter
+    if (locationParam) {
+      if (locationParam === 'remote') {
+        setFilterRemote(true);
+        setShowFilters(true);
+      } else {
+        const locationMap: Record<string, string> = {
+          'dubai': 'AE',
+          'singapore': 'SG',
+          'saudi': 'SA',
+          'qatar': 'QA',
+          'hongkong': 'HK',
+          'taiwan': 'TW',
+          'japan': 'JP',
+          'uk': 'UK',
+          'germany': 'DE',
+          'italy': 'IT',
+          'canada': 'CA',
+          'australia': 'AU',
+        };
+
+        if (locationMap[locationParam]) {
+          setSelectedCountry(locationMap[locationParam]);
+          setShowFilters(true);
+        }
+      }
+    }
+
+    // Map job type parameter
+    if (typeParam === 'full-time' || typeParam === 'part-time' || typeParam === 'contract') {
+      setSelectedJobType(typeParam);
+      setShowFilters(true);
+    }
+
+    // Handle salary filter
+    if (salaryParam === 'high') {
+      setMinSalary('100000'); // Set high salary threshold
+      setShowFilters(true);
+    }
+
+    // Handle featured filter
+    if (featuredParam === 'true') {
+      setFilterFeatured(true);
+      setShowFilters(true);
     }
   }, [searchParams]);
 
@@ -69,7 +122,7 @@ function JobsPageContent() {
     setLastDoc(null);
     setHasMore(true);
     loadJobs();
-  }, [selectedCountry, selectedJobType, selectedCategory]);
+  }, [selectedCountry, selectedJobType, selectedCategory, filterRemote, filterFeatured]);
 
   const loadJobs = async (loadMore = false) => {
     try {
@@ -92,6 +145,14 @@ function JobsPageContent() {
 
       if (selectedCategory) {
         constraints.push(where('category', '==', selectedCategory));
+      }
+
+      if (filterRemote) {
+        constraints.push(where('locationType', '==', 'remote'));
+      }
+
+      if (filterFeatured) {
+        constraints.push(where('isFeatured', '==', true));
       }
 
       // Add pagination cursor if loading more
@@ -140,44 +201,44 @@ function JobsPageContent() {
     loadJobs(true);
   };
 
-  const filteredJobs = jobs.filter((job) => {
-    // Search term filter
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      const matchesSearch = (
-        job.title.toLowerCase().includes(search) ||
-        job.companyName.toLowerCase().includes(search) ||
-        job.location.toLowerCase().includes(search) ||
-        job.skills.some((skill) => skill.toLowerCase().includes(search))
-      );
-      if (!matchesSearch) return false;
-    }
+  // OPTIMIZATION: Memoize filtered jobs to prevent recomputation on every render
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      // Search term filter
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        const matchesSearch = (
+          job.title.toLowerCase().includes(search) ||
+          job.companyName.toLowerCase().includes(search) ||
+          job.location.toLowerCase().includes(search) ||
+          job.skills.some((skill) => skill.toLowerCase().includes(search))
+        );
+        if (!matchesSearch) return false;
+      }
 
-    // Minimum salary filter
-    if (minSalary && job.salaryMin) {
-      if (job.salaryMin < parseInt(minSalary)) return false;
-    }
+      // Minimum salary filter
+      if (minSalary && job.salaryMin) {
+        if (job.salaryMin < parseInt(minSalary)) return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [jobs, searchTerm, minSalary]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Desktop Header - Full Navigation */}
-      <div className="hidden md:block">
-        <HeaderDesign1Enhanced
-          searchPlaceholder="Search jobs, companies, skills..."
-          showFiltersButton={true}
-          showSearchButton={true}
-          onFiltersClick={() => setShowFilters(!showFilters)}
-          onSearchButtonClick={handleSearch}
-          searchValue={searchTerm}
-          onSearchChange={setSearchTerm}
-          showNavigation={false}
-        />
-      </div>
-
-      {/* Mobile Search Bar - Expandable & Sticky */}
+    <>
+      <ListingHeader
+        breadcrumbs={[{ label: 'Jobs' }]}
+        searchPlaceholder="Search jobs, companies, skills..."
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSearchSubmit={handleSearch}
+        onFilterClick={() => setShowFilters(!showFilters)}
+        showFilters={showFilters}
+        showSearchButton={true}
+      />
+      <div className="min-h-screen bg-gray-50">
+        {/* Mobile Search Bar - Expandable & Sticky (kept for mobile) */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 py-3">
           {!mobileSearchExpanded ? (
@@ -350,6 +411,7 @@ function JobsPageContent() {
         />
       </div>
     </div>
+    </>
   );
 }
 

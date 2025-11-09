@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useState, useEffect } from 'react';
@@ -22,9 +22,25 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function LandingNav3Enhanced() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchBar, setShowSearchBar] = useState(false);
+
+  // Get active filters from URL
+  const activeLocation = searchParams?.get('location');
+  const activeType = searchParams?.get('type');
+  const activeFeatured = searchParams?.get('featured');
+  const activeSalary = searchParams?.get('salary');
+
+  // Helper to get pill classes based on active state
+  const getPillClasses = (isActive: boolean, activeClasses: string, inactiveClasses: string) => {
+    const baseClasses = "flex items-center justify-center gap-1.5 px-4 py-2 h-9 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm snap-start flex-shrink-0";
+    if (isActive) {
+      return `${baseClasses} ${activeClasses} shadow-lg transform -translate-y-0.5`;
+    }
+    return `${baseClasses} ${inactiveClasses} hover:shadow-md transform hover:-translate-y-0.5`;
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -138,42 +154,66 @@ export default function LandingNav3Enhanced() {
             <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 snap-x snap-mandatory animate-fadeIn">
               <Link
                 href="/jobs?location=remote"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border border-blue-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+                className={getPillClasses(
+                  activeLocation === 'remote',
+                  'bg-gradient-to-r from-blue-500 to-blue-600 text-white border border-blue-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 text-gray-700 hover:text-blue-700 border border-gray-200 hover:border-blue-300'
+                )}
               >
                 <span className="text-base leading-none">🌏</span>
                 <span className="leading-none">Remote</span>
               </Link>
               <Link
                 href="/jobs?type=full-time"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+                className={getPillClasses(
+                  activeType === 'full-time',
+                  'bg-gradient-to-r from-purple-500 to-purple-600 text-white border border-purple-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300'
+                )}
               >
                 <span className="text-base leading-none">💼</span>
                 <span className="leading-none">Full</span>
               </Link>
               <Link
                 href="/jobs?location=dubai"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-orange-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+                className={getPillClasses(
+                  activeLocation === 'dubai',
+                  'bg-gradient-to-r from-orange-500 to-orange-600 text-white border border-orange-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-orange-300'
+                )}
               >
                 <span className="text-base leading-none">🇦🇪</span>
                 <span className="leading-none">Dubai</span>
               </Link>
               <Link
                 href="/jobs?location=singapore"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 hover:text-red-700 border border-gray-200 hover:border-red-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+                className={getPillClasses(
+                  activeLocation === 'singapore',
+                  'bg-gradient-to-r from-red-500 to-red-600 text-white border border-red-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 hover:text-red-700 border border-gray-200 hover:border-red-300'
+                )}
               >
                 <span className="text-base leading-none">🇸🇬</span>
                 <span className="leading-none">Singapore</span>
               </Link>
               <Link
                 href="/jobs?featured=true"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border border-yellow-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-lg transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+                className={getPillClasses(
+                  activeFeatured === 'true',
+                  'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border border-yellow-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-yellow-300'
+                )}
               >
                 <span className="text-base leading-none">✨</span>
                 <span className="leading-none">Featured</span>
               </Link>
               <Link
                 href="/jobs?salary=high"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 h-9 bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300 rounded-full text-xs font-medium whitespace-nowrap transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 snap-start flex-shrink-0"
+                className={getPillClasses(
+                  activeSalary === 'high',
+                  'bg-gradient-to-r from-green-500 to-green-600 text-white border border-green-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300'
+                )}
               >
                 <span className="text-base leading-none">💰</span>
                 <span className="leading-none">High Salary</span>

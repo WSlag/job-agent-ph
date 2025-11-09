@@ -71,8 +71,30 @@ export default function BottomNav() {
     }
   }
 
+  // Hide on desktop for pages with specialized headers (keep visible on mobile)
+  const pagesWithOwnHeaders = [
+    '/',                     // Homepage has LandingNav3Enhanced
+    '/jobs',                 // Jobs listing has ListingHeader
+    '/companies',            // Companies has ListingHeader
+    '/profile',              // Profile has UserDashboardHeader
+    '/saved-jobs',           // Saved jobs has UserDashboardHeader
+    '/messages',             // Messages has MessagesHeader
+    '/notifications',        // Notifications has UserDashboardHeader
+    '/about',                // Marketing pages have MarketingHeader
+    '/contact',
+    '/privacy',
+    '/faq',
+    '/resources',
+  ];
+
+  const hideOnDesktop = pagesWithOwnHeaders.some(path =>
+    path === '/' ? pathname === '/' : pathname.startsWith(path)
+  ) || pathname.startsWith('/agency'); // Agency pages have AgencyDashboardHeader
+
+  const navClassName = `fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-sm ${hideOnDesktop ? 'md:hidden' : ''}`;
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-sm">
+    <nav className={navClassName}>
       <div className="flex items-center justify-around h-14 md:h-16 max-w-screen-xl mx-auto px-2 md:px-4 md:justify-between md:gap-4">
         {/* Logo - Only show on desktop for agency users */}
         {userType === 'agency' && (

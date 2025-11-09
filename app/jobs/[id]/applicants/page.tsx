@@ -8,7 +8,6 @@ import { COLLECTIONS } from '@/lib/collections'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToJobApplications, updateApplicationStatus } from '@/lib/application-helpers'
 import { JobApplication, Job, ApplicationStatus } from '@/types'
-import HeaderDesign1Enhanced from '@/components/layout/HeaderDesign1Enhanced'
 import ApplicationCard from '@/components/applications/ApplicationCard'
 import { Loader2, Users, ArrowLeft, Briefcase, Filter } from 'lucide-react'
 
@@ -97,7 +96,7 @@ export default function JobApplicantsPage() {
   if (authLoading || loading || !job) {
     return (
       <div className="min-h-screen bg-gray-50 pt-16">
-        <HeaderDesign1Enhanced hideSearch />
+        
         <div className="flex items-center justify-center py-20">
           <Loader2 className="animate-spin text-blue-600" size={48} />
         </div>
@@ -111,7 +110,7 @@ export default function JobApplicantsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
-      <HeaderDesign1Enhanced hideSearch />
+      
 
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
