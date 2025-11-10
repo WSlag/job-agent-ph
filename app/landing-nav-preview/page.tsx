@@ -4,6 +4,9 @@ import { useState } from 'react';
 import LandingNav3Enhanced from '@/components/layout/LandingNav3Enhanced';
 import { Monitor, Smartphone, Check, Copy } from 'lucide-react';
 
+// Force dynamic rendering to avoid prerendering issues with useSearchParams
+export const dynamic = 'force-dynamic';
+
 /**
  * Landing Nav Preview Page
  * Shows both desktop and mobile views of the enhanced landing navigation

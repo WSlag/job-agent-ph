@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import Header from './Header';
 import AgencyDashboardHeader from './AgencyDashboardHeader';
 import UserDashboardHeader from './UserDashboardHeader';
@@ -9,7 +9,7 @@ import MarketingHeader from './MarketingHeader';
 
 export default function ConditionalHeader() {
   const pathname = usePathname();
-  const { userType } = useAuth();
+  const { userType } = useOptionalAuth();
 
   // Pages with no header (use their own custom headers or LandingNav)
   const noHeaderPaths = [
@@ -49,7 +49,7 @@ export default function ConditionalHeader() {
   }
 
   // USER DASHBOARD PAGES (Job Hunters)
-  if (userType === 'job-hunter') {
+  if (userType === 'jobhunter') {
     if (
       pathname.startsWith('/profile') ||
       pathname === '/saved-jobs' ||

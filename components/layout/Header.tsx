@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import { User, LogOut, Menu, X, MessageCircle, Briefcase, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Logo from '@/components/ui/Logo';
@@ -10,7 +10,7 @@ import { subscribeToConversations } from '@/lib/messaging-helpers';
 import { subscribeToJobHunterApplications } from '@/lib/application-helpers';
 
 export default function Header() {
-  const { user, userType, signOut, loading } = useAuth();
+  const { user, userType, signOut, loading } = useOptionalAuth();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);

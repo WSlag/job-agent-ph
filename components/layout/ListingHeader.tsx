@@ -2,7 +2,7 @@
 
 import { Search, Filter, Home, ChevronRight, ChevronDown, X } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
@@ -33,7 +33,7 @@ export default function ListingHeader({
   showFilters = false,
   showSearchButton = true,
 }: ListingHeaderProps) {
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
   const router = useRouter();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [mobileSearchExpanded, setMobileSearchExpanded] = useState(false);

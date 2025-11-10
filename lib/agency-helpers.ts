@@ -1,5 +1,5 @@
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from './firebase';
+import { getDbInstance } from './firebase';
 import { COLLECTIONS } from './collections';
 import type { Agency, AgencyStatsData } from '@/types';
 
@@ -38,6 +38,7 @@ export async function getAgencyWithStats(agencyId: string): Promise<{
   stats: AgencyStatsData;
 }> {
   try {
+    const db = getDbInstance();
     // Fetch agency profile
     const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, agencyId));
     const agency = agencyDoc.exists()
@@ -83,6 +84,7 @@ export async function getAgencyWithStats(agencyId: string): Promise<{
  */
 export async function getAgencyJobCount(agencyId: string): Promise<number> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, COLLECTIONS.JOBS),
       where('agencyId', '==', agencyId),

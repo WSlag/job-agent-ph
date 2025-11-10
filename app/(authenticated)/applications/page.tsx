@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Timeline, Badge, StatCard, StatCardGrid, EmptyState } from '@/components/ui';
 import { NoApplicationsEmptyState } from '@/components/ui/EmptyState';
@@ -78,6 +78,7 @@ export default function ApplicationsPage() {
 
     try {
       setLoading(true);
+      const db = getDbInstance();
       const applicationsRef = collection(db, COLLECTIONS.APPLICATIONS);
       const q = query(
         applicationsRef,

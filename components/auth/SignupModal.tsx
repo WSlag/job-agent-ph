@@ -6,9 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { getAuthInstance, getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
 import AuthPrompt, { AuthPromptContext } from './AuthPrompt';
@@ -66,7 +66,7 @@ export default function SignupModal({
   onSuccess,
 }: SignupModalProps) {
   const router = useRouter();
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn } = useOptionalAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -205,6 +205,8 @@ export default function SignupModal({
     setIsLoading(true);
 
     try {
+      const auth = getAuthInstance();
+      const db = getDbInstance();
       const authProvider = provider === 'google'
         ? new GoogleAuthProvider()
         : new FacebookAuthProvider();

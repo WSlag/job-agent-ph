@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 
 // Map of job titles to relevant image URLs from Unsplash
@@ -28,6 +28,7 @@ const jobImageMap: { [key: string]: string } = {
 
 export async function GET(request: NextRequest) {
   try {
+    const db = getDbInstance();
     const jobsCollection = collection(db, 'jobs');
     const q = query(jobsCollection, where('agencyId', '==', 'sample-agency-001'));
     const querySnapshot = await getDocs(q);

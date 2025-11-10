@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { updateJob } from '@/lib/job-helpers';
 import { Job } from '@/types';
 import { Loader2, ArrowLeft } from 'lucide-react';
@@ -38,6 +38,7 @@ export default function EditJobPage() {
 
     try {
       setLoading(true);
+      const db = getDbInstance();
       const jobDoc = await getDoc(doc(db, 'jobs', jobId));
 
       if (!jobDoc.exists()) {

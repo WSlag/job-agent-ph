@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { NoNotificationsEmptyState } from '@/components/ui/EmptyState';
 import { collection, query, where, orderBy, onSnapshot, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import toast from 'react-hot-toast';
 
@@ -35,6 +35,7 @@ export default function NotificationsPage() {
       return;
     }
 
+    const db = getDbInstance();
     // Load notifications from Firestore with real-time updates
     const notificationsRef = collection(db, 'notifications');
     const q = query(
@@ -72,6 +73,7 @@ export default function NotificationsPage() {
     if (!user) return;
 
     try {
+      const db = getDbInstance();
       const batch = writeBatch(db);
       const unreadNotifications = notifications.filter(n => !n.read);
 
@@ -90,6 +92,7 @@ export default function NotificationsPage() {
 
   const handleDelete = async (id: string) => {
     try {
+      const db = getDbInstance();
       await deleteDoc(doc(db, 'notifications', id));
       toast.success('Notification deleted');
     } catch (error) {
@@ -101,6 +104,7 @@ export default function NotificationsPage() {
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
       try {
+        const db = getDbInstance();
         await updateDoc(doc(db, 'notifications', notification.id), {
           read: true,
         });

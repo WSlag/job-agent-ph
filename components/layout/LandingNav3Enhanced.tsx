@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp } from 'lucide-react';
+import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp, Globe, MessageCircle } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 
 /**
  * LANDING NAV 3 ENHANCED: Beautiful App-Style Navigation
@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
  */
 
 export default function LandingNav3Enhanced() {
-  const { user } = useAuth();
+  const { user } = useOptionalAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -288,7 +288,7 @@ export default function LandingNav3Enhanced() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-fadeIn"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] animate-fadeIn"
             onClick={() => setIsMenuOpen(false)}
             aria-hidden="true"
           ></div>
@@ -299,107 +299,84 @@ export default function LandingNav3Enhanced() {
             id="mobile-menu"
             role="navigation"
             aria-label="Main menu"
-            className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white z-50 shadow-2xl overflow-y-auto animate-slideInRight"
+            className="fixed top-0 bottom-0 right-0 w-full sm:w-96 bg-white z-[110] shadow-2xl overflow-y-auto animate-slideInRight pt-20"
           >
             <div className="p-6 space-y-6">
-              {/* User Section - Beautiful Gradient Card */}
-              <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-xl">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border-2 border-white/30 shadow-lg">
-                    <User2 className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-lg">Welcome Back!</p>
-                    <p className="text-sm text-blue-100">Start your career journey today</p>
+              {/* User Section */}
+              {user ? (
+                <div className="pb-4 border-b border-gray-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">{user.email}</p>
+                      <p className="text-sm text-gray-500">Job Seeker</p>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    href="/auth/login?type=jobseeker"
-                    className="px-4 py-3 bg-white text-blue-600 rounded-xl text-sm font-bold text-center hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Find Jobs
-                  </Link>
-                  <Link
-                    href="/auth/login?type=employer"
-                    className="px-4 py-3 bg-white/20 text-white rounded-xl text-sm font-bold text-center hover:bg-white/30 transition-all backdrop-blur-sm border border-white/30 transform hover:-translate-y-0.5"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Post Job
-                  </Link>
+              ) : (
+                <div className="pb-4 border-b border-gray-200">
+                  <div className="space-y-3">
+                    <Link
+                      href="/auth/login"
+                      className="block w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="block w-full px-4 py-3 border-2 border-blue-600 text-blue-600 text-center rounded-lg font-semibold hover:bg-blue-50 transition-all"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Create Account
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-5 h-5 text-blue-600" />
-                    <span className="text-xs font-semibold text-blue-900">NEW TODAY</span>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-600">2,345</p>
-                  <p className="text-xs text-blue-700">Fresh Jobs</p>
-                </div>
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-5 h-5 text-purple-600" />
-                    <span className="text-xs font-semibold text-purple-900">FEATURED</span>
-                  </div>
-                  <p className="text-2xl font-bold text-purple-600">500+</p>
-                  <p className="text-xs text-purple-700">Top Jobs</p>
-                </div>
-              </div>
-
-              {/* Main Menu Items - Beautiful Cards */}
-              <div className="space-y-3">
-                <p className="px-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
-                  Explore Jobs
+              {/* Main Navigation */}
+              <div className="space-y-2">
+                <p className="px-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                  Navigation
                 </p>
                 <Link
                   href="/jobs"
-                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 rounded-xl transition-all border border-blue-100 hover:border-blue-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-md">
-                    <Search className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900">Browse All Jobs</p>
-                    <p className="text-xs text-gray-600">300,000+ opportunities worldwide</p>
-                  </div>
+                  <Search className="w-5 h-5 text-gray-400" />
+                  <span>Browse Jobs</span>
                 </Link>
-
                 <Link
                   href="/companies"
-                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 rounded-xl transition-all border border-purple-100 hover:border-purple-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md">
-                    <User2 className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900">Top Companies</p>
-                    <p className="text-xs text-gray-600">Explore leading employers</p>
-                  </div>
+                  <Globe className="w-5 h-5 text-gray-400" />
+                  <span>Companies</span>
                 </Link>
-
-                <Link
-                  href="/saved-jobs"
-                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 rounded-xl transition-all border border-red-100 hover:border-red-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md relative">
-                    <Heart className="w-6 h-6 text-white" />
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-red-600 rounded-full text-[10px] flex items-center justify-center font-bold">
-                      3
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900">Saved Jobs</p>
-                    <p className="text-xs text-gray-600">Your bookmarked opportunities</p>
-                  </div>
-                </Link>
+                {user && (
+                  <>
+                    <Link
+                      href="/saved-jobs"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Heart className="w-5 h-5 text-gray-400" />
+                      <span>Saved Jobs</span>
+                    </Link>
+                    <Link
+                      href="/messages"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <MessageCircle className="w-5 h-5 text-gray-400" />
+                      <span>Messages</span>
+                    </Link>
+                  </>
+                )}
               </div>
 
               {/* Help Section */}
@@ -410,21 +387,21 @@ export default function LandingNav3Enhanced() {
                 <div className="space-y-2">
                   <Link
                     href="/resources"
-                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-medium"
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Career Resources
                   </Link>
                   <Link
                     href="/faq"
-                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-medium"
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     FAQs
                   </Link>
                   <Link
                     href="/contact"
-                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors font-medium"
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Contact Support

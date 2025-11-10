@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { collection, query, getDocs, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -13,6 +13,7 @@ import { Job } from '@/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
+import UserDashboardHeader from '@/components/layout/UserDashboardHeader';
 
 export default function SavedJobsPage() {
   const { user: currentUser, userType, loading: authLoading } = useAuth();
@@ -42,6 +43,7 @@ export default function SavedJobsPage() {
 
     try {
       setLoading(true);
+      const db = getDbInstance();
 
       // Get saved job IDs from Firestore
       const savedJobsRef = collection(db, 'savedJobs', currentUser.uid, 'jobs');
@@ -159,6 +161,7 @@ export default function SavedJobsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <UserDashboardHeader showNotifications={true} />
       <MobileNativeHeader
         title="Saved Jobs"
         onBack={() => router.back()}

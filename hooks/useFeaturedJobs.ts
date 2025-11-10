@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 
@@ -27,6 +27,7 @@ export function useFeaturedJobs(): UseFeaturedJobsReturn {
 
     try {
       // Create query for featured jobs
+      const db = getDbInstance();
       const jobsRef = collection(db, COLLECTIONS.JOBS);
       const q = query(
         jobsRef,

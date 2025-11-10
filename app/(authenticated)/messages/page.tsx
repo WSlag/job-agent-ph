@@ -7,7 +7,7 @@ import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 import { Conversation, Job, Agency, JobHunter } from '@/types';
 import { subscribeToConversations, getOrCreateConversation } from '@/lib/messaging-helpers';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageCircle, Loader2, Inbox } from 'lucide-react';
@@ -35,6 +35,7 @@ function MessagesContent() {
     try {
       if (!user || !userType) return;
 
+      const db = getDbInstance();
       // Fetch job to get agency ID
       const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId));
       if (!jobDoc.exists()) {
@@ -69,6 +70,7 @@ function MessagesContent() {
   // Memoize loadConversationDetails with batching to reduce N+1 queries
   const loadConversationDetails = useCallback(async (convos: Conversation[]) => {
     try {
+      const db = getDbInstance();
       // Collect unique IDs to batch fetch
       const uniqueJobIds = [...new Set(convos.map(c => c.jobId))];
       const uniqueAgencyIds = [...new Set(convos.map(c => c.agencyId))];

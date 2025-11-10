@@ -11,7 +11,7 @@ import {
   limit,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from './firebase'
+import { getDbInstance } from './firebase'
 import { COLLECTIONS } from './collections'
 import {
   FeaturedJobRequest,
@@ -50,6 +50,7 @@ export async function createFeaturedRequest(
   } = params
 
   try {
+    const db = getDbInstance();
     // Check if job exists and belongs to agency
     const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId))
     if (!jobDoc.exists()) {
@@ -110,6 +111,7 @@ export async function getFeaturedRequests(
   status?: 'pending' | 'approved' | 'rejected'
 ): Promise<FeaturedJobRequestWithDetails[]> {
   try {
+    const db = getDbInstance();
     const requestsRef = collection(db, COLLECTIONS.FEATURED_REQUESTS)
     let q = query(requestsRef, orderBy('createdAt', 'desc'))
 
@@ -168,6 +170,7 @@ export async function getAgencyFeaturedRequests(
   agencyId: string
 ): Promise<FeaturedJobRequest[]> {
   try {
+    const db = getDbInstance();
     const requestsRef = collection(db, COLLECTIONS.FEATURED_REQUESTS)
     const q = query(
       requestsRef,
@@ -201,6 +204,7 @@ export async function approveFeaturedRequest(
   }
 
   try {
+    const db = getDbInstance();
     // Get the request
     const requestDoc = await getDoc(doc(db, COLLECTIONS.FEATURED_REQUESTS, requestId))
     if (!requestDoc.exists()) {
@@ -243,6 +247,7 @@ export async function rejectFeaturedRequest(
   adminId: string
 ): Promise<void> {
   try {
+    const db = getDbInstance();
     await updateDoc(doc(db, COLLECTIONS.FEATURED_REQUESTS, requestId), {
       status: 'rejected',
       reviewedBy: adminId,
@@ -262,6 +267,7 @@ export async function rejectFeaturedRequest(
  */
 export async function removeFeaturedJob(jobId: string): Promise<void> {
   try {
+    const db = getDbInstance();
     await updateDoc(doc(db, COLLECTIONS.JOBS, jobId), {
       isFeatured: false,
       featuredPriority: null,
@@ -287,6 +293,7 @@ export async function updateFeaturedPriority(
   }
 
   try {
+    const db = getDbInstance();
     await updateDoc(doc(db, COLLECTIONS.JOBS, jobId), {
       featuredPriority: newPriority,
     })
@@ -302,6 +309,7 @@ export async function updateFeaturedPriority(
  */
 export async function getFeaturedJobs(): Promise<Job[]> {
   try {
+    const db = getDbInstance();
     const jobsRef = collection(db, COLLECTIONS.JOBS)
     const q = query(
       jobsRef,

@@ -6,8 +6,10 @@ import { useOnboarding } from '@/contexts/OnboardingContext'
 import { useState } from 'react'
 import Link from 'next/link'
 
+type AgencyChecklistKey = 'logoUploaded' | 'registrationAdded' | 'contactInfoComplete' | 'firstJobPosted';
+
 interface ChecklistItem {
-  id: 'logoUploaded' | 'registrationAdded' | 'contactInfoComplete' | 'firstJobPosted'
+  id: AgencyChecklistKey
   title: string
   description: string
   icon: any
@@ -138,7 +140,8 @@ export default function AgencyProfileChecklist() {
           >
             <div className="p-4 space-y-3">
               {CHECKLIST_ITEMS.map((item, index) => {
-                const isCompleted = onboardingData?.profileChecklist?.[item.id]
+                const checklist = onboardingData?.profileChecklist as any;
+                const isCompleted = checklist?.[item.id]
                 const Icon = item.icon
 
                 return (

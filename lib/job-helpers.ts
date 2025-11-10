@@ -1,4 +1,4 @@
-import { storage } from './firebase'
+import { getStorageInstance } from './firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { createDocument } from './firestore-helpers'
 import type { Job, JobType, JobLocation } from '@/types'
@@ -52,6 +52,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
 
   if (imageFile) {
     try {
+      const storage = getStorageInstance();
       const timestamp = Date.now()
       const filename = `${timestamp}_${imageFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
       const storageRef = ref(storage, `jobs/${agencyId}/${filename}`)
@@ -163,10 +164,11 @@ export async function deleteJob(jobId: string): Promise<void> {
  */
 export async function getAgencyJobs(agencyId: string): Promise<Job[]> {
   const { collection, query, where, orderBy, getDocs } = await import('firebase/firestore')
-  const { db } = await import('./firebase')
+  const { getDbInstance } = await import('./firebase')
   const { COLLECTIONS } = await import('./collections')
 
   try {
+    const db = getDbInstance();
     // Query without orderBy (Firebase composite index not yet created)
     // TODO: Create composite index in Firebase Console, then add: orderBy('postedAt', 'desc')
     const q = query(
@@ -249,10 +251,11 @@ export async function getSimilarJobs(
   limit: number = 6
 ): Promise<Job[]> {
   const { collection, query, where, orderBy, getDocs, limit: firestoreLimit } = await import('firebase/firestore')
-  const { db } = await import('./firebase')
+  const { getDbInstance } = await import('./firebase')
   const { COLLECTIONS } = await import('./collections')
 
   try {
+    const db = getDbInstance();
     let q
 
     // Priority 1: Same category

@@ -3,7 +3,7 @@
 import { Home, Briefcase, MessageCircle, BookOpen, User, Grid, Search } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useOptionalAuth } from '@/contexts/AuthContext'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import MessageBadge from '@/components/common/MessageBadge'
 import Logo from '@/components/ui/Logo'
@@ -13,7 +13,7 @@ export default function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, userType, loading } = useAuth()
+  const { user, userType, loading } = useOptionalAuth()
   const { unreadCount } = useUnreadMessages()
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [isMounted, setIsMounted] = useState(false)

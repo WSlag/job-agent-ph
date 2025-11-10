@@ -1,5 +1,5 @@
 import { collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { getDbInstance } from './firebase';
 import { COLLECTIONS } from './collections';
 
 /**
@@ -14,6 +14,7 @@ export async function trackJobView(
   source?: string
 ): Promise<void> {
   try {
+    const db = getDbInstance();
     // Build the document data conditionally
     const viewData: any = {
       jobId,
@@ -41,6 +42,7 @@ export async function trackJobView(
  */
 export async function getJobViewCount(jobId: string): Promise<number> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, COLLECTIONS.JOB_VIEWS),
       where('jobId', '==', jobId)

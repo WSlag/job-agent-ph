@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useAuth } from './AuthContext'
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { getDbInstance } from '@/lib/firebase'
 
 // Job Hunter onboarding steps
 export type JobHunterOnboardingStep =
@@ -162,6 +162,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        const db = getDbInstance()
         const collectionName = userType === 'jobhunter' ? 'jobHunters' : 'agencies'
         const docRef = doc(db, collectionName, user.uid)
         const docSnap = await getDoc(docRef)
@@ -213,6 +214,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setOnboardingData(newData as OnboardingData)
 
     try {
+      const db = getDbInstance()
       const collectionName = userType === 'jobhunter' ? 'jobHunters' : 'agencies'
       const docRef = doc(db, collectionName, user.uid)
       await updateDoc(docRef, {
@@ -327,6 +329,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     if (!user || (userType !== 'jobhunter' && userType !== 'agency')) return
 
     try {
+      const db = getDbInstance()
       const collectionName = userType === 'jobhunter' ? 'jobHunters' : 'agencies'
       const docRef = doc(db, collectionName, user.uid)
       await updateDoc(docRef, {

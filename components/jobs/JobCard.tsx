@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Job } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import { getJobApplicationCount } from '@/lib/application-helpers';
 import { motion } from 'framer-motion';
 import { fadeInUp } from '@/lib/animations';
@@ -30,7 +30,7 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, onSave, onMessage, isSaved = false, applicantCount: providedCount }: JobCardProps) {
-  const { userType, user } = useAuth();
+  const { userType, user } = useOptionalAuth();
   const [saved, setSaved] = useState(isSaved);
   const [imageError, setImageError] = useState(false);
   const [applicantCount, setApplicantCount] = useState<number | null>(providedCount ?? null);

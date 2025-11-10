@@ -3,7 +3,7 @@
  * Handles user profile updates for both job hunters and agencies
  */
 
-import { db } from './firebase'
+import { getDbInstance } from './firebase'
 import { doc, updateDoc, Timestamp, collection, query, where, getDocs, writeBatch } from 'firebase/firestore'
 import { Agency, JobHunter } from '@/types'
 import { COLLECTIONS } from './collections'
@@ -18,6 +18,7 @@ export async function updateAgencyProfile(
   data: Partial<Omit<Agency, 'id' | 'email' | 'userType' | 'createdAt'>>
 ): Promise<void> {
   try {
+    const db = getDbInstance();
     const agencyRef = doc(db, COLLECTIONS.AGENCIES, userId)
     await updateDoc(agencyRef, {
       ...data,
@@ -54,6 +55,7 @@ export async function updateJobHunterProfile(
   data: Partial<Omit<JobHunter, 'id' | 'email' | 'userType' | 'createdAt'>>
 ): Promise<void> {
   try {
+    const db = getDbInstance();
     const jobHunterRef = doc(db, COLLECTIONS.JOB_HUNTERS, userId)
     await updateDoc(jobHunterRef, {
       ...data,

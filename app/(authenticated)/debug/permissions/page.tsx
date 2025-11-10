@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { getDbInstance } from '@/lib/firebase'
 import Button from '@/components/ui/Button'
 
 export default function PermissionsDebugPage() {
@@ -23,6 +23,7 @@ export default function PermissionsDebugPage() {
     setMessage('')
 
     try {
+      const db = getDbInstance();
       const userId = user.uid
 
       // Check users collection
@@ -75,6 +76,7 @@ export default function PermissionsDebugPage() {
     setMessage('')
 
     try {
+      const db = getDbInstance();
       const userId = user.uid
 
       // Determine user type from other collections

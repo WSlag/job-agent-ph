@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { getAuthInstance } from '@/lib/firebase';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Logo from '@/components/ui/Logo';
@@ -33,6 +33,7 @@ export default function ForgotPasswordPage() {
 
     try {
       setLoading(true);
+      const auth = getAuthInstance();
       await sendPasswordResetEmail(auth, email, {
         url: `${window.location.origin}/auth/login`,
         handleCodeInApp: false,

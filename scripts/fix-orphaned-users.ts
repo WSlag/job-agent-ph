@@ -4,6 +4,12 @@
  * Usage: npx tsx scripts/fix-orphaned-users.ts
  */
 
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables from .env.local
+dotenv.config({ path: resolve(process.cwd(), '.env.local') });
+
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import * as readline from 'readline';
@@ -17,6 +23,11 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
+
+console.log('Firebase Config:', {
+  projectId: firebaseConfig.projectId,
+  hasApiKey: !!firebaseConfig.apiKey,
+});
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -151,8 +162,8 @@ async function main() {
 
   // The orphaned user we found
   const orphanedUser = {
-    userId: 'qUqVWcQWYWRNrjO2iyUu7oIM7PZ2',
-    email: 'wslagbas@gmail.com',
+    userId: 'wxSTEBGY3zYYR2dCYk2PRgFY5yn2',
+    email: 'hunter2@test.com',
   };
 
   await fixOrphanedUser(orphanedUser.userId, orphanedUser.email);

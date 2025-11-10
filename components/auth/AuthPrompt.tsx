@@ -7,7 +7,7 @@ export interface AuthPromptContext {
   /**
    * Action that requires authentication
    */
-  action: 'apply' | 'save' | 'message' | 'view_applications' | 'view_profile' | 'ai_advanced';
+  action: 'apply' | 'save' | 'message' | 'view_applications' | 'view_profile' | 'ai_advanced' | 'post_job' | 'edit_job';
   /**
    * Title for the prompt
    */
@@ -76,6 +76,10 @@ export default function AuthPrompt({ context, className = '' }: AuthPromptProps)
         return <User size={48} className="text-primary-600" />;
       case 'ai_advanced':
         return <Sparkles size={48} className="text-primary-600" />;
+      case 'post_job':
+        return <Briefcase size={48} className="text-primary-600" />;
+      case 'edit_job':
+        return <Briefcase size={48} className="text-primary-600" />;
       default:
         return <Lock size={48} className="text-primary-600" />;
     }

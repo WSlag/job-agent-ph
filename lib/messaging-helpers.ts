@@ -15,7 +15,7 @@ import {
   Timestamp,
   QueryConstraint,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { getDbInstance } from './firebase';
 import { COLLECTIONS, getCollectionPath } from './collections';
 import { Conversation, Message, UserType } from '@/types';
 
@@ -67,6 +67,7 @@ export async function getOrCreateConversation(
   agencyId: string
 ): Promise<string> {
   try {
+    const db = getDbInstance();
     // Use composite key as document ID to ensure uniqueness
     const conversationKey = `${jobId}_${jobHunterId}_${agencyId}`;
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationKey);
@@ -86,9 +87,17 @@ export async function getOrCreateConversation(
       unreadCount: 0, // Legacy field for backward compatibility
       [`unreadCount_${jobHunterId}`]: 0, // Per-user unread count for job hunter
       [`unreadCount_${agencyId}`]: 0, // Per-user unread count for agency
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     };
+
+    console.log('Creating conversation with data:', {
+      jobId,
+      jobHunterId,
+      agencyId,
+      conversationKey,
+      newConversation
+    });
 
     await setDoc(conversationRef, newConversation);
     return conversationRef.id;
@@ -117,6 +126,7 @@ export async function sendMessage(
 ): Promise<string> {
   return retryWithBackoff(async () => {
     try {
+    const db = getDbInstance();
     // Validate message content
     const trimmedContent = content.trim();
     if (!trimmedContent) {
@@ -211,6 +221,7 @@ export async function markMessagesAsRead(
 
   return retryWithBackoff(async () => {
     try {
+    const db = getDbInstance();
 
     const messagesRef = collection(
       db,
@@ -271,6 +282,7 @@ export function subscribeToConversations(
   onUpdate: (conversations: Conversation[]) => void,
   limitCount: number = 20 // Default pagination limit
 ): () => void {
+  const db = getDbInstance();
   const conversationsRef = collection(db, COLLECTIONS.CONVERSATIONS);
   const field = userType === 'jobhunter' ? 'jobHunterId' : 'agencyId';
 
@@ -311,6 +323,7 @@ export function subscribeToMessages(
   onUpdate: (messages: Message[]) => void,
   limitCount: number = 100 // Default limit for initial message load
 ): () => void {
+  const db = getDbInstance();
   const messagesRef = collection(
     db,
     getCollectionPath.messages(conversationId)
@@ -351,6 +364,7 @@ export function subscribeToMessages(
  */
 export async function getConversationDetails(conversationId: string) {
   try {
+    const db = getDbInstance();
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
     const conversationSnap = await getDoc(conversationRef);
 
@@ -404,6 +418,7 @@ export async function getUnreadMessagesCount(
   userType: UserType
 ): Promise<number> {
   try {
+    const db = getDbInstance();
     const conversationsRef = collection(db, COLLECTIONS.CONVERSATIONS);
     const field = userType === 'jobhunter' ? 'jobHunterId' : 'agencyId';
 
@@ -440,6 +455,7 @@ export async function setTypingIndicator(
   isTyping: boolean
 ): Promise<void> {
   try {
+    const db = getDbInstance();
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
     const typingKey = `typing_${userId}`;
 
@@ -468,6 +484,7 @@ export function subscribeToTypingIndicators(
   currentUserId: string,
   onUpdate: (isTyping: boolean) => void
 ): () => void {
+  const db = getDbInstance();
   const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
 
   const unsubscribe = onSnapshot(

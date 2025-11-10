@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { getDbInstance } from '@/lib/firebase'
 import { COLLECTIONS } from '@/lib/collections'
 import { JobApplication, Job, JobHunter, ApplicationStatus } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
@@ -49,6 +49,7 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
 
   const loadDetails = async () => {
     try {
+      const db = getDbInstance()
       // Load job details
       const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, application.jobId))
       if (jobDoc.exists()) {

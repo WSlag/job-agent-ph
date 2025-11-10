@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import {
   Briefcase,
@@ -40,6 +40,7 @@ export default function AdminDashboardPage() {
 
   const loadDashboardStats = async () => {
     try {
+      const db = getDbInstance();
       // Load all stats in parallel
       const [
         jobsSnapshot,

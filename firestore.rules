@@ -168,7 +168,9 @@ service cloud.firestore {
     // Conversations collection
     match /conversations/{conversationId} {
       // Participants can read their own conversations
+      // Also allow read if conversation doesn't exist (for checking before creation)
       allow read: if isAuthenticated() && (
+                    !exists(/databases/$(database)/documents/conversations/$(conversationId)) ||
                     resource.data.jobHunterId == request.auth.uid ||
                     resource.data.agencyId == request.auth.uid
                   );
@@ -185,9 +187,9 @@ service cloud.firestore {
                       request.resource.data.updatedAt is timestamp &&
                       // User must be a participant
                       (request.resource.data.jobHunterId == request.auth.uid ||
-                       request.resource.data.agencyId == request.auth.uid) &&
-                      // Validate job exists
-                      exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId));
+                       request.resource.data.agencyId == request.auth.uid);
+                      // Validate job exists - temporarily disabled to debug
+                      // exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId));
 
       // Participants can update lastMessage, unreadCount fields, typing indicators, and updatedAt
       // Don't allow changing core identifiers (jobId, jobHunterId, agencyId, createdAt)

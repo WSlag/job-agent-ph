@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/contexts/AuthContext';
+import { getDbInstance } from '@/lib/firebase';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 
 export function useUnreadMessages() {
-  const { user, userType } = useAuth();
+  const { user, userType } = useOptionalAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -18,6 +18,7 @@ export function useUnreadMessages() {
     }
 
     // Query conversations based on user type
+    const db = getDbInstance();
     const conversationsRef = collection(db, 'conversations');
     const conversationsQuery = userType === 'agency'
       ? query(conversationsRef, where('agencyId', '==', user.uid))

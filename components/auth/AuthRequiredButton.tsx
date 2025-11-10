@@ -50,7 +50,7 @@ interface AuthRequiredButtonProps {
   /**
    * Button variant
    */
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'warning' | 'danger';
   /**
    * Button size
    */

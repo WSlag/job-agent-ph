@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
+import { getDbInstance, getStorageInstance } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile, updatePassword } from 'firebase/auth';
 import Card from '@/components/ui/Card';
@@ -90,6 +90,7 @@ export default function ProfilePage() {
 
     try {
       setLoading(true);
+      const db = getDbInstance();
       const collectionName = userType === 'jobhunter' ? 'jobHunters' : 'agencies';
       const profileDoc = await getDoc(doc(db, collectionName, currentUser.uid));
 
@@ -220,6 +221,7 @@ export default function ProfilePage() {
   };
 
   const uploadFile = async (file: File, path: string): Promise<string> => {
+    const storage = getStorageInstance();
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
     return await getDownloadURL(storageRef);
@@ -230,6 +232,7 @@ export default function ProfilePage() {
 
     try {
       setSaving(true);
+      const db = getDbInstance();
 
       // Collect all validation errors
       const errors: Record<string, string> = {};
@@ -472,13 +475,13 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       name="fullName"
-                      value={profile.fullName || ''}
+                      value={'fullName' in profile ? (profile.fullName || '') : ''}
                       onChange={(e) => {
                         handleInputChange('fullName', e.target.value);
                         clearFieldError('fullName');
                       }}
                       onBlur={(e) => validateField('fullName', e.target.value)}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                         fieldErrors.fullName
                           ? 'border-red-500 bg-red-50'
                           : 'border-gray-300'
@@ -515,7 +518,7 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       name="location"
-                      value={profile.location || ''}
+                      value={'location' in profile ? (profile.location || '') : ''}
                       onChange={(e) => {
                         handleInputChange('location', e.target.value);
                         clearFieldError('location');
@@ -575,7 +578,7 @@ export default function ProfilePage() {
                     <input
                       type="number"
                       name="experience"
-                      value={profile.experience || 0}
+                      value={'experience' in profile ? (profile.experience || 0) : 0}
                       onChange={(e) => {
                         handleInputChange('experience', parseInt(e.target.value) || 0);
                         clearFieldError('experience');
@@ -619,7 +622,7 @@ export default function ProfilePage() {
                       <Button onClick={handleAddSkill} type="button">Add</Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {(profile.skills || []).map((skill, index) => (
+                      {('skills' in profile ? (profile.skills || []) : []).map((skill, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
@@ -641,7 +644,7 @@ export default function ProfilePage() {
                       Bio
                     </label>
                     <textarea
-                      value={profile.bio || ''}
+                      value={'bio' in profile ? (profile.bio || '') : ''}
                       onChange={(e) => handleInputChange('bio', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={4}
@@ -655,7 +658,7 @@ export default function ProfilePage() {
                       <FileText className="inline w-4 h-4 mr-2" />
                       Resume
                     </label>
-                    {profile.resumeUrl && (
+                    {'resumeUrl' in profile && profile.resumeUrl && (
                       <div className="mb-2">
                         <a
                           href={profile.resumeUrl}
@@ -685,7 +688,7 @@ export default function ProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Profile Picture
                     </label>
-                    {profile.profilePictureUrl && (
+                    {'profilePictureUrl' in profile && profile.profilePictureUrl && (
                       <img
                         src={profile.profilePictureUrl}
                         alt="Profile"
@@ -718,7 +721,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value={profile.companyName}
+                      value={'companyName' in profile ? profile.companyName : ''}
                       onChange={(e) => handleInputChange('companyName', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Acme Corporation"
@@ -745,7 +748,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="email"
-                      value={profile.contactEmail}
+                      value={'contactEmail' in profile ? profile.contactEmail : ''}
                       onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="contact@company.com"
@@ -773,7 +776,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value={profile.address || ''}
+                      value={'address' in profile ? (profile.address || '') : ''}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="123 Business St, Makati, Philippines"
@@ -786,7 +789,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value={profile.registrationNumber || ''}
+                      value={'registrationNumber' in profile ? (profile.registrationNumber || '') : ''}
                       onChange={(e) => handleInputChange('registrationNumber', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="DTI-12345678"
@@ -799,7 +802,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="url"
-                      value={profile.website || ''}
+                      value={'website' in profile ? (profile.website || '') : ''}
                       onChange={(e) => handleInputChange('website', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="https://company.com"
@@ -811,7 +814,7 @@ export default function ProfilePage() {
                       Company Description
                     </label>
                     <textarea
-                      value={profile.description || ''}
+                      value={'description' in profile ? (profile.description || '') : ''}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={4}
@@ -824,7 +827,7 @@ export default function ProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Company Logo
                     </label>
-                    {profile.logoUrl && (
+                    {'logoUrl' in profile && profile.logoUrl && (
                       <img
                         src={profile.logoUrl}
                         alt="Company Logo"

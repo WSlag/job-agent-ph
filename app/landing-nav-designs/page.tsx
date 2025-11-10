@@ -7,6 +7,9 @@ import LandingNav3 from '@/components/layout/LandingNav3';
 import LandingNav4 from '@/components/layout/LandingNav4';
 import { Check, Copy, Sparkles } from 'lucide-react';
 
+// Force dynamic rendering to avoid prerendering issues with useSearchParams
+export const dynamic = 'force-dynamic';
+
 /**
  * Landing Page Navigation Designs Demo Page
  * View and compare all 4 landing page navigation designs

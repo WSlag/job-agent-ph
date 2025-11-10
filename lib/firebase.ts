@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { getAuth, Auth, setPersistence, browserSessionPersistence } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
@@ -13,15 +13,70 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-// Initialize app first (works on both client and server)
-const app: FirebaseApp = !getApps().length
-  ? initializeApp(firebaseConfig)
-  : getApps()[0];
+// Initialize Firebase app (lazy initialization)
+let app: FirebaseApp | null = null;
 
-// Initialize services (these are safe to call on server, they just won't be used)
-const auth: Auth = getAuth(app);
-const db: Firestore = getFirestore(app);
-const storage: FirebaseStorage = getStorage(app);
+function getApp(): FirebaseApp {
+  if (!app) {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+  }
+  return app;
+}
 
-export { auth, db, storage };
+// Lazy-initialized services - only created when first accessed
+let _auth: Auth | null = null;
+let _db: Firestore | null = null;
+let _storage: FirebaseStorage | null = null;
+let _persistenceInitialized = false;
+
+// Getter for Auth - initializes on first use
+export function getAuthInstance(): Auth {
+  if (!_auth) {
+    _auth = getAuth(getApp());
+
+    // Set persistence to SESSION mode on first auth access
+    if (typeof window !== 'undefined' && !_persistenceInitialized) {
+      _persistenceInitialized = true;
+      setPersistence(_auth, browserSessionPersistence).catch((error) => {
+        console.error('Error setting auth persistence:', error);
+      });
+    }
+  }
+  return _auth;
+}
+
+// Getter for Firestore - initializes on first use
+export function getDbInstance(): Firestore {
+  if (!_db) {
+    _db = getFirestore(getApp());
+  }
+  return _db;
+}
+
+// Getter for Storage - initializes on first use
+export function getStorageInstance(): FirebaseStorage {
+  if (!_storage) {
+    _storage = getStorage(getApp());
+  }
+  return _storage;
+}
+
+// Legacy exports for backward compatibility (will be removed in Phase 2)
+// These use the lazy getters internally
+export const auth = new Proxy({} as Auth, {
+  get(_target, prop) {
+    return (getAuthInstance() as any)[prop];
+  }
+});
+
+export const db = new Proxy({} as Firestore, {
+  get(_target, prop) {
+    return (getDbInstance() as any)[prop];
+  }
+});
+
+export const storage = new Proxy({} as FirebaseStorage, {
+  get(_target, prop) {
+    return (getStorageInstance() as any)[prop];
+  }
+});

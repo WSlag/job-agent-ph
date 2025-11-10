@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { collection, query, where, orderBy, limit, getDocs, DocumentSnapshot, startAfter, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import JobList from '@/components/jobs/JobList';
@@ -79,6 +79,7 @@ function JobsPageContent() {
       // Fetch agency name
       const fetchAgencyName = async () => {
         try {
+          const db = getDbInstance();
           const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, agencyParam));
           if (agencyDoc.exists()) {
             const agencyData = agencyDoc.data();
@@ -150,6 +151,7 @@ function JobsPageContent() {
     try {
       setLoading(true);
 
+      const db = getDbInstance();
       const jobsRef = collection(db, COLLECTIONS.JOBS);
       const constraints: any[] = [
         where('isActive', '==', true),

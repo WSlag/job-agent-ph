@@ -16,7 +16,7 @@ import {
   DocumentData,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from './firebase';
+import { getDbInstance, getStorageInstance } from './firebase';
 import { JobApplication, ApplicationWithDetails, ApplicationStatus } from '@/types';
 
 const APPLICATIONS_COLLECTION = 'applications';
@@ -44,6 +44,7 @@ export async function createApplication(params: {
   conversationId?: string;
 }): Promise<string> {
   try {
+    const db = getDbInstance();
     const applicationData = {
       jobId: params.jobId,
       jobHunterId: params.jobHunterId,
@@ -71,6 +72,7 @@ export async function updateApplicationStatus(
   status: ApplicationStatus
 ): Promise<void> {
   try {
+    const db = getDbInstance();
     const applicationRef = doc(db, APPLICATIONS_COLLECTION, applicationId);
     await updateDoc(applicationRef, {
       status,
@@ -97,6 +99,7 @@ export async function updateApplicationConversation(
   conversationId: string
 ): Promise<void> {
   try {
+    const db = getDbInstance();
     const applicationRef = doc(db, APPLICATIONS_COLLECTION, applicationId);
     await updateDoc(applicationRef, {
       conversationId,
@@ -113,6 +116,7 @@ export async function updateApplicationConversation(
  */
 export async function getApplication(applicationId: string): Promise<JobApplication | null> {
   try {
+    const db = getDbInstance();
     const applicationRef = doc(db, APPLICATIONS_COLLECTION, applicationId);
     const applicationSnap = await getDoc(applicationRef);
 
@@ -139,6 +143,7 @@ export async function getJobHunterApplications(
   limitCount: number = 50
 ): Promise<JobApplication[]> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, APPLICATIONS_COLLECTION),
       where('jobHunterId', '==', jobHunterId),
@@ -165,6 +170,7 @@ export async function getJobApplications(
   limitCount: number = 100
 ): Promise<JobApplication[]> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, APPLICATIONS_COLLECTION),
       where('jobId', '==', jobId),
@@ -191,6 +197,7 @@ export async function getAgencyApplications(
   limitCount: number = 100
 ): Promise<JobApplication[]> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, APPLICATIONS_COLLECTION),
       where('agencyId', '==', agencyId),
@@ -217,6 +224,7 @@ export async function hasAppliedToJob(
   jobHunterId: string
 ): Promise<boolean> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, APPLICATIONS_COLLECTION),
       where('jobId', '==', jobId),
@@ -240,6 +248,7 @@ export async function getExistingApplication(
   jobHunterId: string
 ): Promise<JobApplication | null> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, APPLICATIONS_COLLECTION),
       where('jobId', '==', jobId),
@@ -268,6 +277,7 @@ export async function getExistingApplication(
  */
 export async function getJobApplicationCount(jobId: string): Promise<number> {
   try {
+    const db = getDbInstance();
     const q = query(
       collection(db, APPLICATIONS_COLLECTION),
       where('jobId', '==', jobId)
@@ -314,6 +324,7 @@ export async function getJobApplicationStats(jobId: string): Promise<{
  */
 export async function deleteApplication(applicationId: string): Promise<void> {
   try {
+    const db = getDbInstance();
     const applicationRef = doc(db, APPLICATIONS_COLLECTION, applicationId);
     await deleteDoc(applicationRef);
   } catch (error) {
@@ -329,6 +340,7 @@ export function subscribeToJobHunterApplications(
   jobHunterId: string,
   callback: (applications: JobApplication[]) => void
 ): () => void {
+  const db = getDbInstance();
   const q = query(
     collection(db, APPLICATIONS_COLLECTION),
     where('jobHunterId', '==', jobHunterId),
@@ -351,6 +363,7 @@ export function subscribeToJobApplications(
   jobId: string,
   callback: (applications: JobApplication[]) => void
 ): () => void {
+  const db = getDbInstance();
   const q = query(
     collection(db, APPLICATIONS_COLLECTION),
     where('jobId', '==', jobId),
@@ -387,6 +400,7 @@ export async function uploadResume(
     }
 
     // Create unique filename
+    const storage = getStorageInstance();
     const timestamp = Date.now();
     const filename = `resumes/${jobHunterId}/${timestamp}_${file.name}`;
     const storageRef = ref(storage, filename);

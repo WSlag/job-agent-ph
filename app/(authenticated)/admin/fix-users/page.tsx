@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { collection, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 
 export default function FixUsersPage() {
@@ -18,6 +18,7 @@ export default function FixUsersPage() {
     const logs: string[] = [];
 
     try {
+      const db = getDbInstance();
       logs.push('🔍 Checking users collection...');
       setResults([...logs]);
 

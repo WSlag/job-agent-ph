@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,6 +92,7 @@ export default function JobDetailsPage() {
       setLoading(true);
       try {
         const jobId = params.id as string;
+        const db = getDbInstance();
 
         // Load job data
         const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId));
@@ -1046,10 +1047,10 @@ export default function JobDetailsPage() {
           isOpen={showQuickApplyModal}
           onClose={() => setShowQuickApplyModal(false)}
           job={job}
-          profileCompletionPercentage={userProfile.profileCompleteness || 0}
-          hasResume={!!userProfile.resumeUrl}
-          hasCertificates={!!userProfile.certificates && userProfile.certificates.length > 0}
-          hasValidId={!!userProfile.idDocumentUrl}
+          profileCompletionPercentage={('profileCompleteness' in userProfile ? (userProfile as any).profileCompleteness : 0) || 0}
+          hasResume={'resumeUrl' in userProfile && !!userProfile.resumeUrl}
+          hasCertificates={'certificates' in userProfile && !!(userProfile as any).certificates && (userProfile as any).certificates.length > 0}
+          hasValidId={'idDocumentUrl' in userProfile && !!(userProfile as any).idDocumentUrl}
           onSubmit={handleQuickApplySubmit}
         />
       )}

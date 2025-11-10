@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import Card from '@/components/ui/Card';
 import Section from '@/components/ui/Section';
 import Badge from '@/components/ui/Badge';
@@ -36,6 +36,7 @@ export default function CompaniesPage() {
   const loadAgencies = async () => {
     try {
       setLoading(true);
+      const db = getDbInstance();
 
       // Get agencies (limit to 50 for now)
       const agenciesRef = collection(db, 'agencies');

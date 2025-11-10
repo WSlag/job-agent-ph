@@ -6,11 +6,13 @@ import OnboardingWizard from './OnboardingWizard';
 import AgencyOnboardingWizard from './AgencyOnboardingWizard';
 
 export default function OnboardingWizardWrapper() {
+  // This component is now only rendered in the authenticated layout
+  // so we can safely use the regular hooks
   const { userType } = useAuth();
-  const { showOnboarding } = useOnboarding();
+  const onboardingData = useOnboarding();
 
-  // Don't render anything if onboarding shouldn't be shown
-  if (!showOnboarding) {
+  // Don't render anything if wizard shouldn't be shown
+  if (!onboardingData.showWizard) {
     return null;
   }
 

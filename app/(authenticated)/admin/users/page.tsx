@@ -8,7 +8,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { collection, getDocs, query, orderBy, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,7 @@ export default function AdminUsersPage() {
     const loadUsers = async () => {
       try {
         setLoading(true);
+        const db = getDbInstance();
         const usersRef = collection(db, COLLECTIONS.USERS);
         const q = query(usersRef, orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);

@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
+import { Suspense } from 'react';
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import BottomNav from "@/components/layout/BottomNav";
 import ConditionalHeader from "@/components/layout/ConditionalHeader";
-import OnboardingWizardWrapper from "@/components/onboarding/OnboardingWizardWrapper";
-import FeatureTour from "@/components/onboarding/FeatureTour";
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 
@@ -53,40 +50,36 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} antialiased pb-14 md:pb-0 md:pt-16`}>
         <ErrorBoundary>
-          <AuthProvider>
-            <OnboardingProvider>
-              <ConditionalHeader />
-              {children}
-              <BottomNav />
-              <OnboardingWizardWrapper />
-              <FeatureTour />
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#fff',
-                    color: '#363636',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  },
-                  success: {
-                    iconTheme: {
-                      primary: '#10b981',
-                      secondary: '#fff',
-                    },
-                  },
-                  error: {
-                    iconTheme: {
-                      primary: '#ef4444',
-                      secondary: '#fff',
-                    },
-                  },
-                }}
-              />
-            </OnboardingProvider>
-          </AuthProvider>
+          <ConditionalHeader />
+          {children}
+          <Suspense fallback={null}>
+            <BottomNav />
+          </Suspense>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#fff',
+                color: '#363636',
+                borderRadius: '12px',
+                padding: '16px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </ErrorBoundary>
       </body>
     </html>

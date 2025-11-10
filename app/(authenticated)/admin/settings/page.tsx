@@ -8,7 +8,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import toast from 'react-hot-toast';
 
 export default function AdminSettingsPage() {
@@ -46,6 +46,7 @@ export default function AdminSettingsPage() {
     // Load settings from Firestore
     const loadSettings = async () => {
       try {
+        const db = getDbInstance();
         const settingsDoc = await getDoc(doc(db, 'settings', 'platform'));
         if (settingsDoc.exists()) {
           const data = settingsDoc.data();
@@ -75,6 +76,7 @@ export default function AdminSettingsPage() {
     setSaving(true);
 
     try {
+      const db = getDbInstance();
       // Save settings to Firestore
       await setDoc(doc(db, 'settings', 'platform'), {
         siteName,

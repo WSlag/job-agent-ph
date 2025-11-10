@@ -2,15 +2,16 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { HelpCircle, X } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, ReactNode } from 'react'
 
 interface HelpTooltipProps {
-  content: string
+  content: string | ReactNode
   title?: string
   position?: 'top' | 'bottom' | 'left' | 'right'
   triggerMode?: 'hover' | 'click'
   iconClassName?: string
   maxWidth?: number
+  children?: ReactNode
 }
 
 export default function HelpTooltip({
@@ -20,6 +21,7 @@ export default function HelpTooltip({
   triggerMode = 'hover',
   iconClassName = '',
   maxWidth = 280,
+  children,
 }: HelpTooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
@@ -141,11 +143,11 @@ export default function HelpTooltip({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        className={`inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded-full transition-colors group ${iconClassName}`}
+        className={`inline-flex items-center justify-center ${children ? '' : 'p-1 hover:bg-gray-100 rounded-full'} transition-colors group ${iconClassName}`}
         aria-label="Help information"
         type="button"
       >
-        <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+        {children || <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />}
       </button>
 
       <AnimatePresence>
@@ -180,7 +182,7 @@ export default function HelpTooltip({
                     )}
                   </div>
                 )}
-                <p className="text-sm text-gray-600 leading-relaxed">{content}</p>
+                <div className="text-sm text-gray-600 leading-relaxed">{content}</div>
               </div>
 
               {/* Arrow pointer */}

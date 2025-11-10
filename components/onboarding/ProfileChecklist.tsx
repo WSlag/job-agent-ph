@@ -6,8 +6,10 @@ import { useOnboarding } from '@/contexts/OnboardingContext'
 import { useState } from 'react'
 import Link from 'next/link'
 
+type JobHunterChecklistKey = 'resumeUploaded' | 'profileComplete' | 'skillsAdded' | 'firstApplication' | 'locationSet' | 'bioAdded';
+
 interface ChecklistItem {
-  id: keyof typeof import('@/contexts/OnboardingContext').OnboardingData.prototype.profileChecklist
+  id: JobHunterChecklistKey
   title: string
   description: string
   icon: any
@@ -17,7 +19,7 @@ interface ChecklistItem {
 
 const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
-    id: 'resumeUploaded' as any,
+    id: 'resumeUploaded',
     title: 'Upload Your Resume',
     description: 'Add your CV to enable Quick Apply and increase application speed',
     icon: FileText,
@@ -25,7 +27,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     linkText: 'Upload Resume',
   },
   {
-    id: 'skillsAdded' as any,
+    id: 'skillsAdded',
     title: 'Add Your Skills',
     description: 'List your key skills to improve job matching and visibility',
     icon: Lightbulb,
@@ -33,7 +35,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     linkText: 'Add Skills',
   },
   {
-    id: 'locationSet' as any,
+    id: 'locationSet',
     title: 'Set Your Location',
     description: 'Help agencies find candidates in your area',
     icon: MapPin,
@@ -41,7 +43,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     linkText: 'Set Location',
   },
   {
-    id: 'bioAdded' as any,
+    id: 'bioAdded',
     title: 'Write a Bio',
     description: 'Share your experience and career goals with potential employers',
     icon: User,
@@ -169,7 +171,8 @@ export default function ProfileChecklist() {
           >
             <div className="p-4 space-y-3">
               {CHECKLIST_ITEMS.map((item, index) => {
-                const isCompleted = onboardingData?.profileChecklist?.[item.id as keyof typeof onboardingData.profileChecklist]
+                const checklist = onboardingData?.profileChecklist as any;
+                const isCompleted = checklist?.[item.id]
                 const Icon = item.icon
 
                 return (

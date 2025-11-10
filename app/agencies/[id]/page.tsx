@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { doc, getDoc, collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -76,6 +76,7 @@ export default function AgencyProfilePage() {
       try {
         setLoading(true);
         const agencyId = params.id as string;
+        const db = getDbInstance();
 
         // Fetch agency profile from Firestore agencies collection (has public read access)
         const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, agencyId));

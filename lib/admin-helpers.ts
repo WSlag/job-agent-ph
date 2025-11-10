@@ -1,6 +1,6 @@
 import { UserType, Admin } from '@/types'
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from './firebase'
+import { getDbInstance } from './firebase'
 import { COLLECTIONS } from './collections'
 
 /**
@@ -30,6 +30,7 @@ export function requireAdmin(userType: UserType | null): void {
  */
 export async function getAdminProfile(adminId: string): Promise<Admin | null> {
   try {
+    const db = getDbInstance();
     const adminDoc = await getDoc(doc(db, COLLECTIONS.ADMINS, adminId))
 
     if (!adminDoc.exists()) {

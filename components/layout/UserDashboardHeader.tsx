@@ -22,7 +22,7 @@ export default function UserDashboardHeader({
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   // Only show for job hunter users
-  if (userType !== 'job-hunter' && userType !== null) {
+  if (userType !== 'jobhunter' && userType !== null) {
     return null;
   }
 

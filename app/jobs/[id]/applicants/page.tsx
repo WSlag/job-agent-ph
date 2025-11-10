@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { getDbInstance } from '@/lib/firebase'
 import { COLLECTIONS } from '@/lib/collections'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToJobApplications, updateApplicationStatus } from '@/lib/application-helpers'
@@ -58,6 +58,7 @@ export default function JobApplicantsPage() {
   const loadJob = async () => {
     try {
       const jobId = params.id as string
+      const db = getDbInstance()
       const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId))
 
       if (jobDoc.exists()) {

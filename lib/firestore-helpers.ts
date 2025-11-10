@@ -17,7 +17,7 @@ import {
   serverTimestamp,
   addDoc,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { getDbInstance } from './firebase';
 import { COLLECTIONS } from './collections';
 
 // Generic CRUD operations
@@ -27,6 +27,7 @@ export async function createDocument<T>(
   docId: string | undefined,
   data: T
 ) {
+  const db = getDbInstance();
   // If docId is not provided, use addDoc to auto-generate an ID
   if (!docId) {
     const collectionRef = collection(db, collectionName);
@@ -52,6 +53,7 @@ export async function getDocument<T>(
   collectionName: string,
   docId: string
 ): Promise<T | null> {
+  const db = getDbInstance();
   const docRef = doc(db, collectionName, docId);
   const docSnap = await getDoc(docRef);
 
@@ -67,6 +69,7 @@ export async function updateDocument<T>(
   docId: string,
   data: Partial<T>
 ) {
+  const db = getDbInstance();
   const docRef = doc(db, collectionName, docId);
   await updateDoc(docRef, {
     ...data,
@@ -75,6 +78,7 @@ export async function updateDocument<T>(
 }
 
 export async function deleteDocument(collectionName: string, docId: string) {
+  const db = getDbInstance();
   const docRef = doc(db, collectionName, docId);
   await deleteDoc(docRef);
 }
@@ -85,6 +89,7 @@ export async function queryDocuments<T>(
   pageSize: number = 20,
   lastDoc?: DocumentSnapshot
 ): Promise<{ data: T[]; lastDoc: DocumentSnapshot | null }> {
+  const db = getDbInstance();
   const collectionRef = collection(db, collectionName);
   const queryConstraints = [...constraints, limit(pageSize)];
 
@@ -150,6 +155,7 @@ export async function documentExists(
   collectionName: string,
   docId: string
 ): Promise<boolean> {
+  const db = getDbInstance();
   const docRef = doc(db, collectionName, docId);
   const docSnap = await getDoc(docRef);
   return docSnap.exists();

@@ -13,7 +13,7 @@ interface TourStep {
   action?: string // Action button text
 }
 
-const TOUR_CONFIGS: Record<TourType, TourStep[]> = {
+const TOUR_CONFIGS: Partial<Record<TourType, TourStep[]>> = {
   'search-filters': [
     {
       target: '[data-tour="search-bar"]',
@@ -92,7 +92,7 @@ export default function FeatureTour() {
   const [isVisible, setIsVisible] = useState(false)
   const observerRef = useRef<MutationObserver | null>(null)
 
-  const steps = currentTour ? TOUR_CONFIGS[currentTour] : []
+  const steps = currentTour ? (TOUR_CONFIGS[currentTour] || []) : []
   const currentStep = steps[currentStepIndex]
   const isLastStep = currentStepIndex === steps.length - 1
 

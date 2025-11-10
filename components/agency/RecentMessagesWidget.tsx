@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { MessageCircle, ChevronRight, Inbox } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, orderBy, limit, onSnapshot, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ConversationWithDetails {
@@ -33,6 +33,7 @@ export default function RecentMessagesWidget() {
     }
 
     // Subscribe to recent conversations
+    const db = getDbInstance();
     const conversationsRef = collection(db, 'conversations');
     const conversationsQuery = query(
       conversationsRef,

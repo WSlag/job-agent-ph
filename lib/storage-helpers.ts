@@ -3,7 +3,7 @@
  * Handles file uploads and downloads
  */
 
-import { storage } from './firebase'
+import { getStorageInstance } from './firebase'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 
 /**
@@ -14,6 +14,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
  */
 export async function uploadFile(file: File, path: string): Promise<string> {
   try {
+    const storage = getStorageInstance();
     const storageRef = ref(storage, path)
     const snapshot = await uploadBytes(storageRef, file)
     const downloadURL = await getDownloadURL(snapshot.ref)
@@ -30,6 +31,7 @@ export async function uploadFile(file: File, path: string): Promise<string> {
  */
 export async function deleteFile(path: string): Promise<void> {
   try {
+    const storage = getStorageInstance();
     const storageRef = ref(storage, path)
     await deleteObject(storageRef)
   } catch (error) {
@@ -45,6 +47,7 @@ export async function deleteFile(path: string): Promise<void> {
  */
 export async function getFileURL(path: string): Promise<string> {
   try {
+    const storage = getStorageInstance();
     const storageRef = ref(storage, path)
     const url = await getDownloadURL(storageRef)
     return url

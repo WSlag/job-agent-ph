@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
 const sampleJobs = [
@@ -388,6 +388,7 @@ const sampleJobs = [
 
 export async function GET(request: NextRequest) {
   try {
+    const db = getDbInstance();
     const jobsCollection = collection(db, 'jobs');
     const results = [];
 
