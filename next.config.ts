@@ -26,8 +26,6 @@ const nextConfig: NextConfig = {
       // Add other specific domains as needed
     ],
   },
-  // Enable production optimizations
-  swcMinify: true,
   compiler: {
     // Remove console.log in production
     removeConsole: process.env.NODE_ENV === 'production' ? {

@@ -9,8 +9,6 @@ import { COLLECTIONS } from '@/lib/collections';
 import { useAuth } from '@/contexts/AuthContext';
 import { Job } from '@/types';
 import {
-  Search,
-  MapPin,
   ArrowRight,
   CheckCircle,
   MessageCircle,
@@ -29,8 +27,6 @@ import { CATEGORIES } from '@/lib/categories';
 
 export default function Home() {
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [location, setLocation] = useState('');
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
@@ -101,14 +97,6 @@ export default function Home() {
   };
 
   const router = useRouter();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchQuery) params.append('q', searchQuery);
-    if (location) params.append('location', location);
-    router.push(`/jobs${params.toString() ? '?' + params.toString() : ''}`);
-  };
 
   const loadSavedJobs = async () => {
     if (!user) return;
@@ -190,7 +178,7 @@ export default function Home() {
       {/* Enhanced App-Style Navigation */}
       <LandingNav3Enhanced />
 
-      <main className="min-h-screen bg-white w-full pt-28 md:pt-32">
+      <main className="min-h-screen bg-white w-full pt-[6.5rem] md:pt-28">
         {/* Hero Carousel Section */}
         <section className="relative bg-gradient-to-br from-gray-50 via-white to-blue-50/30 pt-4 md:pt-8 pb-8 md:pb-16 overflow-hidden">
         {/* Decorative elements */}
@@ -206,85 +194,6 @@ export default function Home() {
           <HeroCarousel />
         </motion.div>
       </section>
-
-        {/* Search Bar Section - Fixed */}
-        <div className="fixed top-14 md:top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm w-full">
-        <div className="max-w-7xl mx-auto px-2.5 py-2 md:px-4 sm:px-6 lg:px-8 md:py-4">
-          <form onSubmit={handleSearch} className="w-full">
-            {/* Mobile: Compact Single Row Layout */}
-            <div className="md:hidden flex items-center gap-1.5">
-              {/* Job Search Input */}
-              <div className="flex-1 flex items-center gap-1.5 px-2.5 py-2 bg-white rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
-                <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Job title or keywords"
-                  className="flex-1 outline-none text-xs text-gray-900 placeholder-gray-400 bg-transparent min-w-0"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              {/* Location Icon Button */}
-              <div className="flex items-center gap-1 px-2 py-2 bg-white rounded-lg border border-gray-300 focus-within:border-blue-500 flex-shrink-0">
-                <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="City"
-                  className="w-10 outline-none text-xs text-gray-900 placeholder-gray-400 bg-transparent"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </div>
-
-              {/* Search Button */}
-              <button
-                type="submit"
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2.5 py-2 rounded-lg text-xs font-semibold hover:from-blue-700 hover:to-blue-800 transition-all whitespace-nowrap flex-shrink-0"
-              >
-                Search
-              </button>
-            </div>
-
-            {/* Desktop: Original Layout */}
-            <div className="hidden md:flex flex-row gap-3">
-              {/* Job Search Input */}
-              <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
-                <Search className="w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Job title or keywords"
-                  className="flex-1 outline-none text-base text-gray-900 placeholder-gray-500 bg-transparent"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              {/* Location Input */}
-              <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all shadow-sm hover:shadow-md">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Location"
-                  className="flex-1 outline-none text-base text-gray-900 placeholder-gray-500 bg-transparent"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </div>
-
-              {/* Search Button */}
-              <motion.button
-                type="submit"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
-              >
-                Search
-              </motion.button>
-            </div>
-          </form>
-        </div>
-      </div>
 
         {/* Featured Jobs Section */}
         <section className="pt-16 md:pt-20 pb-16 bg-white">

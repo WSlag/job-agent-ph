@@ -123,9 +123,9 @@ export default function LandingNav3Enhanced() {
   }, [isMenuOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md">
       {/* Main Navigation */}
-      <nav className="bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg">
+      <nav className="border-b border-gray-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo */}

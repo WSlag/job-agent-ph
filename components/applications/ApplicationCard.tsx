@@ -16,8 +16,11 @@ import {
   MessageSquare,
   ExternalLink,
   User,
+  Loader2,
 } from 'lucide-react'
 import Badge from '@/components/ui/Badge'
+import { getOrCreateConversation } from '@/lib/messaging-helpers'
+import { updateApplicationConversation } from '@/lib/application-helpers'
 
 interface ApplicationCardProps {
   application: JobApplication
@@ -38,6 +41,7 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
   const [job, setJob] = useState<Job | null>(null)
   const [jobHunter, setJobHunter] = useState<JobHunter | null>(null)
   const [loading, setLoading] = useState(true)
+  const [creatingConversation, setCreatingConversation] = useState(false)
 
   useEffect(() => {
     loadDetails()
@@ -78,9 +82,30 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
     router.push(`/jobs/${application.jobId}`)
   }
 
-  const handleViewConversation = () => {
-    if (application.conversationId) {
-      router.push(`/messages/${application.conversationId}`)
+  const handleMessageApplicant = async () => {
+    try {
+      setCreatingConversation(true)
+      let conversationId = application.conversationId
+
+      // If no conversation exists, create one
+      if (!conversationId) {
+        conversationId = await getOrCreateConversation(
+          application.jobId,
+          application.jobHunterId,
+          application.agencyId
+        )
+
+        // Update the application with the conversation ID
+        await updateApplicationConversation(application.id, conversationId)
+      }
+
+      // Navigate to the conversation
+      router.push(`/messages/${conversationId}`)
+    } catch (error) {
+      console.error('Error opening conversation:', error)
+      alert('Failed to open conversation. Please try again.')
+    } finally {
+      setCreatingConversation(false)
     }
   }
 
@@ -196,9 +221,30 @@ export default function ApplicationCard({ application, viewType, onStatusChange 
             </a>
           )}
 
-          {application.conversationId && (
+          {viewType === 'agency' && (
             <button
-              onClick={handleViewConversation}
+              onClick={handleMessageApplicant}
+              disabled={creatingConversation}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {creatingConversation ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="hidden sm:inline">Loading...</span>
+                </>
+              ) : (
+                <>
+                  <MessageSquare size={16} />
+                  <span className="hidden sm:inline">{application.conversationId ? 'View Messages' : 'Send Message'}</span>
+                  <span className="sm:hidden">Message</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {viewType === 'jobhunter' && application.conversationId && (
+            <button
+              onClick={handleMessageApplicant}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium w-full sm:w-auto"
             >
               <MessageSquare size={16} />

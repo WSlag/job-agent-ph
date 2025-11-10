@@ -94,6 +94,13 @@ export async function getOrCreateConversation(
     return conversationRef.id;
   } catch (error) {
     console.error('Error getting or creating conversation:', error);
+    console.error('Error details:', {
+      message: (error as any)?.message,
+      code: (error as any)?.code,
+      name: (error as any)?.name,
+      stack: (error as any)?.stack,
+      fullError: error
+    });
     throw error;
   }
 }

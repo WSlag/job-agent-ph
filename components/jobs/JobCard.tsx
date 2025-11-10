@@ -26,13 +26,14 @@ interface JobCardProps {
   onSave?: (jobId: string) => void;
   onMessage?: (jobId: string) => void;
   isSaved?: boolean;
+  applicantCount?: number; // Pre-calculated count to avoid N+1 queries
 }
 
-export default function JobCard({ job, onSave, onMessage, isSaved = false }: JobCardProps) {
+export default function JobCard({ job, onSave, onMessage, isSaved = false, applicantCount: providedCount }: JobCardProps) {
   const { userType, user } = useAuth();
   const [saved, setSaved] = useState(isSaved);
   const [imageError, setImageError] = useState(false);
-  const [applicantCount, setApplicantCount] = useState<number | null>(null);
+  const [applicantCount, setApplicantCount] = useState<number | null>(providedCount ?? null);
 
   // OPTIMIZATION: Memoize the loadApplicantCount function
   const loadApplicantCount = useCallback(async () => {
@@ -45,11 +46,11 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false }: Job
   }, [job.id]);
 
   useEffect(() => {
-    // Only load applicant count for agencies viewing their own jobs
-    if (userType === 'agency' && user && job.agencyId === user.uid) {
+    // Only load applicant count if not provided as prop and user is agency viewing their own job
+    if (providedCount === undefined && userType === 'agency' && user && job.agencyId === user.uid) {
       loadApplicantCount();
     }
-  }, [userType, user, job.agencyId, loadApplicantCount]);
+  }, [providedCount, userType, user, job.agencyId, loadApplicantCount]);
 
   const handleSave = () => {
     setSaved(!saved);

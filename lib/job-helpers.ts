@@ -167,7 +167,8 @@ export async function getAgencyJobs(agencyId: string): Promise<Job[]> {
   const { COLLECTIONS } = await import('./collections')
 
   try {
-    // Query without orderBy to avoid needing a composite index
+    // Query without orderBy (Firebase composite index not yet created)
+    // TODO: Create composite index in Firebase Console, then add: orderBy('postedAt', 'desc')
     const q = query(
       collection(db, COLLECTIONS.JOBS),
       where('agencyId', '==', agencyId)
@@ -181,7 +182,7 @@ export async function getAgencyJobs(agencyId: string): Promise<Job[]> {
       expiresAt: doc.data().expiresAt?.toDate?.() || doc.data().expiresAt,
     })) as Job[]
 
-    // Sort in memory instead of in the query
+    // Sort in memory until Firebase composite index is created
     return jobs.sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime())
   } catch (error) {
     console.error('Error fetching agency jobs:', error)

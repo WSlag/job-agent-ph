@@ -78,6 +78,13 @@ export async function updateApplicationStatus(
     });
   } catch (error) {
     console.error('Error updating application status:', error);
+    console.error('Error details:', {
+      message: (error as any)?.message,
+      code: (error as any)?.code,
+      name: (error as any)?.name,
+      stack: (error as any)?.stack,
+      fullError: error
+    });
     throw error;
   }
 }

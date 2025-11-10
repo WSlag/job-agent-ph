@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import MessageBadge from '@/components/common/MessageBadge'
 import Logo from '@/components/ui/Logo'
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 
 export default function BottomNav() {
   const pathname = usePathname()
@@ -16,9 +16,20 @@ export default function BottomNav() {
   const { user, userType, loading } = useAuth()
   const { unreadCount } = useUnreadMessages()
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Fix hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Don't show bottom nav on auth pages, job details pages, or conversation pages
   if (pathname.startsWith('/auth') || pathname.match(/^\/jobs\/[^\/]+$/) || pathname.match(/^\/messages\/[^\/]+$/)) {
+    return null
+  }
+
+  // Prevent hydration mismatch - don't render until mounted
+  if (!isMounted) {
     return null
   }
 

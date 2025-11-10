@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useAuth } from '@/contexts/AuthContext'
 import { getAgencyJobs } from '@/lib/job-helpers'
 import { getAgencyApplications } from '@/lib/application-helpers'
@@ -11,8 +12,27 @@ import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit, Star, 
 import Link from 'next/link'
 import { Agency } from '@/types'
 import FeaturedRequestModal from '@/components/modals/FeaturedRequestModal'
-import RecentMessagesWidget from '@/components/agency/RecentMessagesWidget'
 import AgencyDashboardHeader from '@/components/layout/AgencyDashboardHeader'
+
+// Lazy load RecentMessagesWidget to improve initial load performance
+const RecentMessagesWidget = dynamic(
+  () => import('@/components/agency/RecentMessagesWidget'),
+  {
+    loading: () => (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="space-y-3">
+            <div className="h-16 bg-gray-100 rounded"></div>
+            <div className="h-16 bg-gray-100 rounded"></div>
+            <div className="h-16 bg-gray-100 rounded"></div>
+          </div>
+        </div>
+      </div>
+    ),
+    ssr: false
+  }
+)
 
 export default function AgencyDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -21,6 +41,7 @@ export default function AgencyDashboardPage() {
   const searchQuery = searchParams.get('search') || ''
   const [jobs, setJobs] = useState<Job[]>([])
   const [applications, setApplications] = useState<JobApplication[]>([])
+  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [showFeaturedModal, setShowFeaturedModal] = useState(false)
 
@@ -47,8 +68,16 @@ export default function AgencyDashboardPage() {
         getAgencyApplications(user.uid),
       ])
 
+      // Pre-calculate applicant counts for all jobs (batch operation)
+      // This eliminates N+1 queries from individual JobCard components
+      const counts = jobsData.reduce((acc, job) => {
+        acc[job.id] = applicationsData.filter(app => app.jobId === job.id).length
+        return acc
+      }, {} as Record<string, number>)
+
       setJobs(jobsData)
       setApplications(applicationsData)
+      setApplicantCounts(counts)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -259,7 +288,7 @@ export default function AgencyDashboardPage() {
           {filteredJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+                <JobCard key={job.id} job={job} applicantCount={applicantCounts[job.id] || 0} />
               ))}
             </div>
           ) : searchQuery ? (

@@ -16,10 +16,18 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Handle redirect after authentication
   useEffect(() => {
-    if (user && userType && !authLoading) {
+    console.log('[LoginPage] Auth state:', {
+      hasUser: !!user,
+      userType,
+      authLoading,
+      isRedirecting
+    });
+
+    if (user && userType && !authLoading && !isRedirecting) {
       const redirectParam = searchParams.get('redirect');
       const jobId = searchParams.get('jobId');
       const agencyId = searchParams.get('agencyId');
@@ -39,9 +47,13 @@ function LoginForm() {
         finalRedirect = getDefaultRouteForUserType(userType);
       }
 
-      router.push(finalRedirect);
+      console.log('[LoginPage] Redirecting to:', finalRedirect);
+      setIsRedirecting(true);
+
+      // Use replace instead of push to prevent back button issues
+      router.replace(finalRedirect);
     }
-  }, [user, userType, authLoading, router, searchParams]);
+  }, [user, userType, authLoading, isRedirecting, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,10 +65,23 @@ function LoginForm() {
       // Redirect is handled by useEffect after userType is loaded
     } catch (err: any) {
       setError(err.message || 'Failed to login');
-    } finally {
       setLoading(false);
     }
+    // Don't set loading to false on success - let redirect handle it
   };
+
+  // Show redirecting state
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4">
+        <div className="text-center">
+          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Redirecting to your dashboard...</h2>
+          <p className="text-gray-600">Please wait</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4">
@@ -87,6 +112,7 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -105,6 +131,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
