@@ -26,6 +26,7 @@ export const COLLECTIONS = {
   JOB_VIEWS: 'jobViews', // For analytics
   AGENCY_STATS: 'agencyStats', // Cached agency statistics
   AGENCY_REVIEWS: 'agencyReviews', // Agency ratings and reviews
+  NOTIFICATIONS: 'notifications', // User notifications
 } as const;
 
 // Helper to get collection paths
@@ -45,6 +46,7 @@ export const getCollectionPath = {
   jobViews: () => COLLECTIONS.JOB_VIEWS,
   agencyStats: () => COLLECTIONS.AGENCY_STATS,
   agencyReviews: () => COLLECTIONS.AGENCY_REVIEWS,
+  notifications: () => COLLECTIONS.NOTIFICATIONS,
 };
 
 // Firestore indexes needed (create in Firebase Console)
@@ -95,6 +97,13 @@ export const REQUIRED_INDEXES = [
     collection: 'featuredRequests',
     fields: [
       { field: 'agencyId', order: 'ASCENDING' },
+      { field: 'createdAt', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'notifications',
+    fields: [
+      { field: 'userId', order: 'ASCENDING' },
       { field: 'createdAt', order: 'DESCENDING' },
     ],
   },

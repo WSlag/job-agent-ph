@@ -9,6 +9,7 @@ import { Job } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { hasAppliedToJob } from '@/lib/application-helpers';
+import toast from 'react-hot-toast';
 import { calculateJobMatch, getPlaceholderJobData } from '@/lib/placeholder-data';
 import { trackJobView } from '@/lib/job-view-helpers';
 import type { JobMatch, JobHunter } from '@/types';
@@ -16,6 +17,9 @@ import dynamic from 'next/dynamic';
 
 // OPTIMIZATION: Lazy load heavy modal and map components to reduce initial bundle size
 const ApplicationModal = dynamic(() => import('@/components/applications/ApplicationModal'), {
+  ssr: false,
+});
+const QuickApplyModal = dynamic(() => import('@/components/jobs/QuickApplyModal'), {
   ssr: false,
 });
 const JobLocationMap = dynamic(() => import('@/components/jobs/JobLocationMap'), {
@@ -70,6 +74,7 @@ export default function JobDetailsPage() {
   const [imageError, setImageError] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showQuickApplyModal, setShowQuickApplyModal] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [checkingApplication, setCheckingApplication] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -238,7 +243,7 @@ export default function JobDetailsPage() {
         setShowApplicationModal(true);
       }
     } else {
-      alert('Only job hunters can apply to jobs');
+      toast.error('Only job hunters can apply to jobs');
     }
   };
 
@@ -247,14 +252,15 @@ export default function JobDetailsPage() {
     setShowApplicationModal(false);
   };
 
-  const handleQuickApply = async () => {
+  const handleQuickApply = () => {
     if (!user) {
+      setAuthPromptAction('apply');
       setShowAuthPrompt(true);
       return;
     }
 
     if (userType !== 'jobhunter') {
-      alert('Only job hunters can apply to jobs');
+      toast.error('Only job hunters can apply to jobs');
       return;
     }
 
@@ -265,30 +271,37 @@ export default function JobDetailsPage() {
 
     // Check if user has a resume in their profile
     if (!userProfile?.resumeUrl) {
-      alert('Please add a resume to your profile first or use the Apply Now button to upload one.');
+      toast.error('Please add a resume to your profile first or use the Apply Now button to upload one.');
       return;
     }
 
+    // Open Quick Apply Modal
+    setShowQuickApplyModal(true);
+  };
+
+  const handleQuickApplySubmit = async (data: { coverLetter?: string; additionalNotes?: string }) => {
     setIsQuickApplying(true);
 
     try {
       // Import application helper
       const { createApplication } = await import('@/lib/application-helpers');
 
-      // Create application with existing resume and empty cover letter
+      // Create application with existing resume and optional cover letter
       await createApplication({
         jobId: job!.id,
-        jobHunterId: user.uid,
+        jobHunterId: user!.uid,
         agencyId: job!.agencyId,
-        coverLetter: '', // Quick apply doesn't require cover letter
-        resumeUrl: userProfile.resumeUrl,
+        coverLetter: data.coverLetter || '',
+        resumeUrl: userProfile!.resumeUrl,
       });
 
       setHasApplied(true);
-      alert('Application submitted successfully!');
+      setShowQuickApplyModal(false);
+      toast.success('Application submitted successfully!');
     } catch (error) {
       console.error('Error submitting quick application:', error);
-      alert('Failed to submit application. Please try again.');
+      toast.error('Failed to submit application. Please try again.');
+      throw error; // Re-throw so modal can handle it
     } finally {
       setIsQuickApplying(false);
     }
@@ -326,7 +339,7 @@ export default function JobDetailsPage() {
       case 'instagram':
         // Instagram doesn't support direct web sharing, so we'll copy the link
         navigator.clipboard.writeText(window.location.href);
-        alert('Link copied! You can now share it on Instagram.');
+        toast.success('Link copied! You can now share it on Instagram.');
         setShowShareModal(false);
         return;
       case 'whatsapp':
@@ -334,7 +347,7 @@ export default function JobDetailsPage() {
         break;
       case 'copy':
         navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
+        toast.success('Link copied to clipboard!');
         setShowShareModal(false);
         return;
     }
@@ -353,7 +366,7 @@ export default function JobDetailsPage() {
     } else if (userType === 'jobhunter' && job) {
       router.push(`/messages?jobId=${job.id}&agencyId=${job.agencyId}`);
     } else {
-      alert('Only job hunters can message agencies');
+      toast.error('Only job hunters can message agencies');
     }
   };
 
@@ -818,28 +831,19 @@ export default function JobDetailsPage() {
                   {userProfile?.resumeUrl && (
                     <button
                       onClick={handleQuickApply}
-                      disabled={checkingApplication || isQuickApplying}
+                      disabled={checkingApplication}
                       data-tour="quick-apply"
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                     >
-                      {isQuickApplying ? (
-                        <>
-                          <Loader2 size={20} className="animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle size={20} />
-                          Quick Apply
-                        </>
-                      )}
+                      <CheckCircle size={20} />
+                      Quick Apply
                     </button>
                   )}
 
                   {/* Apply Now Button */}
                   <button
                     onClick={handleApply}
-                    disabled={checkingApplication || isQuickApplying}
+                    disabled={checkingApplication}
                     data-tour="apply-button"
                     className={`w-full ${
                       userProfile?.resumeUrl
@@ -1036,6 +1040,20 @@ export default function JobDetailsPage() {
         />
       )}
 
+      {/* Quick Apply Modal */}
+      {showQuickApplyModal && job && userProfile && (
+        <QuickApplyModal
+          isOpen={showQuickApplyModal}
+          onClose={() => setShowQuickApplyModal(false)}
+          job={job}
+          profileCompletionPercentage={userProfile.profileCompleteness || 0}
+          hasResume={!!userProfile.resumeUrl}
+          hasCertificates={!!userProfile.certificates && userProfile.certificates.length > 0}
+          hasValidId={!!userProfile.idDocumentUrl}
+          onSubmit={handleQuickApplySubmit}
+        />
+      )}
+
       {/* Mobile Bottom Action Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40 shadow-lg">
         <div className="flex gap-3 max-w-lg mx-auto">
@@ -1049,30 +1067,51 @@ export default function JobDetailsPage() {
             </button>
           ) : (
             <>
-              {/* Message to Agency Button */}
-              <button
-                onClick={handleMessageAgency}
-                className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3.5 rounded-lg font-semibold text-sm whitespace-nowrap hover:from-green-700 hover:to-green-800 transition-all flex items-center justify-center gap-2"
-              >
-                <MessageCircle size={18} />
-                <span>Message Agency</span>
-              </button>
-
-              {/* Apply Button */}
-              <button
-                onClick={handleApply}
-                disabled={checkingApplication}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 rounded-lg font-semibold text-sm whitespace-nowrap hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {checkingApplication ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Checking...</span>
-                  </>
-                ) : (
-                  <span>Apply Now</span>
-                )}
-              </button>
+              {/* Quick Apply Button - Show if user has resume */}
+              {userProfile?.resumeUrl ? (
+                <>
+                  <button
+                    onClick={handleQuickApply}
+                    disabled={checkingApplication}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 rounded-lg font-semibold text-sm whitespace-nowrap hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle size={18} />
+                    <span>Quick Apply</span>
+                  </button>
+                  <button
+                    onClick={handleMessageAgency}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3.5 rounded-lg font-semibold text-sm whitespace-nowrap hover:from-green-700 hover:to-green-800 transition-all flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={18} />
+                    <span>Message</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* Apply Now Button - Show if no resume */}
+                  <button
+                    onClick={handleApply}
+                    disabled={checkingApplication}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3.5 rounded-lg font-semibold text-sm whitespace-nowrap hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {checkingApplication ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>Checking...</span>
+                      </>
+                    ) : (
+                      <span>Apply Now</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleMessageAgency}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3.5 rounded-lg font-semibold text-sm whitespace-nowrap hover:from-green-700 hover:to-green-800 transition-all flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={18} />
+                    <span>Message</span>
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>

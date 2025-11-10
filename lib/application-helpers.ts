@@ -53,7 +53,6 @@ export async function createApplication(params: {
       coverLetter: params.coverLetter || null,
       resumeUrl: params.resumeUrl || null,
       appliedAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
     };
 
     const docRef = await addDoc(collection(db, APPLICATIONS_COLLECTION), applicationData);

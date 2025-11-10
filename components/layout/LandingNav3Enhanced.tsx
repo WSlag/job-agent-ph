@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
@@ -26,6 +26,8 @@ export default function LandingNav3Enhanced() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchBar, setShowSearchBar] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   // Get active filters from URL
   const activeLocation = searchParams?.get('location');
@@ -67,6 +69,59 @@ export default function LandingNav3Enhanced() {
     }
   };
 
+  // Handle menu open/close with accessibility features
+  useEffect(() => {
+    if (isMenuOpen) {
+      // Prevent body scroll
+      document.body.style.overflow = 'hidden';
+
+      // Focus first focusable element in menu
+      const firstFocusable = menuRef.current?.querySelector<HTMLElement>(
+        'a, button, input, [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+
+      // Handle keyboard navigation
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Close menu on Escape
+        if (e.key === 'Escape') {
+          setIsMenuOpen(false);
+          menuButtonRef.current?.focus();
+          return;
+        }
+
+        // Tab trap
+        if (e.key === 'Tab') {
+          const focusableElements = menuRef.current?.querySelectorAll<HTMLElement>(
+            'a, button, input, [tabindex]:not([tabindex="-1"])'
+          );
+          if (!focusableElements || focusableElements.length === 0) return;
+
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+
+          if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = '';
+      };
+    } else {
+      // Restore body scroll when menu closes
+      document.body.style.overflow = '';
+    }
+  }, [isMenuOpen]);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* Main Navigation */}
@@ -104,10 +159,10 @@ export default function LandingNav3Enhanced() {
               <Link
                 href="/notifications"
                 className="relative p-2 hover:bg-purple-50 rounded-xl transition-colors group"
-                aria-label="Notifications"
+                aria-label="Notifications - You have new notifications"
               >
-                <Bell className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" />
-                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse shadow-lg"></span>
+                <Bell className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" aria-hidden="true" />
+                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse shadow-lg" aria-hidden="true"></span>
               </Link>
 
               {/* Login/Profile - Desktop */}
@@ -121,15 +176,20 @@ export default function LandingNav3Enhanced() {
 
               {/* Menu Toggle */}
               <button
+                ref={menuButtonRef}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-                aria-label="Menu"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-2"
+                aria-label={isMenuOpen ? 'Close menu' : 'Open main menu'}
+                aria-expanded={isMenuOpen}
+                aria-controls="mobile-menu"
+                aria-haspopup="true"
               >
                 {isMenuOpen ? (
-                  <X className="w-5 h-5 text-gray-700" />
+                  <X className="w-5 h-5 text-gray-700" aria-hidden="true" />
                 ) : (
-                  <Menu className="w-5 h-5 text-gray-700" />
+                  <Menu className="w-5 h-5 text-gray-700" aria-hidden="true" />
                 )}
+                <span className="text-sm font-medium text-gray-700 hidden sm:inline">Menu</span>
               </button>
             </div>
           </div>
@@ -230,10 +290,17 @@ export default function LandingNav3Enhanced() {
           <div
             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-fadeIn"
             onClick={() => setIsMenuOpen(false)}
+            aria-hidden="true"
           ></div>
 
           {/* Menu Panel */}
-          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white z-50 shadow-2xl overflow-y-auto animate-slideInRight">
+          <div
+            ref={menuRef}
+            id="mobile-menu"
+            role="navigation"
+            aria-label="Main menu"
+            className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white z-50 shadow-2xl overflow-y-auto animate-slideInRight"
+          >
             <div className="p-6 space-y-6">
               {/* User Section - Beautiful Gradient Card */}
               <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-xl">

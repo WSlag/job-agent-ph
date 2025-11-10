@@ -22,6 +22,7 @@ import LandingNav3Enhanced from '@/components/layout/LandingNav3Enhanced';
 import Logo from '@/components/ui/Logo';
 import Modal from '@/components/ui/Modal';
 import JobCard from '@/components/jobs/JobCard';
+import SignupModal from '@/components/auth/SignupModal';
 import { motion } from 'framer-motion';
 import { staggerContainer, listItemAnimation } from '@/lib/animations';
 import { CATEGORIES } from '@/lib/categories';
@@ -35,6 +36,7 @@ export default function Home() {
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
   const [categoryCounts, setCategoryCounts] = useState<{ [key: string]: number }>({});
   const [selectedFeature, setSelectedFeature] = useState<number | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     loadFeaturedJobs();
@@ -123,8 +125,7 @@ export default function Home() {
 
   const handleSave = async (jobId: string) => {
     if (!user) {
-      alert('Please log in to save jobs');
-      router.push('/auth/login');
+      setShowAuthModal(true);
       return;
     }
 
@@ -521,6 +522,19 @@ export default function Home() {
           icon={features[selectedFeature].icon}
         />
       )}
+
+      {/* Auth Modal for Save Job */}
+      <SignupModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        context={{
+          action: 'save',
+          title: 'Sign up to save jobs',
+          description: 'Create a free account to save and organize your job searches',
+          benefit: 'Build your personalized job collection and never lose track of opportunities',
+          returnUrl: '/',
+        }}
+      />
     </>
   );
 }

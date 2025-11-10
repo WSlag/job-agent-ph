@@ -28,16 +28,22 @@ export function useUnreadMessages() {
 
       snapshot.docs.forEach((doc) => {
         const data = doc.data();
-        const lastMessage = data.lastMessage;
 
-        // Count unread if:
-        // 1. There is a last message
-        // 2. The message is not from the current user
-        // 3. The message is marked as unread
-        if (lastMessage &&
-            lastMessage.senderId !== user.uid &&
-            lastMessage.read === false) {
-          totalUnread++;
+        // Use per-user unread count if available, fall back to legacy count
+        const userUnreadKey = `unreadCount_${user.uid}`;
+        const userUnreadCount = data[userUnreadKey];
+
+        if (userUnreadCount !== undefined) {
+          // New per-user count system
+          totalUnread += userUnreadCount;
+        } else {
+          // Fallback to legacy system (count conversations with unread lastMessage)
+          const lastMessage = data.lastMessage;
+          if (lastMessage &&
+              lastMessage.senderId !== user.uid &&
+              lastMessage.read === false) {
+            totalUnread++;
+          }
         }
       });
 

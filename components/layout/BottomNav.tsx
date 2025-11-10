@@ -13,7 +13,7 @@ export default function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, userType } = useAuth()
+  const { user, userType, loading } = useAuth()
   const { unreadCount } = useUnreadMessages()
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
 
@@ -48,7 +48,10 @@ export default function BottomNav() {
   ]
 
   // Determine which nav items to show
-  const navItems = !user
+  // While loading, show guest nav items to prevent flash
+  const navItems = loading
+    ? guestNavItems
+    : !user
     ? guestNavItems
     : userType === 'agency'
     ? agencyNavItems
@@ -94,7 +97,7 @@ export default function BottomNav() {
   const navClassName = `fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-sm ${hideOnDesktop ? 'md:hidden' : ''}`;
 
   return (
-    <nav className={navClassName}>
+    <nav className={navClassName} aria-label="Primary navigation">
       <div className="flex items-center justify-around h-14 md:h-16 max-w-screen-xl mx-auto px-2 md:px-4 md:justify-between md:gap-4">
         {/* Logo - Only show on desktop for agency users */}
         {userType === 'agency' && (
@@ -134,6 +137,8 @@ export default function BottomNav() {
               className={`flex flex-col items-center justify-center flex-1 md:flex-initial h-full gap-1 transition-colors relative group md:px-4 md:flex-row md:gap-2 ${
                 active ? 'text-blue-600' : 'text-gray-500'
               }`}
+              aria-current={active ? 'page' : undefined}
+              aria-label={`${item.label}${item.label === 'Messages' && unreadCount > 0 ? `, ${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : ''}`}
             >
               {/* Active indicator line at top for mobile, bottom for desktop */}
               {active && (
@@ -147,6 +152,7 @@ export default function BottomNav() {
                     active ? 'text-blue-600' : 'text-gray-500 group-active:text-blue-500'
                   }`}
                   strokeWidth={active ? 2.5 : 2}
+                  aria-hidden="true"
                 />
                 {/* Show unread badge for Messages link */}
                 {item.label === 'Messages' && unreadCount > 0 && (

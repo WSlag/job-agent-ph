@@ -83,7 +83,9 @@ export async function getOrCreateConversation(
       jobId,
       jobHunterId,
       agencyId,
-      unreadCount: 0,
+      unreadCount: 0, // Legacy field for backward compatibility
+      [`unreadCount_${jobHunterId}`]: 0, // Per-user unread count for job hunter
+      [`unreadCount_${agencyId}`]: 0, // Per-user unread count for agency
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -139,15 +141,34 @@ export async function sendMessage(
 
     const docRef = await addDoc(messagesRef, newMessage);
 
-    // Get current conversation to calculate unreadCount
+    // Get current conversation to validate and update
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
     const conversationSnap = await getDoc(conversationRef);
+
+    if (!conversationSnap.exists()) {
+      throw new Error('Conversation not found');
+    }
+
     const conversationData = conversationSnap.data();
 
-    // Increment unreadCount for the recipient
-    const currentUnreadCount = conversationData?.unreadCount || 0;
+    // Validate sender is a participant in the conversation
+    if (conversationData.jobHunterId !== senderId && conversationData.agencyId !== senderId) {
+      throw new Error('Sender is not a participant in this conversation');
+    }
 
-    // Update conversation's lastMessage, unreadCount, and updatedAt
+    // Determine receiver ID (the other participant)
+    const receiverId = conversationData.jobHunterId === senderId
+      ? conversationData.agencyId
+      : conversationData.jobHunterId;
+
+    // Use per-user unread counts to track separately for each participant
+    const senderUnreadKey = `unreadCount_${senderId}`;
+    const receiverUnreadKey = `unreadCount_${receiverId}`;
+
+    // Get current unread counts (fallback to legacy unreadCount if per-user doesn't exist)
+    const currentReceiverUnread = conversationData?.[receiverUnreadKey] ?? conversationData?.unreadCount ?? 0;
+
+    // Update conversation: increment ONLY receiver's unread count, reset sender's to 0
     await updateDoc(conversationRef, {
       lastMessage: {
         id: docRef.id,
@@ -157,7 +178,9 @@ export async function sendMessage(
         createdAt: new Date(), // Use Date for immediate display (serverTimestamp would be null)
         read: false,
       },
-      unreadCount: currentUnreadCount + 1, // Increment unread count
+      [receiverUnreadKey]: currentReceiverUnread + 1, // Increment receiver's unread
+      [senderUnreadKey]: 0, // Reset sender's unread (they're viewing the conversation)
+      unreadCount: currentReceiverUnread + 1, // Keep legacy field for backward compatibility
       updatedAt: timestamp,
     });
 
@@ -170,11 +193,12 @@ export async function sendMessage(
 }
 
 /**
- * Mark messages as read and reset unreadCount with retry logic
+ * Mark messages as read and update per-user unreadCount with retry logic
  */
 export async function markMessagesAsRead(
   conversationId: string,
-  messageIds: string[]
+  messageIds: string[],
+  userId: string
 ): Promise<void> {
   if (messageIds.length === 0) return;
 
@@ -193,15 +217,32 @@ export async function markMessagesAsRead(
 
     await Promise.all(updatePromises);
 
-    // Reset unreadCount in conversation
+    // Get conversation to update per-user unread count
     const conversationRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId);
+    const conversationSnap = await getDoc(conversationRef);
+    const conversationData = conversationSnap.data();
+
+    if (!conversationData) {
+      throw new Error('Conversation not found');
+    }
+
+    // Use per-user unread count
+    const userUnreadKey = `unreadCount_${userId}`;
+    const currentUnread = conversationData[userUnreadKey] ?? conversationData.unreadCount ?? 0;
+
+    // Decrement by number of messages marked as read (don't go below 0)
+    const newUnreadCount = Math.max(0, currentUnread - messageIds.length);
+
+    // Update per-user unread count
     await updateDoc(conversationRef, {
-      unreadCount: 0,
+      [userUnreadKey]: newUnreadCount,
+      // Update legacy unreadCount only if this user is the receiver of lastMessage
+      ...(conversationData.lastMessage?.senderId !== userId && {
+        unreadCount: newUnreadCount
+      })
     });
 
     // Update lastMessage read status if the last message was read
-    const conversationSnap = await getDoc(conversationRef);
-    const conversationData = conversationSnap.data();
     if (conversationData?.lastMessage && messageIds.includes(conversationData.lastMessage.id)) {
       await updateDoc(conversationRef, {
         'lastMessage.read': true,

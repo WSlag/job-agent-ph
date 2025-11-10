@@ -10,7 +10,7 @@ import { subscribeToConversations } from '@/lib/messaging-helpers';
 import { subscribeToJobHunterApplications } from '@/lib/application-helpers';
 
 export default function Header() {
-  const { user, userType, signOut } = useAuth();
+  const { user, userType, signOut, loading } = useAuth();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -70,17 +70,24 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center" aria-label="Job Agent PH - Home">
             <Logo size="sm" showText={true} />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="flex items-center gap-6">
+          <nav className="flex items-center gap-6" aria-label="Main navigation">
             <Link href="/jobs" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105">
               Browse Jobs
             </Link>
 
-            {user ? (
+            {loading ? (
+              // Show loading skeleton to prevent flash
+              <div className="flex items-center gap-4">
+                <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-9 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+              </div>
+            ) : user ? (
               <>
                 {userType === 'agency' && (
                   <>
@@ -156,15 +163,18 @@ export default function Header() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-menu"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t py-4">
-            <nav className="flex flex-col gap-4">
+          <div className="md:hidden border-t py-4" id="mobile-nav-menu">
+            <nav className="flex flex-col gap-4" aria-label="Mobile navigation">
               <Link
                 href="/jobs"
                 className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"

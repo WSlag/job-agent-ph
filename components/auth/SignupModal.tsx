@@ -4,6 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/collections';
+import { useAuth } from '@/contexts/AuthContext';
 import BottomSheet from '@/components/ui/BottomSheet';
 import Button from '@/components/ui/Button';
 import AuthPrompt, { AuthPromptContext } from './AuthPrompt';
@@ -61,9 +66,11 @@ export default function SignupModal({
   onSuccess,
 }: SignupModalProps) {
   const router = useRouter();
+  const { signUp, signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -71,6 +78,12 @@ export default function SignupModal({
     email: '',
     password: '',
     agreeToTerms: false,
+  });
+
+  // Login form state
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: '',
   });
 
   // Validation state
@@ -116,21 +129,35 @@ export default function SignupModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     // Validate all fields
     const emailValid = validateEmail(formData.email);
     const passwordValid = validatePassword(formData.password);
 
     if (!emailValid || !passwordValid || !formData.agreeToTerms) {
+      setError('Please fill all fields correctly and agree to the terms.');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual signup logic with Firebase
-      // For now, simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Default to jobhunter userType, can be customized via context
+      const userType = context.userType || 'jobhunter';
+
+      // Split name into first and last name
+      const nameParts = formData.name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      await signUp(formData.email, formData.password, userType, {
+        firstName,
+        lastName,
+        location: '',
+        skills: [],
+        experience: 0,
+      });
 
       // On success
       if (onSuccess) {
@@ -141,17 +168,123 @@ export default function SignupModal({
       }
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
-      // TODO: Show error toast
+      setError(error.message || 'Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialLogin = (provider: 'google' | 'facebook') => {
-    // TODO: Implement social login
-    console.log(`Login with ${provider}`);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await signIn(loginData.email, loginData.password);
+
+      // On success
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push(context.returnUrl || '/');
+      }
+
+      onClose();
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setError(error.message || 'Failed to sign in. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const authProvider = provider === 'google'
+        ? new GoogleAuthProvider()
+        : new FacebookAuthProvider();
+
+      const result = await signInWithPopup(auth, authProvider);
+      const userId = result.user.uid;
+
+      // Check if user profile already exists
+      const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
+        getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
+        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
+        getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
+      ]);
+
+      // If no profile exists, create one as job hunter (default)
+      if (!adminDoc.exists() && !jobHunterDoc.exists() && !agencyDoc.exists()) {
+        const displayName = result.user.displayName || 'User';
+        const nameParts = displayName.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        const userType = context.userType || 'jobhunter';
+
+        await setDoc(doc(db, COLLECTIONS.USERS, userId), {
+          email: result.user.email,
+          userType,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        if (userType === 'jobhunter') {
+          await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), {
+            firstName,
+            lastName,
+            email: result.user.email,
+            userType: 'jobhunter',
+            location: '',
+            skills: [],
+            experience: 0,
+            profileImageUrl: result.user.photoURL || '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        } else if (userType === 'agency') {
+          await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
+            companyName: displayName,
+            email: result.user.email,
+            userType: 'agency',
+            registrationNumber: '',
+            contactPerson: displayName,
+            phone: '',
+            address: '',
+            logoUrl: result.user.photoURL || '',
+            verified: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+      }
+
+      // On success
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push(context.returnUrl || '/');
+      }
+
+      onClose();
+    } catch (error: any) {
+      console.error('Social login error:', error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        setError('Login cancelled. Please try again.');
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        setError('An account already exists with this email. Please use the original login method.');
+      } else {
+        setError(error.message || 'Failed to sign in. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const passwordStrength = () => {
@@ -190,6 +323,13 @@ export default function SignupModal({
         )}
 
         <AuthPrompt context={context} className="mb-6" />
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-error-50 border border-error-200 rounded-lg">
+            <p className="text-sm text-error-700">{error}</p>
+          </div>
+        )}
 
         {/* Toggle between signup and login */}
         <div className="flex items-center justify-center gap-2 mb-6">
@@ -420,17 +560,80 @@ export default function SignupModal({
               </Button>
             </motion.form>
           ) : (
-            <motion.div
+            <motion.form
               key="login"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
-              className="text-center text-gray-600"
+              onSubmit={handleLogin}
+              className="space-y-4"
             >
-              <p>Login form would go here</p>
-              <p className="text-sm mt-2">TODO: Implement login form</p>
-            </motion.div>
+              {/* Email */}
+              <div>
+                <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  id="login-email"
+                  type="email"
+                  required
+                  value={loginData.email}
+                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="juan@example.com"
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="text-right">
+                <a
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary-600 hover:underline"
+                >
+                  Forgot password?
+                </a>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                isLoading={isLoading}
+                disabled={!loginData.email || !loginData.password}
+              >
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </Button>
+            </motion.form>
           )}
         </AnimatePresence>
       </div>

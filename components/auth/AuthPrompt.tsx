@@ -28,6 +28,10 @@ export interface AuthPromptContext {
    * Return URL after authentication
    */
   returnUrl?: string;
+  /**
+   * User type for signup (defaults to 'jobhunter')
+   */
+  userType?: 'jobhunter' | 'agency' | 'admin';
 }
 
 interface AuthPromptProps {

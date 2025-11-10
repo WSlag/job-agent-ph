@@ -64,40 +64,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log('[AuthContext] Loading user profile for ID:', userId);
+
       // OPTIMIZATION: Check all user types in parallel instead of sequential
+      console.log('[AuthContext] Querying Firestore collections...');
       const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
         getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
         getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
         getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
       ]);
 
+      console.log('[AuthContext] Firestore queries completed successfully');
+      console.log('[AuthContext] Admin exists:', adminDoc.exists());
+      console.log('[AuthContext] JobHunter exists:', jobHunterDoc.exists());
+      console.log('[AuthContext] Agency exists:', agencyDoc.exists());
+
       if (adminDoc.exists()) {
+        console.log('[AuthContext] User is an ADMIN');
         setUserProfile({ id: adminDoc.id, ...adminDoc.data() } as Admin);
         setUserType('admin');
         return;
       }
 
       if (jobHunterDoc.exists()) {
+        console.log('[AuthContext] User is a JOB HUNTER');
         setUserProfile({ id: jobHunterDoc.id, ...jobHunterDoc.data() } as JobHunter);
         setUserType('jobhunter');
         return;
       }
 
       if (agencyDoc.exists()) {
+        console.log('[AuthContext] User is an AGENCY');
         setUserProfile({ id: agencyDoc.id, ...agencyDoc.data() } as Agency);
         setUserType('agency');
         return;
       }
 
       // Profile not found - sign out the user to prevent issues
-      console.error('User profile not found in database. User ID:', userId);
-      console.error('No profile document found in jobHunters, agencies, or admins collections.');
-      console.error('Please create a profile document in Firestore with this user ID.');
+      console.error('[AuthContext] ERROR: User profile not found in database. User ID:', userId);
+      console.error('[AuthContext] No profile document found in jobHunters, agencies, or admins collections.');
+      console.error('[AuthContext] Please create a profile document in Firestore with this user ID.');
       await firebaseSignOut(auth);
       setUserProfile(null);
       setUserType(null);
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      console.error('[AuthContext] CRITICAL ERROR loading user profile:', error);
+      console.error('[AuthContext] Error details:', JSON.stringify(error, null, 2));
       // Sign out on error to prevent stuck auth state
       await firebaseSignOut(auth);
       setUserProfile(null);
@@ -198,7 +210,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      // Get the ID token and create a session cookie
+      const idToken = await userCredential.user.getIdToken();
+
+      // Call the session API to create a server-side session cookie
+      const response = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to create session cookie');
+        // Don't throw error here - client-side auth still works
+      } else {
+        console.log('[AuthContext] Session cookie created successfully');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
 
@@ -223,6 +254,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Call the logout API to clear the session cookie
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      // Sign out from Firebase client
       await firebaseSignOut(auth);
       setUserProfile(null);
       setUserType(null);

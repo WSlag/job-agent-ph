@@ -264,7 +264,7 @@ export default function ContactPage() {
                 posting jobs, and using our platform.
               </p>
               <Link
-                href="/#faq"
+                href="/faq"
                 className="text-blue-600 hover:text-blue-700 font-medium text-sm"
               >
                 View FAQ →

@@ -76,7 +76,8 @@ function ConversationPageContent() {
       if (unreadMessages.length > 0) {
         markMessagesAsRead(
           conversationId,
-          unreadMessages.map((msg) => msg.id)
+          unreadMessages.map((msg) => msg.id),
+          user.uid
         ).catch((error) => {
           console.error('Failed to mark messages as read:', error);
         });
@@ -503,7 +504,7 @@ function ConversationPageContent() {
 
             <button
               type="submit"
-              disabled={!newMessage.trim() || sending}
+              disabled={!newMessage.trim() || sending || newMessage.length > 2000}
               className="flex-shrink-0 bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed md:p-3"
             >
               {sending ? (

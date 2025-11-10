@@ -25,7 +25,7 @@ export default function AgencyDashboardHeader({
   onSearch,
   showPostJobButton = true,
 }: AgencyDashboardHeaderProps) {
-  const { user, userType } = useAuth();
+  const { user, userType, signOut } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -129,9 +129,14 @@ export default function AgencyDashboardHeader({
                         Profile
                       </Link>
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           setShowUserDropdown(false);
-                          router.push('/auth/login');
+                          try {
+                            await signOut();
+                            router.push('/auth/login');
+                          } catch (error) {
+                            console.error('Logout error:', error);
+                          }
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
                       >

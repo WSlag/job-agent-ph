@@ -167,10 +167,10 @@ export async function getAgencyJobs(agencyId: string): Promise<Job[]> {
   const { COLLECTIONS } = await import('./collections')
 
   try {
+    // Query without orderBy to avoid needing a composite index
     const q = query(
       collection(db, COLLECTIONS.JOBS),
-      where('agencyId', '==', agencyId),
-      orderBy('postedAt', 'desc')
+      where('agencyId', '==', agencyId)
     )
 
     const snapshot = await getDocs(q)
@@ -181,7 +181,8 @@ export async function getAgencyJobs(agencyId: string): Promise<Job[]> {
       expiresAt: doc.data().expiresAt?.toDate?.() || doc.data().expiresAt,
     })) as Job[]
 
-    return jobs
+    // Sort in memory instead of in the query
+    return jobs.sort((a, b) => b.postedAt.getTime() - a.postedAt.getTime())
   } catch (error) {
     console.error('Error fetching agency jobs:', error)
     throw new Error('Failed to fetch agency jobs')
