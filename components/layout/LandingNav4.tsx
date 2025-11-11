@@ -204,7 +204,7 @@ export default function LandingNav4() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-[100px] bg-white z-40 overflow-y-auto animate-fadeIn">
+        <div className="md:hidden fixed inset-0 top-[100px] bg-white z-[60] overflow-y-auto animate-fadeIn">
           <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
             {/* Premium Features */}
             <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl p-6 text-white mb-6">

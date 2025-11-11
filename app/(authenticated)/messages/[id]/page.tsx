@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 
 function ConversationPageContent() {
   const params = useParams();
@@ -259,9 +260,15 @@ function ConversationPageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="animate-spin text-blue-600" size={48} />
-      </div>
+      <>
+        <MobileNativeHeader
+          title="Conversation"
+          onBack={() => router.push('/messages')}
+        />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+          <Loader2 className="animate-spin text-blue-600" size={48} />
+        </div>
+      </>
     );
   }
 
@@ -283,8 +290,16 @@ function ConversationPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Chat Header */}
-      <div className="bg-white border-b shadow-sm">
+      {/* Mobile Header */}
+      <div className="md:hidden">
+        <MobileNativeHeader
+          title={otherPartyName}
+          onBack={() => router.push('/messages')}
+        />
+      </div>
+
+      {/* Desktop Chat Header */}
+      <div className="hidden md:block bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -365,7 +380,7 @@ function ConversationPageContent() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 pb-32 md:pb-0">
+      <div className="flex-1 overflow-y-auto bg-gray-50 pb-32 md:pb-0 pt-16 md:pt-0">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
           {Object.keys(groupedMessages).length === 0 ? (
             <div className="text-center py-12">

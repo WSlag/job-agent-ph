@@ -10,6 +10,8 @@ import { Job } from '@/types';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import JobEditForm from '@/components/jobs/JobEditForm';
+import AgencyDashboardHeader from '@/components/layout/AgencyDashboardHeader';
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 
 export default function EditJobPage() {
   const { user, userProfile, loading: authLoading } = useAuth();
@@ -65,9 +67,18 @@ export default function EditJobPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
+      <>
+        <div className="hidden md:block">
+          <AgencyDashboardHeader />
+        </div>
+        <MobileNativeHeader
+          title="Edit Job"
+          onBack={() => router.back()}
+        />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </>
     );
   }
 
@@ -95,8 +106,16 @@ export default function EditJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+    <>
+      <div className="hidden md:block">
+        <AgencyDashboardHeader />
+      </div>
+      <MobileNativeHeader
+        title="Edit Job"
+        onBack={() => router.back()}
+      />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24">
         <div className="mb-6">
           <Link
             href="/agency/dashboard"
@@ -109,8 +128,9 @@ export default function EditJobPage() {
           <p className="text-gray-600 mt-2">Update the details for: {job.title}</p>
         </div>
 
-        <JobEditForm job={job} />
+          <JobEditForm job={job} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -24,16 +24,16 @@ async function getFeaturedJobs(): Promise<Job[]> {
     const jobsData = querySnapshot.docs.map((doc) => {
       const data = doc.data();
       return {
-        id: doc.id,
         ...data,
+        id: doc.id,
         // Convert all Firestore Timestamps to Date objects for client serialization
         postedAt: data.postedAt?.toDate?.() || new Date(),
         createdAt: data.createdAt?.toDate?.() || new Date(),
         updatedAt: data.updatedAt?.toDate?.() || undefined,
         expiresAt: data.expiresAt?.toDate?.() || undefined,
         featuredAt: data.featuredAt?.toDate?.() || undefined,
-      };
-    }) as Job[];
+      } as unknown as Job;
+    });
 
     return jobsData;
   } catch (error) {

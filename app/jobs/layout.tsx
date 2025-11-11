@@ -1,11 +1,11 @@
 'use client';
 
-import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 
 /**
  * Layout for jobs listing page
- * Provides AuthProvider and OnboardingProvider for job browsing
+ * Provides OnboardingProvider for job browsing
+ * AuthProvider is now in the root layout for global access
  */
 export default function JobsLayout({
   children,
@@ -13,10 +13,8 @@ export default function JobsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthProvider>
-      <OnboardingProvider>
-        {children}
-      </OnboardingProvider>
-    </AuthProvider>
+    <OnboardingProvider>
+      {children}
+    </OnboardingProvider>
   );
 }

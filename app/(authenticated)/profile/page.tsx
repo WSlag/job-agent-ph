@@ -21,9 +21,10 @@ import {
   sanitizeString,
   validatePassword
 } from '@/lib/validation';
-import { User, Mail, Phone, MapPin, Briefcase, FileText, Lock, Upload, Save, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Briefcase, FileText, Lock, Upload, Save, ArrowLeft, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import UserDashboardHeader from '@/components/layout/UserDashboardHeader';
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 
 interface JobHunterProfile {
   fullName?: string;
@@ -50,7 +51,7 @@ interface AgencyProfile {
 }
 
 export default function ProfilePage() {
-  const { user: currentUser, userType, loading: authLoading } = useAuth();
+  const { user: currentUser, userType, loading: authLoading, signOut } = useAuth();
   const { updateProfileChecklist } = useOnboarding();
   const router = useRouter();
   const [profile, setProfile] = useState<JobHunterProfile | AgencyProfile | null>(null);
@@ -401,6 +402,17 @@ export default function ProfilePage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out. Please try again.');
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -425,7 +437,15 @@ export default function ProfilePage() {
 
   return (
     <>
-      <UserDashboardHeader showNotifications={true} />
+      <div className="hidden md:block">
+        <UserDashboardHeader showNotifications={true} />
+      </div>
+      <MobileNativeHeader
+        title="Profile"
+        onBack={() => router.back()}
+        hideOnScroll
+        showShadowOnScroll
+      />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4 max-w-4xl pt-20 md:pt-24">
         <div className="mb-8">
@@ -915,6 +935,19 @@ export default function ProfilePage() {
                     {saving ? 'Updating...' : 'Update Password'}
                   </Button>
                 </div>
+              </div>
+
+              {/* Logout Section */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Log Out</h3>
+                <p className="text-sm text-gray-600 mb-4">Sign out of your account on this device</p>
+                <button
+                  onClick={handleLogout}
+                  className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-colors active:scale-95"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Log Out
+                </button>
               </div>
             </div>
           </Card>

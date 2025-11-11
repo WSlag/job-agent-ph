@@ -132,6 +132,20 @@ const config: Config = {
         '3xl': '1.5rem',
         '4xl': '2rem',
       },
+      keyframes: {
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' }
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' }
+        }
+      },
+      animation: {
+        slideInRight: 'slideInRight 0.3s ease-out',
+        fadeIn: 'fadeIn 0.2s ease-out'
+      }
     },
   },
   plugins: [],

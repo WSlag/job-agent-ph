@@ -23,6 +23,18 @@ export default function BottomNav() {
     setIsMounted(true)
   }, [])
 
+  // Debug logging for agency navigation
+  useEffect(() => {
+    if (isMounted && userType) {
+      console.log('[BottomNav] Current state:', {
+        pathname,
+        userType,
+        hasUser: !!user,
+        loading
+      });
+    }
+  }, [isMounted, userType, user, loading, pathname]);
+
   // Don't show bottom nav on auth pages, job details pages, or conversation pages
   if (pathname.startsWith('/auth') || pathname.match(/^\/jobs\/[^\/]+$/) || pathname.match(/^\/messages\/[^\/]+$/)) {
     return null
@@ -53,9 +65,9 @@ export default function BottomNav() {
   const guestNavItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/jobs', icon: Briefcase, label: 'Jobs' },
-    { href: '/companies', icon: Grid, label: 'Companies' },
-    { href: '/about', icon: BookOpen, label: 'About' },
-    { href: '/auth/login', icon: User, label: 'Login' },
+    { href: '/messages', icon: MessageCircle, label: 'Messages' },
+    { href: '/saved-jobs', icon: BookOpen, label: 'Saved' },
+    { href: '/profile', icon: User, label: 'Profile' },
   ]
 
   // Determine which nav items to show

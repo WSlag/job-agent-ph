@@ -20,6 +20,9 @@ import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { Timeline, Badge, StatCard, StatCardGrid, EmptyState } from '@/components/ui';
 import { NoApplicationsEmptyState } from '@/components/ui/EmptyState';
+import UserDashboardHeader from '@/components/layout/UserDashboardHeader';
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
+import { useRouter } from 'next/navigation';
 
 interface Application {
   id: string;
@@ -62,6 +65,7 @@ const STATUS_COLORS: Record<Application['status'], string> = {
  */
 export default function ApplicationsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Application['status'] | 'all'>('all');
@@ -131,22 +135,43 @@ export default function ApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading your applications...</p>
+      <>
+        <div className="hidden md:block">
+          <UserDashboardHeader showNotifications={true} />
+        </div>
+        <MobileNativeHeader
+          title="Applications"
+          onBack={() => router.back()}
+          hideOnScroll
+          showShadowOnScroll
+        />
+        <div className="min-h-screen bg-gray-50 py-8 pt-20 md:pt-24">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
+              <p className="mt-4 text-gray-600">Loading your applications...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
+    <>
+      <div className="hidden md:block">
+        <UserDashboardHeader showNotifications={true} />
+      </div>
+      <MobileNativeHeader
+        title="Applications"
+        onBack={() => router.back()}
+        hideOnScroll
+        showShadowOnScroll
+      />
+      <div className="min-h-screen bg-gray-50 py-8 pt-20 md:pt-24">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Header */}
+          <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
             <Briefcase className="w-8 h-8 text-primary-600" />
             My Applications
@@ -334,5 +359,6 @@ export default function ApplicationsPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

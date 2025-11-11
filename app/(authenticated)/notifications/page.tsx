@@ -11,6 +11,8 @@ import { collection, query, where, orderBy, onSnapshot, updateDoc, deleteDoc, do
 import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import toast from 'react-hot-toast';
+import UserDashboardHeader from '@/components/layout/UserDashboardHeader';
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 
 interface Notification {
   id: string;
@@ -159,24 +161,45 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20 pb-20">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-48"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
+      <>
+        <div className="hidden md:block">
+          <UserDashboardHeader showNotifications={true} />
+        </div>
+        <MobileNativeHeader
+          title="Notifications"
+          onBack={() => router.back()}
+          hideOnScroll
+          showShadowOnScroll
+        />
+        <div className="min-h-screen bg-gray-50 pt-20 pb-20">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-48"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 pb-20">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-6">
+    <>
+      <div className="hidden md:block">
+        <UserDashboardHeader showNotifications={true} />
+      </div>
+      <MobileNativeHeader
+        title="Notifications"
+        onBack={() => router.back()}
+        hideOnScroll
+        showShadowOnScroll
+      />
+      <div className="min-h-screen bg-gray-50 pt-20 pb-20">
+        <div className="max-w-4xl mx-auto px-4">
+          {/* Header */}
+          <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -284,5 +307,6 @@ export default function NotificationsPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

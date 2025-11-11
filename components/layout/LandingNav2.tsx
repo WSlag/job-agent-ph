@@ -143,7 +143,7 @@ export default function LandingNav2() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-[105px] bg-white z-40 animate-fadeIn">
+        <div className="md:hidden fixed inset-0 top-[105px] bg-white z-[60] animate-fadeIn">
           <div className="h-full overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
               {/* Contact Info */}

@@ -98,7 +98,7 @@ export default function HeroCarousel() {
   const salary = formatSalary(currentJob);
 
   return (
-    <div className="relative w-full h-[300px] md:h-[600px] overflow-hidden rounded-2xl md:rounded-3xl shadow-2xl group">
+    <div className="relative z-0 w-full h-[300px] md:h-[600px] overflow-hidden rounded-2xl md:rounded-3xl shadow-2xl group">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         {currentJob.imageUrl ? (

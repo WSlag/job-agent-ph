@@ -122,6 +122,7 @@ export default function SavedJobsPage() {
 
     try {
       setRemovingJobId(jobId);
+      const db = getDbInstance();
       await deleteDoc(doc(db, 'savedJobs', currentUser.uid, 'jobs', jobId));
       setSavedJobs(prev => prev.filter(job => job.id !== jobId));
     } catch (error) {
@@ -161,7 +162,9 @@ export default function SavedJobsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <UserDashboardHeader showNotifications={true} />
+      <div className="hidden md:block">
+        <UserDashboardHeader showNotifications={true} />
+      </div>
       <MobileNativeHeader
         title="Saved Jobs"
         onBack={() => router.back()}

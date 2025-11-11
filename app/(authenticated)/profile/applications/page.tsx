@@ -8,6 +8,8 @@ import { subscribeToJobHunterApplications } from '@/lib/application-helpers'
 import { JobApplication, ApplicationStatus } from '@/types'
 import ApplicationCard from '@/components/applications/ApplicationCard'
 import { Loader2, Briefcase, Filter, ArrowLeft } from 'lucide-react'
+import UserDashboardHeader from '@/components/layout/UserDashboardHeader'
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader'
 
 export default function ApplicationsPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -62,9 +64,20 @@ export default function ApplicationsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="animate-spin text-blue-600" size={48} />
-      </div>
+      <>
+        <div className="hidden md:block">
+          <UserDashboardHeader showNotifications={true} />
+        </div>
+        <MobileNativeHeader
+          title="My Applications"
+          onBack={() => router.back()}
+          hideOnScroll
+          showShadowOnScroll
+        />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+          <Loader2 className="animate-spin text-blue-600" size={48} />
+        </div>
+      </>
     )
   }
 
@@ -73,18 +86,20 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-3 md:px-4 pt-4 md:pt-8">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-6"
-        >
-          <ArrowLeft size={20} />
-          <span className="font-medium">Back</span>
-        </button>
-
-        {/* Page Header */}
-        <div className="mb-8">
+    <>
+      <div className="hidden md:block">
+        <UserDashboardHeader showNotifications={true} />
+      </div>
+      <MobileNativeHeader
+        title="My Applications"
+        onBack={() => router.back()}
+        hideOnScroll
+        showShadowOnScroll
+      />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-3 md:px-4 pt-20 md:pt-24">
+          {/* Page Header */}
+          <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
           <p className="text-gray-600">
             Track the status of all your job applications
@@ -174,5 +189,6 @@ export default function ApplicationsPage() {
         )}
       </div>
     </div>
+    </>
   )
 }

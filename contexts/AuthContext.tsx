@@ -282,11 +282,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('[AuthContext] Starting sign in process...');
       const auth = getAuthInstance();
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('[AuthContext] Firebase authentication successful');
 
       // Get the ID token and create a session cookie
       const idToken = await userCredential.user.getIdToken();
+      console.log('[AuthContext] ID token obtained, creating session cookie...');
 
       // Call the session API to create a server-side session cookie
       const response = await fetch('/api/auth/session', {
@@ -298,13 +301,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        console.error('Failed to create session cookie');
+        console.error('[AuthContext] Failed to create session cookie, status:', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[AuthContext] Session error details:', errorData);
         // Don't throw error here - client-side auth still works
       } else {
         console.log('[AuthContext] Session cookie created successfully');
+        // Wait a bit to ensure cookie is properly set in browser
+        await new Promise(resolve => setTimeout(resolve, 150));
+        console.log('[AuthContext] Session cookie should now be available');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('[AuthContext] Login error:', error);
 
       // Provide user-friendly error messages
       if (error.code === 'auth/user-not-found') {

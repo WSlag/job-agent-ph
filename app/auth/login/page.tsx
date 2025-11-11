@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +17,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const hasRedirected = useRef(false);
 
   // Handle redirect after authentication
   useEffect(() => {
@@ -24,10 +25,12 @@ function LoginForm() {
       hasUser: !!user,
       userType,
       authLoading,
-      isRedirecting
+      isRedirecting,
+      hasRedirected: hasRedirected.current
     });
 
-    if (user && userType && !authLoading && !isRedirecting) {
+    // Only redirect once - use ref to prevent multiple redirects
+    if (user && userType && !authLoading && !hasRedirected.current) {
       const redirectParam = searchParams.get('redirect');
       const jobId = searchParams.get('jobId');
       const agencyId = searchParams.get('agencyId');
@@ -48,12 +51,14 @@ function LoginForm() {
       }
 
       console.log('[LoginPage] Redirecting to:', finalRedirect);
+      hasRedirected.current = true;
       setIsRedirecting(true);
 
       // Use replace instead of push to prevent back button issues
+      // The signIn function now ensures session cookie is set before this executes
       router.replace(finalRedirect);
     }
-  }, [user, userType, authLoading, isRedirecting, router]);
+  }, [user, userType, authLoading, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

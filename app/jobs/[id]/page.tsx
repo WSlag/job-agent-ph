@@ -180,6 +180,7 @@ export default function JobDetailsPage() {
 
   const loadJob = async () => {
     try {
+      const db = getDbInstance();
       const jobId = params.id as string;
       const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId));
 
@@ -204,6 +205,7 @@ export default function JobDetailsPage() {
     }
 
     try {
+      const db = getDbInstance();
       const profileDoc = await getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, user.uid));
       if (profileDoc.exists()) {
         setUserProfile({

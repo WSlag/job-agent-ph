@@ -17,14 +17,43 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, userType, userProfile } = useAuth();
+  const { user, userType, userProfile, loading: authLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationsWithDetails, setConversationsWithDetails] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [conversationsLoading, setConversationsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const creatingConversation = useRef(false); // Prevent duplicate conversation creation
   const touchStartY = useRef(0);
   const pullDistance = useRef(0);
+
+  // Store referrer jobId in sessionStorage for smart back navigation
+  useEffect(() => {
+    const jobId = searchParams.get('jobId');
+    if (jobId) {
+      sessionStorage.setItem('messagesReferrer', jobId);
+    }
+  }, [searchParams]);
+
+  // Smart back navigation handler - user-type aware
+  const handleBack = useCallback(() => {
+    const referrerJobId = sessionStorage.getItem('messagesReferrer');
+
+    // Agency users always go back to their dashboard
+    if (userType === 'agency') {
+      router.push('/agency/dashboard');
+      return;
+    }
+
+    // Job hunters: if came from job details page, go back there
+    if (userType === 'jobhunter' && referrerJobId) {
+      sessionStorage.removeItem('messagesReferrer');
+      router.push(`/jobs/${referrerJobId}`);
+      return;
+    }
+
+    // Otherwise (job hunters without referrer, guests), go to jobs listing
+    router.push('/jobs');
+  }, [router, userType]);
 
   // Memoize handleCreateConversationFromJob to prevent recreation
   const handleCreateConversationFromJob = useCallback(async (jobId: string) => {
@@ -106,7 +135,7 @@ function MessagesContent() {
     } catch (error) {
       console.error('Error loading conversation details:', error);
     } finally {
-      setLoading(false);
+      setConversationsLoading(false);
     }
   }, []);
 
@@ -128,18 +157,25 @@ function MessagesContent() {
   }, [refreshing, user, userType, conversations, loadConversationDetails]);
 
   useEffect(() => {
+    // Wait for AuthContext to finish loading before making authentication decisions
+    if (authLoading) {
+      return;
+    }
+
     if (!user) {
-      // Preserve query parameters when redirecting to login
+      // Redirect unauthenticated users to signup page
       const jobId = searchParams.get('jobId');
       const agencyId = searchParams.get('agencyId');
       const params = new URLSearchParams({ redirect: '/messages' });
       if (jobId) params.append('jobId', jobId);
       if (agencyId) params.append('agencyId', agencyId);
-      router.push(`/auth/login?${params.toString()}`);
+      router.push(`/auth/signup?${params.toString()}`);
       return;
     }
 
     if (!userType) {
+      // Keep loading state active while userType is being determined
+      setConversationsLoading(true);
       return;
     }
 
@@ -160,14 +196,16 @@ function MessagesContent() {
     );
 
     return () => unsubscribe();
-  }, [user, userType, searchParams, router, handleCreateConversationFromJob, loadConversationDetails]);
+  }, [authLoading, user, userType, searchParams, router, handleCreateConversationFromJob, loadConversationDetails]);
 
-  if (loading) {
+  // Show loading state while authenticating or while userType/conversations are loading
+  if (authLoading || conversationsLoading || (user && !userType)) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <MobileNativeHeader title="Messages" />
-        <div className="flex items-center justify-center py-20 pt-24">
-          <Loader2 className="animate-spin text-blue-600" size={48} />
+        <MobileNativeHeader title="Messages" onBack={handleBack} />
+        <div className="flex flex-col items-center justify-center py-20 pt-24">
+          <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
+          <p className="text-gray-600">Loading messages...</p>
         </div>
       </div>
     );
@@ -177,6 +215,7 @@ function MessagesContent() {
     <div className="min-h-screen bg-gray-50">
       <MobileNativeHeader
         title="Messages"
+        onBack={handleBack}
         hideOnScroll
         showShadowOnScroll
       />

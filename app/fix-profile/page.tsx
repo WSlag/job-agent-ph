@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { getDbInstance, getAuthInstance } from '@/lib/firebase';
 
 const COLLECTIONS = {
   USERS: 'users',
@@ -17,6 +17,7 @@ export default function FixProfilePage() {
     setLoading(true);
 
     // Check if user is logged in
+    const auth = getAuthInstance();
     const currentUser = auth.currentUser;
     if (!currentUser) {
       setStatus('❌ Error: You must be logged in as wslagbas@gmail.com to create your admin profile.');
@@ -30,6 +31,7 @@ export default function FixProfilePage() {
     setStatus(`Creating admin profile for ${email}...`);
 
     try {
+      const db = getDbInstance();
 
       // Create user document
       await setDoc(doc(db, COLLECTIONS.USERS, userId), {
@@ -95,10 +97,10 @@ export default function FixProfilePage() {
           </div>
         )}
 
-        {auth.currentUser && (
+        {getAuthInstance().currentUser && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-xs text-green-800">
-              Currently logged in as: {auth.currentUser.email}
+              Currently logged in as: {getAuthInstance().currentUser?.email}
             </p>
           </div>
         )}

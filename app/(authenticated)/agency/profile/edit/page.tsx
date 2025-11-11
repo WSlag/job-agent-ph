@@ -7,6 +7,8 @@ import { Agency } from '@/types'
 import AgencyProfileEditForm from '@/components/profile/AgencyProfileEditForm'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import AgencyDashboardHeader from '@/components/layout/AgencyDashboardHeader'
+import MobileNativeHeader from '@/components/layout/MobileNativeHeader'
 
 export default function EditAgencyProfilePage() {
   const { user, userProfile, loading: authLoading } = useAuth()
@@ -28,9 +30,18 @@ export default function EditAgencyProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
+      <>
+        <div className="hidden md:block">
+          <AgencyDashboardHeader />
+        </div>
+        <MobileNativeHeader
+          title="Edit Profile"
+          onBack={() => router.back()}
+        />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-20">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      </>
     )
   }
 
@@ -58,8 +69,16 @@ export default function EditAgencyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+    <>
+      <div className="hidden md:block">
+        <AgencyDashboardHeader />
+      </div>
+      <MobileNativeHeader
+        title="Edit Profile"
+        onBack={() => router.back()}
+      />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24">
         {/* Page Header */}
         <div className="mb-6">
           <Link
@@ -75,9 +94,10 @@ export default function EditAgencyProfilePage() {
           </p>
         </div>
 
-        {/* Edit Form */}
-        <AgencyProfileEditForm agency={userProfile as Agency} />
+          {/* Edit Form */}
+          <AgencyProfileEditForm agency={userProfile as Agency} />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

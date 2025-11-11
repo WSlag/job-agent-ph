@@ -123,6 +123,7 @@ export default function LandingNav3Enhanced() {
   }, [isMenuOpen]);
 
   return (
+    <>
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md">
       {/* Main Navigation */}
       <nav className="border-b border-gray-200 shadow-lg">
@@ -282,13 +283,14 @@ export default function LandingNav3Enhanced() {
           )}
         </div>
       </div>
+    </header>
 
-      {/* Beautiful Slide-in Menu */}
+      {/* Beautiful Slide-in Menu - Outside Header */}
       {isMenuOpen && (
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] animate-fadeIn"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200] animate-fadeIn"
             onClick={() => setIsMenuOpen(false)}
             aria-hidden="true"
           ></div>
@@ -299,7 +301,7 @@ export default function LandingNav3Enhanced() {
             id="mobile-menu"
             role="navigation"
             aria-label="Main menu"
-            className="fixed top-0 bottom-0 right-0 w-full sm:w-96 bg-white z-[110] shadow-2xl overflow-y-auto animate-slideInRight pt-20"
+            className="fixed top-0 bottom-0 right-0 w-full sm:w-96 bg-white z-[210] shadow-2xl overflow-y-auto animate-slideInRight pt-20"
           >
             <div className="p-6 space-y-6">
               {/* User Section */}
@@ -412,6 +414,6 @@ export default function LandingNav3Enhanced() {
           </div>
         </>
       )}
-    </header>
+    </>
   );
 }

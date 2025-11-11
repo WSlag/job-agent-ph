@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,7 @@ function SignUpForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const hasRedirected = useRef(false);
 
   // Job Hunter fields
   const [firstName, setFirstName] = useState('');
@@ -32,9 +33,9 @@ function SignUpForm() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
 
-  // Handle redirect after authentication
+  // Handle redirect after authentication - only redirect once
   useEffect(() => {
-    if (user && contextUserType && !authLoading) {
+    if (user && contextUserType && !authLoading && !hasRedirected.current) {
       const redirectParam = searchParams.get('redirect');
       const jobId = searchParams.get('jobId');
       const agencyId = searchParams.get('agencyId');
@@ -54,6 +55,7 @@ function SignUpForm() {
         finalRedirect = getDefaultRouteForUserType(contextUserType);
       }
 
+      hasRedirected.current = true;
       router.push(finalRedirect);
     }
   }, [user, contextUserType, authLoading, router, searchParams]);

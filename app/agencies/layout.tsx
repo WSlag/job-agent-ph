@@ -1,10 +1,8 @@
-'use client';
-
 /**
- * Layout for auth routes (login, signup, etc.)
+ * Layout for agencies listing page
  * AuthProvider is now in the root layout for global access
  */
-export default function AuthLayout({
+export default function AgenciesLayout({
   children,
 }: {
   children: React.ReactNode;
