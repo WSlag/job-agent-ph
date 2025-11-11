@@ -20,7 +20,7 @@ import { useOptionalAuth } from '@/contexts/AuthContext';
  */
 
 export default function LandingNav3Enhanced() {
-  const { user } = useOptionalAuth();
+  const { user, userType } = useOptionalAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -313,7 +313,9 @@ export default function LandingNav3Enhanced() {
                     </div>
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900">{user.email}</p>
-                      <p className="text-sm text-gray-500">Job Seeker</p>
+                      <p className="text-sm text-gray-500">
+                        {userType === 'agency' ? 'Agency' : userType === 'admin' ? 'Admin' : 'Job Hunter'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -343,31 +345,33 @@ export default function LandingNav3Enhanced() {
                 <p className="px-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
                   Navigation
                 </p>
-                <Link
-                  href="/jobs"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Search className="w-5 h-5 text-gray-400" />
-                  <span>Browse Jobs</span>
-                </Link>
-                <Link
-                  href="/companies"
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Globe className="w-5 h-5 text-gray-400" />
-                  <span>Companies</span>
-                </Link>
-                {user && (
+
+                {/* Agency Navigation */}
+                {userType === 'agency' ? (
                   <>
                     <Link
-                      href="/saved-jobs"
+                      href="/agency/dashboard"
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <Heart className="w-5 h-5 text-gray-400" />
-                      <span>Saved Jobs</span>
+                      <TrendingUp className="w-5 h-5 text-gray-400" />
+                      <span>Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/jobs/post"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Sparkles className="w-5 h-5 text-gray-400" />
+                      <span>Post Job</span>
+                    </Link>
+                    <Link
+                      href="/agency/dashboard"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Search className="w-5 h-5 text-gray-400" />
+                      <span>My Jobs</span>
                     </Link>
                     <Link
                       href="/messages"
@@ -377,6 +381,54 @@ export default function LandingNav3Enhanced() {
                       <MessageCircle className="w-5 h-5 text-gray-400" />
                       <span>Messages</span>
                     </Link>
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User2 className="w-5 h-5 text-gray-400" />
+                      <span>Profile</span>
+                    </Link>
+                  </>
+                ) : (
+                  /* Job Hunter / Guest Navigation */
+                  <>
+                    <Link
+                      href="/jobs"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Search className="w-5 h-5 text-gray-400" />
+                      <span>Browse Jobs</span>
+                    </Link>
+                    <Link
+                      href="/companies"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Globe className="w-5 h-5 text-gray-400" />
+                      <span>Companies</span>
+                    </Link>
+                    {user && (
+                      <>
+                        <Link
+                          href="/saved-jobs"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Heart className="w-5 h-5 text-gray-400" />
+                          <span>Saved Jobs</span>
+                        </Link>
+                        <Link
+                          href="/messages"
+                          className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <MessageCircle className="w-5 h-5 text-gray-400" />
+                          <span>Messages</span>
+                        </Link>
+                      </>
+                    )}
                   </>
                 )}
               </div>
