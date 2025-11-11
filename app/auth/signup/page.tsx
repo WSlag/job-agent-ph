@@ -19,6 +19,7 @@ function SignUpForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const hasRedirected = useRef(false);
 
   // Job Hunter fields
@@ -56,7 +57,9 @@ function SignUpForm() {
       }
 
       hasRedirected.current = true;
-      router.push(finalRedirect);
+      setIsRedirecting(true);
+      // Use replace instead of push to prevent back button issues
+      router.replace(finalRedirect);
     }
   }, [user, contextUserType, authLoading, router, searchParams]);
 
@@ -146,6 +149,19 @@ function SignUpForm() {
       setLoading(false);
     }
   };
+
+  // Show redirecting state
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4">
+        <div className="text-center">
+          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Redirecting to your dashboard...</h2>
+          <p className="text-gray-600">Please wait</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4 py-12">

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, setPersistence, browserSessionPersistence } from 'firebase/auth';
+import { getAuth, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
@@ -34,10 +34,10 @@ export function getAuthInstance(): Auth {
   if (!_auth) {
     _auth = getAuth(getApp());
 
-    // Set persistence to SESSION mode on first auth access
+    // Set persistence to LOCAL mode on first auth access (persists across browser restarts)
     if (typeof window !== 'undefined' && !_persistenceInitialized) {
       _persistenceInitialized = true;
-      setPersistence(_auth, browserSessionPersistence).catch((error) => {
+      setPersistence(_auth, browserLocalPersistence).catch((error) => {
         console.error('Error setting auth persistence:', error);
       });
     }
