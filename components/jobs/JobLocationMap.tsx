@@ -52,8 +52,16 @@ export default function JobLocationMap({ location, country, coordinates }: JobLo
 
       const query = `${location}, ${country}`;
 
-      // Use our API route to avoid CORS issues
-      const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+      // Call OpenStreetMap Nominatim API directly (client-side for static export)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'JobAgentPH/1.0',
+            'Accept': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         // Silently handle API errors - don't log to console

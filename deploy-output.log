@@ -1,0 +1,140 @@
+
+> job-agent-ph@0.1.0 deploy
+> npm run export && firebase deploy --only hosting
+
+
+> job-agent-ph@0.1.0 export
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\HP\Desktop\jobAgency\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\HP\Desktop\jobAgency\job-agent-ph\package-lock.json
+
+   ▲ Next.js 15.5.6
+   - Environments: .env.local, .env.production
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 25.7s
+   Linting and checking validity of types ...
+
+./app/(authenticated)/admin/dashboard/page.tsx
+247:13  Warning: Do not use an `<a>` element to navigate to `/jobs/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+./app/(authenticated)/admin/featured-requests/page.tsx
+39:6  Warning: React Hook useEffect has a missing dependency: 'filterRequests'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(authenticated)/agency/dashboard/page.tsx
+59:6  Warning: React Hook useEffect has a missing dependency: 'loadDashboardData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(authenticated)/applications/page.tsx
+78:6  Warning: React Hook useEffect has a missing dependency: 'loadApplications'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(authenticated)/debug/permissions/page.tsx
+125:6  Warning: React Hook useEffect has a missing dependency: 'runDiagnosis'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(authenticated)/jobs/edit/[id]/page.tsx
+36:6  Warning: React Hook useEffect has missing dependencies: 'loadJob' and 'router'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(authenticated)/messages/[id]/page.tsx
+101:6  Warning: React Hook useEffect has a missing dependency: 'loadConversationDetails'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/(authenticated)/profile/page.tsx
+87:6  Warning: React Hook useEffect has missing dependencies: 'loadProfile' and 'router'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+712:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+851:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/(authenticated)/saved-jobs/page.tsx
+39:6  Warning: React Hook useEffect has missing dependencies: 'loadSavedJobs' and 'router'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/agencies/[id]/page.tsx
+254:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+272:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/auth/login/page.tsx
+24:5  Warning: Unexpected console statement.  no-console
+53:7  Warning: Unexpected console statement.  no-console
+64:6  Warning: React Hook useEffect has a missing dependency: 'isRedirecting'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/companies/page.tsx
+185:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/contact/page.tsx
+56:7  Warning: Unexpected console statement.  no-console
+
+./app/jobs/page.tsx
+243:6  Warning: React Hook useEffect has a missing dependency: 'loadJobs'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/jobs/[id]/applicants/page.tsx
+35:6  Warning: React Hook useEffect has a missing dependency: 'loadJob'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/applications/ApplicationCard.tsx
+48:6  Warning: React Hook useEffect has a missing dependency: 'loadDetails'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/home/LearningHubCard.tsx
+55:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/home/MessagesPreview.tsx
+115:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/home/RecommendedJobsCarousel.tsx
+140:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/home/SuccessStoryCard.tsx
+62:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/home/UrgentHiringSection.tsx
+133:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/jobs/CostCalculatorModal.tsx
+100:6  Warning: React Hook useEffect has a missing dependency: 'costBreakdown'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/jobs/JobDetailsBenefits.tsx
+96:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/jobs/JobDetailsReviews.tsx
+209:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+261:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/jobs/JobEditForm.tsx
+463:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/jobs/JobPostingForm.tsx
+667:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/jobs/SimilarJobsCarousel.tsx
+25:6  Warning: React Hook useEffect has a missing dependency: 'loadSimilarJobs'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/jobs/SwipeableJobCard.tsx
+141:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/layout/BottomNav.tsx
+31:7  Warning: Unexpected console statement.  no-console
+
+./components/modals/FeaturedRequestModal.tsx
+55:6  Warning: React Hook useEffect has a missing dependency: 'loadAgencyJobs'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/onboarding/ProfileChecklist.tsx
+93:11  Warning: Unexpected console statement.  no-console
+
+./components/onboarding/ProfileSetupWizard/PersonalInfoStep.tsx
+128:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/pages/HomeClient.tsx
+47:6  Warning: React Hook useEffect has a missing dependency: 'loadSavedJobs'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./lib/firebase-admin.ts
+51:7  Warning: Unexpected console statement.  no-console
+
+./lib/messaging-helpers.ts
+94:5  Warning: Unexpected console statement.  no-console
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+
+> Build error occurred
+[Error: Page "/agencies/[id]" is missing "generateStaticParams()" so it cannot be used with "output: export" config.]
