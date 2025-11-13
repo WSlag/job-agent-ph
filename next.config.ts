@@ -32,6 +32,22 @@ const nextConfig: NextConfig = {
       exclude: ['error', 'warn'],
     } : false,
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Fix Firebase client-side bundling issues
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
+  experimental: {
+    // Optimize Firebase bundle size
+    optimizePackageImports: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);
