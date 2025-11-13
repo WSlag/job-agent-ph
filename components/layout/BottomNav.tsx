@@ -156,7 +156,7 @@ export default function BottomNav() {
         )}
 
         {/* Navigation Items */}
-        <div className="flex items-center justify-around md:justify-end flex-1 md:flex-initial md:gap-1">
+        <div className="flex items-center justify-around gap-2 md:justify-end flex-1 md:flex-initial md:gap-1">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
@@ -165,7 +165,7 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center flex-1 md:flex-initial h-full gap-1 transition-colors relative group md:px-4 md:flex-row md:gap-2 ${
+              className={`flex flex-col items-center justify-center flex-1 min-w-[60px] md:flex-initial h-full gap-1 transition-colors relative group md:px-4 md:flex-row md:gap-2 ${
                 active ? 'text-blue-600' : 'text-gray-500'
               }`}
               aria-current={active ? 'page' : undefined}
