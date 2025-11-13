@@ -52,7 +52,7 @@ export default function BottomNav() {
     { href: '/', icon: Home, label: 'Home' },
     { href: '/jobs', icon: Briefcase, label: 'Jobs' },
     { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
-    { href: '/notifications', icon: Bell, label: 'Alerts', badge: notificationCount },
+    { href: '/saved-jobs', icon: BookOpen, label: 'Save Jobs' },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
 
@@ -61,7 +61,7 @@ export default function BottomNav() {
     { href: '/agency/dashboard', icon: Grid, label: 'Dashboard' },
     { href: '/jobs/post', icon: Briefcase, label: 'Post Job' },
     { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
-    { href: '/notifications', icon: Bell, label: 'Alerts', badge: notificationCount },
+    { href: '/profile', icon: User, label: 'Profile' },
   ]
 
   const guestNavItems = [
@@ -85,6 +85,11 @@ export default function BottomNav() {
   const isActive = (href: string) => {
     if (href === '/') {
       return pathname === '/'
+    }
+    // For nested routes like /jobs/post, only match the exact parent
+    // This prevents /jobs from being active when on /jobs/post
+    if (href === '/jobs' && pathname.startsWith('/jobs/')) {
+      return pathname === '/jobs'
     }
     return pathname.startsWith(href)
   }
@@ -113,11 +118,12 @@ export default function BottomNav() {
     '/privacy',
     '/faq',
     '/resources',
+    '/agency',               // Agency pages have AgencyDashboardHeader (desktop only)
   ];
 
   const hideOnDesktop = pagesWithOwnHeaders.some(path =>
     path === '/' ? pathname === '/' : pathname.startsWith(path)
-  ) || pathname.startsWith('/agency'); // Agency pages have AgencyDashboardHeader
+  );
 
   const navClassName = `fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-bottom md:top-0 md:bottom-auto md:border-t-0 md:border-b md:shadow-sm ${hideOnDesktop ? 'md:hidden' : ''}`;
 
