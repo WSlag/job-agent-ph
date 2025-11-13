@@ -307,8 +307,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Don't throw error here - client-side auth still works
       } else {
         console.log('[AuthContext] Session cookie created successfully');
-        // Wait a bit to ensure cookie is properly set in browser
-        await new Promise(resolve => setTimeout(resolve, 150));
+
+        // Verify the cookie is actually set in the browser before proceeding
+        console.log('[AuthContext] Verifying session cookie is available...');
+        let cookieVerified = false;
+
+        for (let attempt = 0; attempt < 10; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+
+          // Check if session cookie exists in document.cookie
+          if (document.cookie.includes('session=')) {
+            cookieVerified = true;
+            console.log('[AuthContext] Session cookie verified in browser (attempt', attempt + 1, ')');
+            break;
+          }
+        }
+
+        if (!cookieVerified) {
+          console.warn('[AuthContext] Could not verify session cookie after 10 attempts (2 seconds)');
+          console.warn('[AuthContext] Proceeding anyway - client-side auth will work');
+        }
+
         console.log('[AuthContext] Session cookie should now be available');
       }
     } catch (error: any) {

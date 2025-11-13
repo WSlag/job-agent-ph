@@ -25,9 +25,13 @@ import {
   Award,
   TrendingUp,
   ArrowLeft,
+  Navigation,
 } from 'lucide-react';
-import { Badge, StatCard, StatCardGrid, Timeline } from '@/components/ui';
+import { Badge, StatCard, StatCardGrid } from '@/components/ui';
 import { Job } from '@/types';
+import StarRating from '@/components/ui/StarRating';
+import RateAgencyModal from '@/components/modals/RateAgencyModal';
+import { getUserRating } from '@/lib/agency-rating';
 
 interface Agency {
   id: string;
@@ -67,6 +71,8 @@ export default function AgencyProfilePage() {
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [userRating, setUserRating] = useState<number | null>(null);
 
   // Get the job ID if navigated from job details
   const fromJobId = searchParams.get('fromJob');
@@ -122,7 +128,7 @@ export default function AgencyProfilePage() {
         const jobsQuery = query(
           collection(db, COLLECTIONS.JOBS),
           where('agencyId', '==', agencyId),
-          where('status', '==', 'open'),
+          where('isActive', '==', true),
           firestoreLimit(10)
         );
 
@@ -134,10 +140,8 @@ export default function AgencyProfilePage() {
 
         setActiveJobs(jobs);
 
-        // Update agency active jobs count
-        if (agency) {
-          setAgency({ ...agency, activeJobs: jobs.length });
-        }
+        // Update agency active jobs count using callback to ensure latest state
+        setAgency((prev) => prev ? { ...prev, activeJobs: jobs.length } : prev);
 
       } catch (err) {
         console.error('Error loading agency data:', err);
@@ -150,6 +154,40 @@ export default function AgencyProfilePage() {
 
     loadAgencyData();
   }, [params.id]);
+
+  // Fetch user's existing rating
+  useEffect(() => {
+    const loadUserRating = async () => {
+      if (user && params.id) {
+        const rating = await getUserRating(params.id as string, user.uid);
+        setUserRating(rating);
+      }
+    };
+
+    loadUserRating();
+  }, [user, params.id]);
+
+  const handleRatingSubmitted = async () => {
+    // Refresh agency data and user rating after rating is submitted
+    const agencyId = params.id as string;
+    const db = getDbInstance();
+    const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, agencyId));
+
+    if (agencyDoc.exists() && agency) {
+      const agencyData = agencyDoc.data();
+      setAgency({
+        ...agency,
+        rating: agencyData.rating || 0,
+        reviewCount: agencyData.reviewCount || 0,
+      });
+    }
+
+    // Refresh user's rating
+    if (user) {
+      const rating = await getUserRating(agencyId, user.uid);
+      setUserRating(rating);
+    }
+  };
 
   const handleMessage = () => {
     if (!user) {
@@ -188,44 +226,6 @@ export default function AgencyProfilePage() {
       </div>
     );
   }
-
-  const deploymentTimeline = [
-    {
-      id: '1',
-      title: 'Application Submitted',
-      date: '2024-01-15',
-      status: 'completed' as const,
-      details: 'Initial application received and reviewed',
-    },
-    {
-      id: '2',
-      title: 'Interview & Assessment',
-      date: '2024-01-20',
-      status: 'completed' as const,
-      details: 'Passed initial interview and skills assessment',
-    },
-    {
-      id: '3',
-      title: 'Medical Examination',
-      date: '2024-01-25',
-      status: 'completed' as const,
-      details: 'Medical clearance obtained',
-    },
-    {
-      id: '4',
-      title: 'Job Order Processing',
-      date: '2024-02-01',
-      status: 'in_progress' as const,
-      details: 'Documents being processed by employer',
-    },
-    {
-      id: '5',
-      title: 'Visa Application',
-      date: 'TBD',
-      status: 'pending' as const,
-      details: 'Awaiting job order approval',
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -286,24 +286,21 @@ export default function AgencyProfilePage() {
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 break-words">
                     {agency.name}
                   </h1>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          size={18}
-                          className={
-                            i < Math.floor(agency.rating)
-                              ? 'text-gold-500'
-                              : 'text-gray-300'
-                          }
-                          fill={i < Math.floor(agency.rating) ? '#FCD116' : 'none'}
-                        />
-                      ))}
+                  <div className="flex items-center gap-3 mb-3 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <StarRating rating={agency.rating} readonly size={18} />
                       <span className="text-xs sm:text-sm font-semibold text-gray-700 ml-2">
                         {agency.reviewCount > 0 ? `${agency.rating} (${agency.reviewCount} ${agency.reviewCount === 1 ? 'review' : 'reviews'})` : 'No reviews yet'}
                       </span>
                     </div>
+                    {user && userType === 'jobhunter' && (
+                      <button
+                        onClick={() => setIsRatingModalOpen(true)}
+                        className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 font-medium hover:underline"
+                      >
+                        {userRating ? `Your rating: ${userRating} ⭐` : '+ Rate this agency'}
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {agency.isDMWVerified && (
@@ -473,16 +470,31 @@ export default function AgencyProfilePage() {
 
           {/* Right Column - Timeline & Reviews */}
           <div className="space-y-6">
-            {/* Average Deployment Timeline */}
+            {/* Agency Location */}
             <div className="bg-white border border-gray-200 rounded-xl p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-info-600" />
-                Typical Process
+                <MapPin className="w-6 h-6 text-primary-600" />
+                Agency Location
               </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Average deployment timeline for this agency
-              </p>
-              <Timeline steps={deploymentTimeline} currentStep={3} />
+
+              <div className="space-y-4">
+                {/* Address */}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Office Address</p>
+                  <p className="text-gray-900">{agency.address}</p>
+                </div>
+
+                {/* Get Directions Button */}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(agency.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                >
+                  <Navigation className="w-5 h-5" />
+                  Get Directions
+                </a>
+              </div>
             </div>
 
             {/* Success Rate */}
@@ -498,6 +510,18 @@ export default function AgencyProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Rating Modal */}
+      {agency && (
+        <RateAgencyModal
+          isOpen={isRatingModalOpen}
+          onClose={() => setIsRatingModalOpen(false)}
+          agencyId={agency.id}
+          agencyName={agency.name}
+          existingRating={userRating || undefined}
+          onRatingSubmitted={handleRatingSubmitted}
+        />
+      )}
     </div>
   );
 }

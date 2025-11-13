@@ -135,7 +135,7 @@ export default function HeaderDesign1Enhanced({
 
     // Otherwise, default behavior: navigate to jobs page with search
     if (searchQuery.trim()) {
-      router.push(`/jobs?search=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/jobs?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchExpanded(false);
     }
   };

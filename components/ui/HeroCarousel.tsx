@@ -40,18 +40,23 @@ export default function HeroCarousel() {
     setCurrentSlide(index);
   };
 
+  // Helper to format number consistently (avoid locale-based hydration mismatch)
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
   const formatSalary = (job: Job): string => {
     if (!job.salaryMin && !job.salaryMax) return '';
 
     if (job.salaryMin && job.salaryMax) {
-      return `${job.currency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
+      return `${job.currency} ${formatNumber(job.salaryMin)} - ${formatNumber(job.salaryMax)}`;
     }
 
     if (job.salaryMin) {
-      return `${job.currency} ${job.salaryMin.toLocaleString()}+`;
+      return `${job.currency} ${formatNumber(job.salaryMin)}+`;
     }
 
-    return `${job.currency} ${job.salaryMax?.toLocaleString()}`;
+    return `${job.currency} ${formatNumber(job.salaryMax!)}`;
   };
 
   // Show loading skeleton

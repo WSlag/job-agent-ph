@@ -1,10 +1,11 @@
 'use client'
 
-import { Home, Briefcase, MessageCircle, BookOpen, User, Grid, Search } from 'lucide-react'
+import { Home, Briefcase, MessageCircle, BookOpen, User, Grid, Search, Bell } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOptionalAuth } from '@/contexts/AuthContext'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import MessageBadge from '@/components/common/MessageBadge'
 import Logo from '@/components/ui/Logo'
 import { useState, useEffect, FormEvent } from 'react'
@@ -15,6 +16,7 @@ export default function BottomNav() {
   const searchParams = useSearchParams()
   const { user, userType, loading } = useOptionalAuth()
   const { unreadCount } = useUnreadMessages()
+  const { unreadCount: notificationCount } = useUnreadNotifications()
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [isMounted, setIsMounted] = useState(false)
 
@@ -49,8 +51,8 @@ export default function BottomNav() {
   const jobHunterNavItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/jobs', icon: Briefcase, label: 'Jobs' },
-    { href: '/messages', icon: MessageCircle, label: 'Messages' },
-    { href: '/saved-jobs', icon: BookOpen, label: 'Saved' },
+    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
+    { href: '/notifications', icon: Bell, label: 'Alerts', badge: notificationCount },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
 
@@ -58,8 +60,8 @@ export default function BottomNav() {
     { href: '/', icon: Home, label: 'Home' },
     { href: '/agency/dashboard', icon: Grid, label: 'Dashboard' },
     { href: '/jobs/post', icon: Briefcase, label: 'Post Job' },
-    { href: '/messages', icon: MessageCircle, label: 'Messages' },
-    { href: '/profile', icon: User, label: 'Profile' },
+    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
+    { href: '/notifications', icon: Bell, label: 'Alerts', badge: notificationCount },
   ]
 
   const guestNavItems = [
@@ -92,7 +94,7 @@ export default function BottomNav() {
     if (searchQuery.trim()) {
       // For agency users, navigate to dashboard with search query
       if (userType === 'agency') {
-        router.push(`/agency/dashboard?search=${encodeURIComponent(searchQuery.trim())}`)
+        router.push(`/agency/dashboard?q=${encodeURIComponent(searchQuery.trim())}`)
       }
     }
   }
@@ -161,7 +163,7 @@ export default function BottomNav() {
                 active ? 'text-blue-600' : 'text-gray-500'
               }`}
               aria-current={active ? 'page' : undefined}
-              aria-label={`${item.label}${item.label === 'Messages' && unreadCount > 0 ? `, ${unreadCount} unread message${unreadCount > 1 ? 's' : ''}` : ''}`}
+              aria-label={`${item.label}${(item as any).badge && (item as any).badge > 0 ? `, ${(item as any).badge} unread` : ''}`}
             >
               {/* Active indicator line at top for mobile, bottom for desktop */}
               {active && (
@@ -177,9 +179,9 @@ export default function BottomNav() {
                   strokeWidth={active ? 2.5 : 2}
                   aria-hidden="true"
                 />
-                {/* Show unread badge for Messages link */}
-                {item.label === 'Messages' && unreadCount > 0 && (
-                  <MessageBadge count={unreadCount} size="sm" />
+                {/* Show unread badge if item has one */}
+                {(item as any).badge && (item as any).badge > 0 && (
+                  <MessageBadge count={(item as any).badge} size="sm" />
                 )}
               </div>
 

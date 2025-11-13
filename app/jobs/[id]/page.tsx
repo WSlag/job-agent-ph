@@ -15,16 +15,12 @@ import { trackJobView } from '@/lib/job-view-helpers';
 import type { JobMatch, JobHunter } from '@/types';
 import dynamic from 'next/dynamic';
 
-// OPTIMIZATION: Lazy load heavy modal and map components to reduce initial bundle size
+// OPTIMIZATION: Lazy load heavy modal components to reduce initial bundle size
 const ApplicationModal = dynamic(() => import('@/components/applications/ApplicationModal'), {
   ssr: false,
 });
 const QuickApplyModal = dynamic(() => import('@/components/jobs/QuickApplyModal'), {
   ssr: false,
-});
-const JobLocationMap = dynamic(() => import('@/components/jobs/JobLocationMap'), {
-  ssr: false,
-  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
 });
 
 import JobRequirementsList from '@/components/jobs/JobRequirementsList';
@@ -61,6 +57,7 @@ import {
   Twitter,
   MoreVertical,
   Instagram,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function JobDetailsPage() {
@@ -273,7 +270,7 @@ export default function JobDetailsPage() {
     }
 
     // Check if user has a resume in their profile
-    if (!userProfile?.resumeUrl) {
+    if (!userProfile?.resumeUrl || userProfile.resumeUrl.trim() === '') {
       toast.error('Please add a resume to your profile first or use the Apply Now button to upload one.');
       return;
     }
@@ -438,10 +435,6 @@ export default function JobDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-0 lg:pt-16 pb-24 lg:pb-8">
-      <div className="hidden lg:block">
-        
-      </div>
-
       {/* Mobile Compact Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
@@ -764,21 +757,41 @@ export default function JobDetailsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.35 }}
             >
-              <AgencyInfoCard agencyId={job.agencyId} jobId={params.id as string} onMessageClick={handleMessageAgency} />
+              <AgencyInfoCard agencyId={job.agencyId} jobId={params.id as string} />
             </motion.div>
 
-            {/* Location Map Section */}
+            {/* Location Section */}
             {job.location && job.country && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
+                className="bg-white rounded-xl shadow-md p-6"
               >
-                <JobLocationMap
-                  location={job.location}
-                  country={job.country}
-                  coordinates={job.coordinates}
-                />
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="text-red-500" size={24} />
+                  <h2 className="text-xl font-bold">Job Location</h2>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="text-gray-400 mt-1 flex-shrink-0" size={20} />
+                    <div>
+                      <p className="font-semibold text-gray-900">{job.location}</p>
+                      <p className="text-gray-600">{job.country}</p>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.location}, ${job.country}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors font-medium mt-4"
+                  >
+                    <ExternalLink size={18} />
+                    Get Directions on Google Maps
+                  </a>
+                </div>
               </motion.div>
             )}
 
@@ -930,6 +943,7 @@ export default function JobDetailsPage() {
               <button
                 onClick={() => setShowShareModal(false)}
                 className="text-gray-400 hover:text-gray-600"
+                aria-label="Close share modal"
               >
                 <Share2 size={24} />
               </button>
@@ -1049,10 +1063,10 @@ export default function JobDetailsPage() {
           isOpen={showQuickApplyModal}
           onClose={() => setShowQuickApplyModal(false)}
           job={job}
-          profileCompletionPercentage={('profileCompleteness' in userProfile ? (userProfile as any).profileCompleteness : 0) || 0}
-          hasResume={'resumeUrl' in userProfile && !!userProfile.resumeUrl}
-          hasCertificates={'certificates' in userProfile && !!(userProfile as any).certificates && (userProfile as any).certificates.length > 0}
-          hasValidId={'idDocumentUrl' in userProfile && !!(userProfile as any).idDocumentUrl}
+          profileCompletionPercentage={userProfile.profileCompleteness || 0}
+          hasResume={!!userProfile.resumeUrl}
+          hasCertificates={!!userProfile.certificates && userProfile.certificates.length > 0}
+          hasValidId={!!userProfile.idDocumentUrl}
           onSubmit={handleQuickApplySubmit}
         />
       )}

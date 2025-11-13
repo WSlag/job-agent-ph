@@ -35,6 +35,11 @@ export default function CostCalculatorModal({
   const [selectedOptionals, setSelectedOptionals] = useState<string[]>([]);
   const [totalCost, setTotalCost] = useState(0);
 
+  // Helper to format number consistently (avoid locale-based hydration mismatch)
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
   // Cost breakdown by category
   const costBreakdown: CostBreakdown[] = [
     {
@@ -163,7 +168,7 @@ export default function CostCalculatorModal({
                     Estimated Total Cost
                   </p>
                   <p className="text-4xl font-bold text-gray-900">
-                    ₱{totalCost.toLocaleString()}
+                    ₱{formatNumber(totalCost)}
                   </p>
                 </div>
                 <div className="text-right">
@@ -250,7 +255,7 @@ export default function CostCalculatorModal({
                           </div>
                         </div>
                         <span className="font-bold text-gray-900">
-                          ₱{item.cost.toLocaleString()}
+                          ₱{formatNumber(item.cost)}
                         </span>
                       </div>
                     ))}
@@ -261,14 +266,15 @@ export default function CostCalculatorModal({
                     </span>
                     <span className="text-lg font-bold text-gray-900">
                       ₱
-                      {category.items
-                        .filter(
-                          (item) =>
-                            !item.isOptional ||
-                            selectedOptionals.includes(item.name)
-                        )
-                        .reduce((sum, item) => sum + item.cost, 0)
-                        .toLocaleString()}
+                      {formatNumber(
+                        category.items
+                          .filter(
+                            (item) =>
+                              !item.isOptional ||
+                              selectedOptionals.includes(item.name)
+                          )
+                          .reduce((sum, item) => sum + item.cost, 0)
+                      )}
                     </span>
                   </div>
                 </div>
@@ -329,7 +335,7 @@ export default function CostCalculatorModal({
             <div>
               <p className="text-sm text-gray-600">Total Estimated Cost</p>
               <p className="text-2xl font-bold text-gray-900">
-                ₱{totalCost.toLocaleString()}
+                ₱{formatNumber(totalCost)}
               </p>
             </div>
             <div className="flex items-center gap-3">

@@ -4,8 +4,10 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminSidebar from './AdminSidebar';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bell } from 'lucide-react';
 import { Admin } from '@/types';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
+import Link from 'next/link';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,6 +16,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, userProfile, userType, loading } = useAuth();
   const router = useRouter();
+  const { unreadCount: notificationCount } = useUnreadNotifications();
 
   useEffect(() => {
     if (!loading) {
@@ -57,6 +60,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
             {/* Admin Info */}
             <div className="flex items-center gap-3">
+              {/* Notifications */}
+              <Link href="/admin/notifications">
+                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                  <Bell className="w-5 h-5" />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
+              </Link>
+
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-gray-900">
                   {adminProfile?.firstName} {adminProfile?.lastName}

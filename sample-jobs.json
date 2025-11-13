@@ -51,7 +51,7 @@
       "currency": "PHP",
       "experienceRequired": 3,
       "skills": ["Figma", "Adobe XD", "User Research", "Prototyping", "Design Systems"],
-      "category": "Design",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -69,7 +69,7 @@
       "currency": "PHP",
       "experienceRequired": 4,
       "skills": ["Python", "Machine Learning", "SQL", "TensorFlow", "Data Visualization"],
-      "category": "Data Science",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -87,7 +87,7 @@
       "currency": "PHP",
       "experienceRequired": 3,
       "skills": ["Swift", "SwiftUI", "iOS SDK", "REST APIs", "Git"],
-      "category": "Mobile Development",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -105,7 +105,7 @@
       "currency": "PHP",
       "experienceRequired": 2,
       "skills": ["Customer Relations", "Communication", "CRM", "Problem Solving", "SaaS"],
-      "category": "Customer Success",
+      "category": "Marketing",
       "isActive": true
     },
     {
@@ -123,7 +123,7 @@
       "currency": "PHP",
       "experienceRequired": 4,
       "skills": ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD"],
-      "category": "DevOps",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -141,7 +141,7 @@
       "currency": "PHP",
       "experienceRequired": 1,
       "skills": ["Copywriting", "SEO", "Research", "WordPress", "Social Media"],
-      "category": "Content",
+      "category": "Marketing",
       "isActive": true
     },
     {
@@ -159,7 +159,7 @@
       "currency": "PHP",
       "experienceRequired": 3,
       "skills": ["Requirements Analysis", "SQL", "JIRA", "Agile", "Documentation"],
-      "category": "Business Analysis",
+      "category": "Marketing",
       "isActive": true
     },
     {
@@ -177,7 +177,7 @@
       "currency": "PHP",
       "experienceRequired": 2,
       "skills": ["Recruitment", "Interviewing", "LinkedIn", "HR Software", "Communication"],
-      "category": "Human Resources",
+      "category": "Education",
       "isActive": true
     },
     {
@@ -195,7 +195,7 @@
       "currency": "PHP",
       "experienceRequired": 3,
       "skills": ["Node.js", "Express", "MongoDB", "REST APIs", "Microservices"],
-      "category": "Backend Development",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -213,7 +213,7 @@
       "currency": "PHP",
       "experienceRequired": 5,
       "skills": ["Product Strategy", "Agile", "User Research", "Analytics", "Roadmapping"],
-      "category": "Product Management",
+      "category": "Marketing",
       "isActive": true
     },
     {
@@ -231,7 +231,7 @@
       "currency": "PHP",
       "experienceRequired": 2,
       "skills": ["Adobe Photoshop", "Illustrator", "InDesign", "Branding", "Typography"],
-      "category": "Design",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -249,7 +249,7 @@
       "currency": "PHP",
       "experienceRequired": 3,
       "skills": ["Selenium", "Jest", "Cypress", "JavaScript", "Test Automation"],
-      "category": "Quality Assurance",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -267,7 +267,7 @@
       "currency": "PHP",
       "experienceRequired": 2,
       "skills": ["Sales", "Negotiation", "CRM", "Lead Generation", "Presentation"],
-      "category": "Sales",
+      "category": "Marketing",
       "isActive": true
     },
     {
@@ -285,7 +285,7 @@
       "currency": "PHP",
       "experienceRequired": 4,
       "skills": ["Network Security", "Penetration Testing", "SIEM", "Firewall", "Compliance"],
-      "category": "Security",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -303,7 +303,7 @@
       "currency": "PHP",
       "experienceRequired": 2,
       "skills": ["Adobe Premiere Pro", "After Effects", "Color Grading", "Motion Graphics", "Storytelling"],
-      "category": "Media",
+      "category": "Marketing",
       "isActive": true
     },
     {
@@ -339,7 +339,7 @@
       "currency": "PHP",
       "experienceRequired": 6,
       "skills": ["AWS", "Azure", "GCP", "Cloud Architecture", "Terraform"],
-      "category": "Cloud Engineering",
+      "category": "IT & Software",
       "isActive": true
     },
     {
@@ -357,7 +357,7 @@
       "currency": "PHP",
       "experienceRequired": 1,
       "skills": ["Project Management", "MS Office", "Communication", "Organization", "Time Management"],
-      "category": "Project Management",
+      "category": "Engineering",
       "isActive": true
     }
   ]

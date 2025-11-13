@@ -38,7 +38,7 @@ export default function AgencyDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const searchQuery = searchParams.get('search') || ''
+  const searchQuery = searchParams.get('q') || ''
   const [jobs, setJobs] = useState<Job[]>([])
   const [applications, setApplications] = useState<JobApplication[]>([])
   const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
@@ -116,7 +116,7 @@ export default function AgencyDashboardPage() {
 
   const handleSearch = (query: string) => {
     const params = new URLSearchParams();
-    params.set('search', query);
+    params.set('q', query);
     router.push(`/agency/dashboard?${params.toString()}`);
   };
 

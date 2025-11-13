@@ -54,9 +54,12 @@ function LoginForm() {
       hasRedirected.current = true;
       setIsRedirecting(true);
 
-      // Use replace instead of push to prevent back button issues
-      // The signIn function now ensures session cookie is set before this executes
-      router.replace(finalRedirect);
+      // Use window.location.href for full page reload to ensure session cookie is sent with request
+      // The signIn function verifies the cookie is set before this executes
+      // This prevents middleware race condition where cookie might not be available yet
+      setTimeout(() => {
+        window.location.href = finalRedirect;
+      }, 100);
     }
   }, [user, userType, authLoading, router, searchParams]);
 

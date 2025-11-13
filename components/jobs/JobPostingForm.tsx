@@ -11,12 +11,15 @@ import FieldHint from './FieldHint'
 import FormSectionHeader from './FormSectionHeader'
 import HelpTooltip from '@/components/onboarding/HelpTooltip'
 import { JOB_FORM_HINTS, JOB_FORM_TOOLTIPS, CHARACTER_LIMITS, VALIDATION_MESSAGES } from '@/lib/job-form-hints'
+import { getCategoryNames } from '@/lib/categories'
+import CountryCombobox from '@/components/ui/CountryCombobox'
 
 interface FormData {
   title: string
   description: string
   tagline: string
   companyName: string
+  category: string
   location: string
   country: string
   locationType: JobLocation
@@ -30,24 +33,6 @@ interface FormData {
   imageFile: File | null
 }
 
-const COUNTRIES = [
-  'Philippines',
-  'Singapore',
-  'Malaysia',
-  'Thailand',
-  'Vietnam',
-  'Indonesia',
-  'Japan',
-  'South Korea',
-  'Hong Kong',
-  'Taiwan',
-  'United Arab Emirates',
-  'Saudi Arabia',
-  'Qatar',
-  'Kuwait',
-  'Other'
-]
-
 const CURRENCIES = [
   { code: 'PHP', name: 'Philippine Peso' },
   { code: 'USD', name: 'US Dollar' },
@@ -58,6 +43,21 @@ const CURRENCIES = [
   { code: 'SAR', name: 'Saudi Riyal' },
   { code: 'JPY', name: 'Japanese Yen' },
   { code: 'KRW', name: 'South Korean Won' },
+  { code: 'CAD', name: 'Canadian Dollar' },
+  { code: 'AUD', name: 'Australian Dollar' },
+  { code: 'GBP', name: 'British Pound' },
+  { code: 'EUR', name: 'Euro' },
+  { code: 'CNY', name: 'Chinese Yuan' },
+  { code: 'HKD', name: 'Hong Kong Dollar' },
+  { code: 'TWD', name: 'Taiwan Dollar' },
+  { code: 'KWD', name: 'Kuwaiti Dinar' },
+  { code: 'QAR', name: 'Qatari Riyal' },
+  { code: 'BHD', name: 'Bahraini Dinar' },
+  { code: 'OMR', name: 'Omani Rial' },
+  { code: 'NZD', name: 'New Zealand Dollar' },
+  { code: 'ILS', name: 'Israeli Shekel' },
+  { code: 'VND', name: 'Vietnamese Dong' },
+  { code: 'IDR', name: 'Indonesian Rupiah' },
 ]
 
 export default function JobPostingForm() {
@@ -73,6 +73,7 @@ export default function JobPostingForm() {
     description: '',
     tagline: '',
     companyName: (userProfile && 'companyName' in userProfile) ? userProfile.companyName : '',
+    category: '',
     location: '',
     country: 'Philippines',
     locationType: 'on-site',
@@ -172,6 +173,9 @@ export default function JobPostingForm() {
       if (!formData.location.trim()) {
         throw new Error('Location is required')
       }
+      if (!formData.category) {
+        throw new Error('Category is required')
+      }
 
       // Parse skills
       const skillsArray = formData.skills
@@ -207,6 +211,7 @@ export default function JobPostingForm() {
         description: formData.description,
         tagline: formData.tagline.trim() || undefined,
         companyName: formData.companyName,
+        category: formData.category,
         location: formData.location,
         country: formData.country,
         locationType: formData.locationType,
@@ -325,6 +330,29 @@ export default function JobPostingForm() {
         </p>
       </div>
 
+      {/* Category */}
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+          Job Category <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="category"
+          name="category"
+          required
+          value={formData.category}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">Select a category</option>
+          {getCategoryNames().map((categoryName) => (
+            <option key={categoryName} value={categoryName}>
+              {categoryName}
+            </option>
+          ))}
+        </select>
+        <FieldHint>Choose the category that best matches this position. This helps candidates find your job.</FieldHint>
+      </div>
+
       {/* Job Description */}
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -390,20 +418,11 @@ export default function JobPostingForm() {
           <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
             Country <span className="text-red-500">*</span>
           </label>
-          <select
-            id="country"
-            name="country"
-            required
+          <CountryCombobox
             value={formData.country}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {COUNTRIES.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setFormData({ ...formData, country: value ?? '' })}
+            required
+          />
           <FieldHint>{JOB_FORM_HINTS.country}</FieldHint>
         </div>
       </div>

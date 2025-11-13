@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search, Bell, Menu, X } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useState } from 'react';
@@ -16,7 +17,18 @@ import { useState } from 'react';
  */
 
 export default function HeaderDesign1() {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/jobs?q=${encodeURIComponent(searchQuery)}`);
+    } else {
+      router.push('/jobs');
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -31,14 +43,16 @@ export default function HeaderDesign1() {
 
             {/* Center Search Bar - Desktop */}
             <div className="hidden md:flex flex-1 max-w-xl mx-8">
-              <div className="relative w-full">
+              <form onSubmit={handleSearch} className="relative w-full">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search jobs, companies..."
                   className="w-full pl-12 pr-4 py-2.5 bg-white/60 backdrop-blur-md border border-white/40 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm placeholder-gray-500 shadow-sm"
                 />
-              </div>
+              </form>
             </div>
 
             {/* Right Actions */}
@@ -78,14 +92,16 @@ export default function HeaderDesign1() {
 
           {/* Mobile Search Bar */}
           <div className="md:hidden pb-3">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search jobs..."
                 className="w-full pl-11 pr-4 py-2 bg-white/60 backdrop-blur-md border border-white/40 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-sm placeholder-gray-500"
               />
-            </div>
+            </form>
           </div>
         </div>
       </nav>

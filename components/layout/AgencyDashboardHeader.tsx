@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
 
 interface Breadcrumb {
   label: string;
@@ -29,6 +30,7 @@ export default function AgencyDashboardHeader({
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const { unreadCount: notificationCount } = useUnreadNotifications();
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -84,11 +86,14 @@ export default function AgencyDashboardHeader({
               )}
 
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell className="w-5 h-5" />
-                {/* Badge for unread notifications */}
-                {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" /> */}
-              </button>
+              <Link href="/notifications">
+                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                  <Bell className="w-5 h-5" />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
+              </Link>
 
               {/* User Profile Dropdown */}
               <div className="relative">

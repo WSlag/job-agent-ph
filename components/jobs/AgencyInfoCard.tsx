@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, Star, Clock, Users, CheckCircle, MessageCircle, Loader2 } from 'lucide-react';
+import { Building2, Star, Clock, Users, CheckCircle, Loader2 } from 'lucide-react';
 import { getAgencyWithStats } from '@/lib/agency-helpers';
 import type { Agency, AgencyStatsData } from '@/types';
 import Image from 'next/image';
@@ -10,20 +10,15 @@ import Image from 'next/image';
 interface AgencyInfoCardProps {
   agencyId: string;
   jobId?: string;
-  onMessageClick?: () => void;
 }
 
-export default function AgencyInfoCard({ agencyId, jobId, onMessageClick }: AgencyInfoCardProps) {
+export default function AgencyInfoCard({ agencyId, jobId }: AgencyInfoCardProps) {
   const router = useRouter();
   const [agency, setAgency] = useState<Agency | null>(null);
   const [stats, setStats] = useState<AgencyStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAgencyData();
-  }, [agencyId]);
-
-  const loadAgencyData = async () => {
+  const loadAgencyData = useCallback(async () => {
     try {
       const data = await getAgencyWithStats(agencyId);
       setAgency(data.agency);
@@ -33,7 +28,11 @@ export default function AgencyInfoCard({ agencyId, jobId, onMessageClick }: Agen
     } finally {
       setLoading(false);
     }
-  };
+  }, [agencyId]);
+
+  useEffect(() => {
+    loadAgencyData();
+  }, [loadAgencyData]);
 
   if (loading) {
     return (
@@ -98,17 +97,16 @@ export default function AgencyInfoCard({ agencyId, jobId, onMessageClick }: Agen
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 pt-4 border-t">
           <div className="text-center p-3 bg-yellow-50 rounded-lg">
-            <div className="flex items-center justify-center gap-1 mb-1">
+            <div className="flex items-center justify-center gap-1">
               <Star className="text-yellow-500 fill-yellow-500" size={18} />
-              <span className="font-bold text-gray-900">{stats?.rating.toFixed(1)}</span>
+              <span className="font-bold text-gray-900">{stats?.rating?.toFixed(1) ?? 'N/A'}</span>
             </div>
-            <p className="text-xs text-gray-600">{stats?.reviewCount} reviews</p>
           </div>
 
           <div className="text-center p-3 bg-blue-50 rounded-lg">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Clock className="text-blue-600" size={18} />
-              <span className="font-bold text-gray-900">{stats?.responseTime}</span>
+              <span className="font-bold text-gray-900">{stats?.responseTime ?? 'N/A'}</span>
             </div>
             <p className="text-xs text-gray-600">Response time</p>
           </div>
@@ -116,7 +114,7 @@ export default function AgencyInfoCard({ agencyId, jobId, onMessageClick }: Agen
           <div className="col-span-2 text-center p-3 bg-purple-50 rounded-lg">
             <div className="flex items-center justify-center gap-1 mb-1">
               <Users className="text-purple-600" size={18} />
-              <span className="font-bold text-gray-900">{stats?.totalPlacements}</span>
+              <span className="font-bold text-gray-900">{stats?.totalPlacements ?? 'N/A'}</span>
             </div>
             <p className="text-xs text-gray-600">Successful placements</p>
           </div>

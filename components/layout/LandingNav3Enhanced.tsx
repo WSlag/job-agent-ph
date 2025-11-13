@@ -203,16 +203,26 @@ export default function LandingNav3Enhanced() {
           {showSearchBar ? (
             /* Search Bar on Scroll */
             <div className="py-3 animate-fadeIn">
-              <Link href="/search" className="block">
-                <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all shadow-sm hover:shadow-md max-w-2xl mx-auto">
+              <form onSubmit={handleSearch} className="block">
+                <div className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all shadow-sm hover:shadow-md max-w-2xl mx-auto cursor-pointer">
                   <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-400 text-sm flex-1">Job title, skills</span>
+                  <input
+                    type="text"
+                    placeholder="Job title, skills"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="text-gray-700 text-sm flex-1 bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-400"
+                  />
                 </div>
-              </Link>
+              </form>
             </div>
           ) : (
             /* Category Pills */
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 snap-x snap-mandatory animate-fadeIn">
+            <nav
+              className="flex gap-2 overflow-x-auto scrollbar-hide py-3 snap-x snap-mandatory animate-fadeIn"
+              role="navigation"
+              aria-label="Job filter quick links"
+            >
               <Link
                 href="/jobs?location=remote"
                 className={getPillClasses(
@@ -220,8 +230,10 @@ export default function LandingNav3Enhanced() {
                   'bg-gradient-to-r from-blue-500 to-blue-600 text-white border border-blue-300',
                   'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 text-gray-700 hover:text-blue-700 border border-gray-200 hover:border-blue-300'
                 )}
+                aria-label="Filter by remote jobs"
+                aria-current={activeLocation === 'remote' ? 'page' : undefined}
               >
-                <span className="text-base leading-none">🌏</span>
+                <span className="text-base leading-none" aria-hidden="true">🌏</span>
                 <span className="leading-none">Remote</span>
               </Link>
               <Link
@@ -231,8 +243,10 @@ export default function LandingNav3Enhanced() {
                   'bg-gradient-to-r from-purple-500 to-purple-600 text-white border border-purple-300',
                   'bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300'
                 )}
+                aria-label="Filter by full-time jobs"
+                aria-current={activeType === 'full-time' ? 'page' : undefined}
               >
-                <span className="text-base leading-none">💼</span>
+                <span className="text-base leading-none" aria-hidden="true">💼</span>
                 <span className="leading-none">Full</span>
               </Link>
               <Link
@@ -242,8 +256,10 @@ export default function LandingNav3Enhanced() {
                   'bg-gradient-to-r from-orange-500 to-orange-600 text-white border border-orange-300',
                   'bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-orange-300'
                 )}
+                aria-label="Filter by jobs in Dubai"
+                aria-current={activeLocation === 'dubai' ? 'page' : undefined}
               >
-                <span className="text-base leading-none">🇦🇪</span>
+                <span className="text-base leading-none" aria-hidden="true">🇦🇪</span>
                 <span className="leading-none">Dubai</span>
               </Link>
               <Link
@@ -253,8 +269,10 @@ export default function LandingNav3Enhanced() {
                   'bg-gradient-to-r from-red-500 to-red-600 text-white border border-red-300',
                   'bg-white hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 text-gray-700 hover:text-red-700 border border-gray-200 hover:border-red-300'
                 )}
+                aria-label="Filter by jobs in Singapore"
+                aria-current={activeLocation === 'singapore' ? 'page' : undefined}
               >
-                <span className="text-base leading-none">🇸🇬</span>
+                <span className="text-base leading-none" aria-hidden="true">🇸🇬</span>
                 <span className="leading-none">Singapore</span>
               </Link>
               <Link
@@ -264,8 +282,10 @@ export default function LandingNav3Enhanced() {
                   'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border border-yellow-300',
                   'bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-yellow-300'
                 )}
+                aria-label="Filter by featured jobs"
+                aria-current={activeFeatured === 'true' ? 'page' : undefined}
               >
-                <span className="text-base leading-none">✨</span>
+                <span className="text-base leading-none" aria-hidden="true">✨</span>
                 <span className="leading-none">Featured</span>
               </Link>
               <Link
@@ -275,11 +295,13 @@ export default function LandingNav3Enhanced() {
                   'bg-gradient-to-r from-green-500 to-green-600 text-white border border-green-300',
                   'bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300'
                 )}
+                aria-label="Filter by high salary jobs"
+                aria-current={activeSalary === 'high' ? 'page' : undefined}
               >
-                <span className="text-base leading-none">💰</span>
+                <span className="text-base leading-none" aria-hidden="true">💰</span>
                 <span className="leading-none">High Salary</span>
               </Link>
-            </div>
+            </nav>
           )}
         </div>
       </div>

@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
 
 interface UserDashboardHeaderProps {
   showNotifications?: boolean;
@@ -19,6 +20,7 @@ export default function UserDashboardHeader({
   const router = useRouter();
   const pathname = usePathname();
   const { unreadCount } = useUnreadMessages();
+  const { unreadCount: notificationCount } = useUnreadNotifications();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   // Only show for job hunter users
@@ -81,11 +83,14 @@ export default function UserDashboardHeader({
             <div className="flex items-center gap-3">
               {/* Notifications */}
               {showNotifications && (
-                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Bell className="w-5 h-5" />
-                  {/* Badge for unread notifications */}
-                  {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" /> */}
-                </button>
+                <Link href="/notifications">
+                  <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                    <Bell className="w-5 h-5" />
+                    {notificationCount > 0 && (
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    )}
+                  </button>
+                </Link>
               )}
 
               {/* User Profile Dropdown */}
@@ -159,9 +164,14 @@ export default function UserDashboardHeader({
           <div className="flex items-center gap-2">
             {/* Notifications */}
             {showNotifications && (
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell className="w-5 h-5" />
-              </button>
+              <Link href="/notifications">
+                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                  <Bell className="w-5 h-5" />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
+              </Link>
             )}
 
             {/* User Avatar */}

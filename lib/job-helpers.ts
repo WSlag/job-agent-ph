@@ -2,6 +2,7 @@ import { getStorageInstance } from './firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { createDocument } from './firestore-helpers'
 import type { Job, JobType, JobLocation } from '@/types'
+import { isValidCategory } from './categories'
 
 interface CreateJobParams {
   agencyId: string
@@ -9,6 +10,7 @@ interface CreateJobParams {
   description: string
   tagline?: string
   companyName: string
+  category: string
   location: string
   country: string
   locationType: JobLocation
@@ -34,6 +36,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     description,
     tagline,
     companyName,
+    category,
     location,
     country,
     locationType,
@@ -46,6 +49,11 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     imageFile,
     expiresAt,
   } = params
+
+  // Validate category
+  if (!isValidCategory(category)) {
+    throw new Error(`Invalid category: ${category}`)
+  }
 
   // Upload image if provided
   let imageUrl: string | undefined
@@ -73,6 +81,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     title: title.trim(),
     description: description.trim(),
     companyName: companyName.trim(),
+    category,
     location: location.trim(),
     country,
     locationType,
@@ -113,8 +122,21 @@ export async function updateJob(
 ): Promise<void> {
   const { updateDocument } = await import('./firestore-helpers')
 
+  // Validate category if it's being updated
+  if (updates.category !== undefined && !isValidCategory(updates.category)) {
+    throw new Error(`Invalid category: ${updates.category}`)
+  }
+
+  // Filter out undefined values - Firebase doesn't accept them
+  const cleanedUpdates: Record<string, any> = {}
+  for (const [key, value] of Object.entries(updates)) {
+    if (value !== undefined) {
+      cleanedUpdates[key] = value
+    }
+  }
+
   const updateData = {
-    ...updates,
+    ...cleanedUpdates,
     updatedAt: new Date(),
   }
 

@@ -18,6 +18,7 @@ import { Job } from '@/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOptionalAuth } from '@/contexts/AuthContext';
 import { getJobApplicationCount } from '@/lib/application-helpers';
+import { getCategoryByName } from '@/lib/categories';
 import { motion } from 'framer-motion';
 import { fadeInUp } from '@/lib/animations';
 
@@ -59,18 +60,25 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false, appli
     }
   };
 
-  // OPTIMIZATION: Memoize time calculation
-  const timeAgo = useMemo(() => {
+  // Calculate time after hydration to avoid mismatch
+  const [timeAgo, setTimeAgo] = useState<string>('');
+
+  useEffect(() => {
     const now = new Date();
     const diffMs = now.getTime() - job.postedAt.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 60) return `${diffMins}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}d`;
-    return `${Math.floor(diffDays / 7)}w`;
+    if (diffMins < 60) {
+      setTimeAgo(`${diffMins}m`);
+    } else if (diffHours < 24) {
+      setTimeAgo(`${diffHours}h`);
+    } else if (diffDays < 7) {
+      setTimeAgo(`${diffDays}d`);
+    } else {
+      setTimeAgo(`${Math.floor(diffDays / 7)}w`);
+    }
   }, [job.postedAt]);
 
   // OPTIMIZATION: Memoize salary formatting
@@ -160,7 +168,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false, appli
         <div className="absolute top-3 right-3">
           <span className="bg-white/95 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-sm flex items-center gap-1">
             <Clock size={12} className="hidden sm:inline" />
-            {timeAgo} ago
+            {timeAgo ? `${timeAgo} ago` : 'Recently'}
           </span>
         </div>
       </div>
@@ -179,7 +187,7 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false, appli
           )}
           {job.category && (
             <span className="hidden md:inline-flex bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-normal">
-              {job.category}
+              {getCategoryByName(job.category)?.icon || '📂'} {job.category}
             </span>
           )}
         </div>

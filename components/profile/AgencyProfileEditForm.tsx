@@ -19,6 +19,7 @@ interface FormData {
   contactPerson: string
   phone: string
   address: string
+  responseTime: string
   logoFile: File | null
 }
 
@@ -34,11 +35,12 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
     contactPerson: agency.contactPerson || '',
     phone: agency.phone || '',
     address: agency.address || '',
+    responseTime: agency.responseTime || '',
     logoFile: null,
   })
 
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -115,6 +117,7 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         contactPerson: formData.contactPerson,
         phone: formData.phone,
         address: formData.address,
+        responseTime: formData.responseTime || undefined,
         logoUrl,
       })
 
@@ -265,6 +268,33 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           required
         />
+      </div>
+
+      {/* Response Time */}
+      <div>
+        <label htmlFor="responseTime" className="block text-sm font-medium text-gray-700 mb-2">
+          Expected Response Time (Optional)
+        </label>
+        <select
+          id="responseTime"
+          name="responseTime"
+          value={formData.responseTime}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Select response time</option>
+          <option value="Within 1 hour">Within 1 hour</option>
+          <option value="1-2 hours">1-2 hours</option>
+          <option value="2-4 hours">2-4 hours</option>
+          <option value="4-8 hours">4-8 hours</option>
+          <option value="Within 1 day">Within 1 day</option>
+          <option value="1-2 days">1-2 days</option>
+          <option value="2-3 days">2-3 days</option>
+          <option value="3-5 days">3-5 days</option>
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          Set your typical response time to help job hunters know when to expect a reply
+        </p>
       </div>
 
       {/* Email (Read-only) */}

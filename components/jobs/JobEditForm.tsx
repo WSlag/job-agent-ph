@@ -7,6 +7,8 @@ import { uploadFile } from '@/lib/storage-helpers'
 import Button from '@/components/ui/Button'
 import { Upload, X } from 'lucide-react'
 import type { Job, JobType, JobLocation } from '@/types'
+import { getCategoryNames } from '@/lib/categories'
+import CountryCombobox from '@/components/ui/CountryCombobox'
 
 interface JobEditFormProps {
   job: Job
@@ -16,6 +18,7 @@ interface FormData {
   title: string
   description: string
   companyName: string
+  category: string
   location: string
   country: string
   locationType: JobLocation
@@ -29,24 +32,6 @@ interface FormData {
   imageFile: File | null
 }
 
-const COUNTRIES = [
-  'Philippines',
-  'Singapore',
-  'Malaysia',
-  'Thailand',
-  'Vietnam',
-  'Indonesia',
-  'Japan',
-  'South Korea',
-  'Hong Kong',
-  'Taiwan',
-  'United Arab Emirates',
-  'Saudi Arabia',
-  'Qatar',
-  'Kuwait',
-  'Other'
-]
-
 const CURRENCIES = [
   { code: 'PHP', name: 'Philippine Peso' },
   { code: 'USD', name: 'US Dollar' },
@@ -57,6 +42,21 @@ const CURRENCIES = [
   { code: 'SAR', name: 'Saudi Riyal' },
   { code: 'JPY', name: 'Japanese Yen' },
   { code: 'KRW', name: 'South Korean Won' },
+  { code: 'CAD', name: 'Canadian Dollar' },
+  { code: 'AUD', name: 'Australian Dollar' },
+  { code: 'GBP', name: 'British Pound' },
+  { code: 'EUR', name: 'Euro' },
+  { code: 'CNY', name: 'Chinese Yuan' },
+  { code: 'HKD', name: 'Hong Kong Dollar' },
+  { code: 'TWD', name: 'Taiwan Dollar' },
+  { code: 'KWD', name: 'Kuwaiti Dinar' },
+  { code: 'QAR', name: 'Qatari Riyal' },
+  { code: 'BHD', name: 'Bahraini Dinar' },
+  { code: 'OMR', name: 'Omani Rial' },
+  { code: 'NZD', name: 'New Zealand Dollar' },
+  { code: 'ILS', name: 'Israeli Shekel' },
+  { code: 'VND', name: 'Vietnamese Dong' },
+  { code: 'IDR', name: 'Indonesian Rupiah' },
 ]
 
 export default function JobEditForm({ job }: JobEditFormProps) {
@@ -69,6 +69,7 @@ export default function JobEditForm({ job }: JobEditFormProps) {
     title: job.title,
     description: job.description,
     companyName: job.companyName,
+    category: job.category || '',
     location: job.location,
     country: job.country,
     locationType: job.locationType,
@@ -148,6 +149,9 @@ export default function JobEditForm({ job }: JobEditFormProps) {
       if (!formData.location.trim()) {
         throw new Error('Location is required')
       }
+      if (!formData.category) {
+        throw new Error('Category is required')
+      }
 
       // Parse skills
       const skillsArray = formData.skills
@@ -174,6 +178,7 @@ export default function JobEditForm({ job }: JobEditFormProps) {
         title: formData.title,
         description: formData.description,
         companyName: formData.companyName,
+        category: formData.category,
         location: formData.location,
         country: formData.country,
         locationType: formData.locationType,
@@ -251,6 +256,28 @@ export default function JobEditForm({ job }: JobEditFormProps) {
         />
       </div>
 
+      {/* Category */}
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+          Job Category *
+        </label>
+        <select
+          id="category"
+          name="category"
+          required
+          value={formData.category}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Select a category</option>
+          {getCategoryNames().map((categoryName) => (
+            <option key={categoryName} value={categoryName}>
+              {categoryName}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Location & Country */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -272,20 +299,11 @@ export default function JobEditForm({ job }: JobEditFormProps) {
           <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
             Country *
           </label>
-          <select
-            id="country"
-            name="country"
+          <CountryCombobox
             value={formData.country}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={(value) => setFormData((prev) => ({ ...prev, country: value ?? '' }))}
             required
-          >
-            {COUNTRIES.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
+          />
         </div>
       </div>
 

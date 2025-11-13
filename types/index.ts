@@ -18,6 +18,9 @@ export interface JobHunter extends User {
   experience: number; // years
   resumeUrl?: string;
   profileImageUrl?: string;
+  profileCompleteness?: number;
+  certificates?: string[];
+  idDocumentUrl?: string;
 }
 
 export interface Agency extends User {
@@ -28,6 +31,7 @@ export interface Agency extends User {
   address: string;
   logoUrl?: string;
   verified: boolean;
+  responseTime?: string; // Expected response time (e.g., "2 hours", "1 day")
 }
 
 export interface Admin extends User {
@@ -48,6 +52,7 @@ export interface Job {
   description: string;
   tagline?: string; // Short summary for job cards (max 100 chars)
   companyName: string;
+  category: string; // Job category (required)
   location: string;
   country: string;
   locationType: JobLocation;
@@ -58,7 +63,6 @@ export interface Job {
   experienceRequired: number; // years
   skills: string[];
   imageUrl?: string;
-  category?: string;
   postedAt: Date;
   expiresAt?: Date;
   isActive: boolean;
