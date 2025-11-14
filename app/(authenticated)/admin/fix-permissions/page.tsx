@@ -61,7 +61,7 @@ export default function FixPermissionsPage() {
               </p>
               <p className="text-sm">
                 <span className="font-medium">Current Role:</span>{' '}
-                <span className={admin?.role === 'super-admin' ? 'text-red-600 font-bold' : 'text-green-600'}>
+                <span className={admin?.role === 'super_admin' ? 'text-red-600 font-bold' : 'text-green-600'}>
                   {admin?.role || 'Not set'}
                 </span>
               </p>
