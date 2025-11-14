@@ -53,7 +53,7 @@ interface iOSInstallModalProps {
  * );
  * ```
  */
-export default function iOSInstallModal({
+export default function IOSInstallModal({
   isOpen: controlledIsOpen,
   onClose,
 }: iOSInstallModalProps = {}) {

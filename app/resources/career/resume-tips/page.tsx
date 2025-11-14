@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, FileText, CheckCircle, XCircle, Star, Download, AlertCircle } from 'lucide-react';
+import { ArrowLeft, FileText, CheckCircle, XCircle, Star, Download, AlertCircle, AlertTriangle } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Section from '@/components/ui/Section';
 

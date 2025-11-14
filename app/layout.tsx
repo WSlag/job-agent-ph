@@ -8,7 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import InstallPWABanner from "@/components/pwa/InstallPWABanner";
-import iOSInstallModal from "@/components/pwa/iOSInstallModal";
+import IOSInstallModal from "@/components/pwa/iOSInstallModal";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -64,7 +64,7 @@ export default function RootLayout({
             <InstallPWABanner />
 
             {/* iOS Install Modal */}
-            <iOSInstallModal />
+            <IOSInstallModal />
 
             <Toaster
               position="top-right"

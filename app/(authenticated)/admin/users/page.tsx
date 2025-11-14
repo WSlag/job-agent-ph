@@ -58,22 +58,60 @@ export default function AdminUsersPage() {
       try {
         setLoading(true);
         const db = getDbInstance();
-        const usersRef = collection(db, COLLECTIONS.USERS);
-        const q = query(usersRef, orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
 
-        const loadedUsers: User[] = snapshot.docs.map((doc) => {
+        // Query all three specialized collections
+        const [jobHuntersSnapshot, agenciesSnapshot, adminsSnapshot] = await Promise.all([
+          getDocs(query(collection(db, COLLECTIONS.JOB_HUNTERS), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, COLLECTIONS.AGENCIES), orderBy('createdAt', 'desc'))),
+          getDocs(query(collection(db, COLLECTIONS.ADMINS), orderBy('createdAt', 'desc'))),
+        ]);
+
+        const loadedUsers: User[] = [];
+
+        // Map JobHunters
+        jobHuntersSnapshot.docs.forEach((doc) => {
           const data = doc.data();
-          return {
+          loadedUsers.push({
             id: doc.id,
-            name: data.fullName || data.companyName || data.name || 'Unknown',
+            name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown',
             email: data.email,
-            role: data.userType || 'jobhunter',
+            role: 'jobhunter',
             status: data.status || 'active',
             createdAt: data.createdAt?.toDate() || new Date(),
             lastActive: data.lastActive?.toDate(),
-          };
+          });
         });
+
+        // Map Agencies
+        agenciesSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          loadedUsers.push({
+            id: doc.id,
+            name: data.companyName || 'Unknown',
+            email: data.email,
+            role: 'agency',
+            status: data.status || 'active',
+            createdAt: data.createdAt?.toDate() || new Date(),
+            lastActive: data.lastActive?.toDate(),
+          });
+        });
+
+        // Map Admins
+        adminsSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          loadedUsers.push({
+            id: doc.id,
+            name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Unknown',
+            email: data.email,
+            role: 'admin',
+            status: data.status || 'active',
+            createdAt: data.createdAt?.toDate() || new Date(),
+            lastActive: data.lastActive?.toDate(),
+          });
+        });
+
+        // Sort by createdAt descending
+        loadedUsers.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
         setUsers(loadedUsers);
       } catch (error) {
