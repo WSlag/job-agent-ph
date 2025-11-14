@@ -323,7 +323,6 @@ export default function IOSInstallModal({
               "
               style={{
                 backgroundColor: COLORS.PRIMARY.BLUE,
-                focusRingColor: COLORS.PRIMARY.BLUE,
               }}
             >
               Got it!
