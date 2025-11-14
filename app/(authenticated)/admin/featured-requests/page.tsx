@@ -130,61 +130,61 @@ export default function FeaturedRequestsPage() {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto p-4 md:p-6">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Featured Job Requests</h1>
-          <p className="text-gray-600">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Featured Job Requests</h1>
+          <p className="text-sm md:text-base text-gray-600">
             Review and manage featured job placement requests from agencies
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-6">
+          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-yellow-600">{pendingCount}</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Pending</p>
+                <p className="text-2xl md:text-3xl font-bold text-yellow-600">{pendingCount}</p>
               </div>
-              <div className="bg-yellow-100 p-3 rounded-lg">
-                <Clock className="text-yellow-600" size={24} />
+              <div className="bg-yellow-100 p-2 md:p-3 rounded-lg">
+                <Clock className="text-yellow-600" size={20} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Approved</p>
-                <p className="text-3xl font-bold text-green-600">{approvedCount}</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Approved</p>
+                <p className="text-2xl md:text-3xl font-bold text-green-600">{approvedCount}</p>
               </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <CheckCircle className="text-green-600" size={24} />
+              <div className="bg-green-100 p-2 md:p-3 rounded-lg">
+                <CheckCircle className="text-green-600" size={20} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Rejected</p>
-                <p className="text-3xl font-bold text-red-600">{rejectedCount}</p>
+                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Rejected</p>
+                <p className="text-2xl md:text-3xl font-bold text-red-600">{rejectedCount}</p>
               </div>
-              <div className="bg-red-100 p-3 rounded-lg">
-                <XCircle className="text-red-600" size={24} />
+              <div className="bg-red-100 p-2 md:p-3 rounded-lg">
+                <XCircle className="text-red-600" size={20} />
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
             {/* Status Filter */}
             <div className="flex-1">
-              <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700 mb-2">
-                <Filter size={16} className="inline mr-1" />
+              <label htmlFor="statusFilter" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <Filter size={14} className="inline mr-1" />
                 Filter by Status
               </label>
               <select
@@ -193,7 +193,7 @@ export default function FeaturedRequestsPage() {
                 onChange={(e) =>
                   setSelectedStatus(e.target.value as FeaturedRequestStatus | 'all')
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Requests</option>
                 <option value="pending">Pending</option>
@@ -204,8 +204,8 @@ export default function FeaturedRequestsPage() {
 
             {/* Search */}
             <div className="flex-1">
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                <Search size={16} className="inline mr-1" />
+              <label htmlFor="search" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <Search size={14} className="inline mr-1" />
                 Search
               </label>
               <input
@@ -214,7 +214,7 @@ export default function FeaturedRequestsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Job title, company, reference..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -223,23 +223,25 @@ export default function FeaturedRequestsPage() {
         {/* Requests Table */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           {loading ? (
-            <div className="p-12 text-center">
-              <Loader2 className="animate-spin text-blue-600 mx-auto mb-4" size={48} />
-              <p className="text-gray-600">Loading requests...</p>
+            <div className="p-8 md:p-12 text-center">
+              <Loader2 className="animate-spin text-blue-600 mx-auto mb-4" size={36} />
+              <p className="text-sm md:text-base text-gray-600">Loading requests...</p>
             </div>
           ) : filteredRequests.length === 0 ? (
-            <div className="p-12 text-center">
-              <FileText className="text-gray-300 mx-auto mb-4" size={48} />
-              <p className="text-gray-600 mb-2">No requests found</p>
-              <p className="text-sm text-gray-500">
+            <div className="p-8 md:p-12 text-center">
+              <FileText className="text-gray-300 mx-auto mb-4" size={36} />
+              <p className="text-sm md:text-base text-gray-600 mb-2">No requests found</p>
+              <p className="text-xs md:text-sm text-gray-500">
                 {selectedStatus !== 'all' || searchQuery
                   ? 'Try changing your filters'
                   : 'Featured job requests will appear here'}
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -350,6 +352,80 @@ export default function FeaturedRequestsPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden divide-y divide-gray-200">
+              {filteredRequests.map((request) => (
+                <div key={request.id} className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-2 mb-2">
+                        <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
+                          <Briefcase className="text-blue-600" size={16} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-gray-900 mb-1">
+                            {request.job?.title || 'Job not found'}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {request.job?.location}, {request.job?.country}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 size={14} className="text-gray-400" />
+                        <span className="text-xs font-medium text-gray-900">
+                          {request.agency?.companyName || 'Unknown'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ml-3">
+                      {getStatusBadge(request.status)}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded p-3 mb-3 space-y-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      <DollarSign size={12} className="text-gray-400" />
+                      <span className="font-semibold text-gray-900">
+                        {request.currency} {request.paymentAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 capitalize">
+                      {request.paymentMethod.replace('_', ' ')}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Ref: {request.paymentReference}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>Submitted: {formatDate(request.createdAt)}</span>
+                    {request.reviewedAt && (
+                      <span>Reviewed: {formatDate(request.reviewedAt)}</span>
+                    )}
+                  </div>
+
+                  {request.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApprove(request)}
+                        className="flex-1 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(request)}
+                        className="flex-1 bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
           )}
         </div>
       </div>

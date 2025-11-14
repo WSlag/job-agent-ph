@@ -86,21 +86,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (adminDoc.exists()) {
         console.log('[AuthContext] User is an ADMIN');
-        setUserProfile({ id: adminDoc.id, ...adminDoc.data() } as Admin);
+        const adminData = { id: adminDoc.id, ...adminDoc.data() } as Admin;
+
+        // Check if admin is suspended or deleted
+        if (adminData.status === 'suspended' || adminData.status === 'deleted') {
+          console.log('[AuthContext] Admin account is', adminData.status);
+          alert(`Your account has been ${adminData.status}. ${adminData.suspensionReason || ''}`);
+          await firebaseSignOut(auth);
+          setUserProfile(null);
+          setUserType(null);
+          return;
+        }
+
+        setUserProfile(adminData);
         setUserType('admin');
         return;
       }
 
       if (jobHunterDoc.exists()) {
         console.log('[AuthContext] User is a JOB HUNTER');
-        setUserProfile({ id: jobHunterDoc.id, ...jobHunterDoc.data() } as JobHunter);
+        const jobHunterData = { id: jobHunterDoc.id, ...jobHunterDoc.data() } as JobHunter;
+
+        // Check if user is suspended or deleted
+        if (jobHunterData.status === 'suspended' || jobHunterData.status === 'deleted') {
+          console.log('[AuthContext] Job hunter account is', jobHunterData.status);
+          const message = jobHunterData.status === 'suspended'
+            ? `Your account has been suspended. ${jobHunterData.suspensionReason || ''}`
+            : 'Your account has been deleted.';
+          alert(message);
+          await firebaseSignOut(auth);
+          setUserProfile(null);
+          setUserType(null);
+          return;
+        }
+
+        setUserProfile(jobHunterData);
         setUserType('jobhunter');
         return;
       }
 
       if (agencyDoc.exists()) {
         console.log('[AuthContext] User is an AGENCY');
-        setUserProfile({ id: agencyDoc.id, ...agencyDoc.data() } as Agency);
+        const agencyData = { id: agencyDoc.id, ...agencyDoc.data() } as Agency;
+
+        // Check if agency is suspended or deleted
+        if (agencyData.status === 'suspended' || agencyData.status === 'deleted') {
+          console.log('[AuthContext] Agency account is', agencyData.status);
+          const message = agencyData.status === 'suspended'
+            ? `Your account has been suspended. ${agencyData.suspensionReason || ''}`
+            : 'Your account has been deleted.';
+          alert(message);
+          await firebaseSignOut(auth);
+          setUserProfile(null);
+          setUserType(null);
+          return;
+        }
+
+        setUserProfile(agencyData);
         setUserType('agency');
         return;
       }

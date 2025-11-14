@@ -1,12 +1,22 @@
 // User Types
 export type UserType = 'jobhunter' | 'agency' | 'admin';
+export type UserStatus = 'active' | 'suspended' | 'deleted';
 
 export interface User {
   id: string;
   email: string;
   userType: UserType;
+  status?: UserStatus; // Default: 'active'
   createdAt: Date;
   updatedAt: Date;
+  // Suspension fields
+  suspendedAt?: Date;
+  suspendedBy?: string; // Admin ID
+  suspensionReason?: string;
+  suspensionExpiry?: Date; // For temporary suspensions
+  // Deletion fields
+  deletedAt?: Date;
+  deletedBy?: string; // Admin ID
 }
 
 export interface JobHunter extends User {
@@ -39,11 +49,39 @@ export interface Admin extends User {
   lastName: string;
   phone?: string;
   role: 'super_admin' | 'moderator';
+  permissions?: Permission[]; // Granular permissions
+}
+
+// Permission Types
+export enum Permission {
+  // User Management
+  VIEW_USERS = 'VIEW_USERS',
+  MANAGE_USERS = 'MANAGE_USERS',
+  SUSPEND_USERS = 'SUSPEND_USERS',
+  DELETE_USERS = 'DELETE_USERS',
+
+  // Job Management
+  VIEW_JOBS = 'VIEW_JOBS',
+  MANAGE_JOBS = 'MANAGE_JOBS',
+  HOLD_JOBS = 'HOLD_JOBS',
+  DELETE_JOBS = 'DELETE_JOBS',
+
+  // Featured Jobs
+  VIEW_FEATURED_REQUESTS = 'VIEW_FEATURED_REQUESTS',
+  APPROVE_FEATURED_REQUESTS = 'APPROVE_FEATURED_REQUESTS',
+  MANAGE_FEATURED_JOBS = 'MANAGE_FEATURED_JOBS',
+
+  // Settings & System
+  MANAGE_SETTINGS = 'MANAGE_SETTINGS',
+  VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS',
+  MANAGE_PERMISSIONS = 'MANAGE_PERMISSIONS',
+  VIEW_ANALYTICS = 'VIEW_ANALYTICS',
 }
 
 // Job Types
 export type JobType = 'full-time' | 'part-time' | 'contract';
 export type JobLocation = 'remote' | 'hybrid' | 'on-site';
+export type JobStatus = 'active' | 'on-hold' | 'deleted';
 
 export interface Job {
   id: string;
@@ -65,7 +103,14 @@ export interface Job {
   imageUrl?: string;
   postedAt: Date;
   expiresAt?: Date;
-  isActive: boolean;
+  isActive: boolean; // Kept for backward compatibility
+  status?: JobStatus; // New status field (default: 'active')
+  // Job moderation fields
+  onHoldReason?: string;
+  onHoldAt?: Date;
+  onHoldBy?: string; // Admin ID
+  deletedAt?: Date;
+  deletedBy?: string; // Admin ID
   // Featured job fields
   isFeatured: boolean;
   featuredPriority?: number; // 1-5, determines carousel order (1 = first)
@@ -220,4 +265,36 @@ export interface JobMatch {
   percentage: number;
   matchingSkills: string[];
   missingSkills: string[];
+}
+
+// Audit Log Types
+export type AuditAction =
+  // Job actions
+  | 'job_created' | 'job_updated' | 'job_deleted' | 'job_held' | 'job_unheld'
+  // User actions
+  | 'user_suspended' | 'user_unsuspended' | 'user_deleted'
+  // Featured job actions
+  | 'featured_request_approved' | 'featured_request_rejected' | 'featured_job_removed'
+  // Settings actions
+  | 'settings_updated'
+  // Permission actions
+  | 'permissions_updated';
+
+export type AuditResourceType = 'job' | 'user' | 'agency' | 'jobhunter' | 'featured_request' | 'settings' | 'admin';
+
+export interface AuditLog {
+  id: string;
+  adminId: string;
+  adminName: string; // For quick display
+  action: AuditAction;
+  resourceType: AuditResourceType;
+  resourceId: string;
+  details: Record<string, any>; // Additional context (e.g., reason, old values, new values)
+  timestamp: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export interface AuditLogWithAdmin extends AuditLog {
+  admin?: Admin;
 }

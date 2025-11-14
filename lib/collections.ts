@@ -27,6 +27,7 @@ export const COLLECTIONS = {
   AGENCY_STATS: 'agencyStats', // Cached agency statistics
   AGENCY_REVIEWS: 'agencyReviews', // Agency ratings and reviews
   NOTIFICATIONS: 'notifications', // User notifications
+  AUDIT_LOGS: 'auditLogs', // Admin action audit logs
 } as const;
 
 // Helper to get collection paths
@@ -47,6 +48,7 @@ export const getCollectionPath = {
   agencyStats: () => COLLECTIONS.AGENCY_STATS,
   agencyReviews: () => COLLECTIONS.AGENCY_REVIEWS,
   notifications: () => COLLECTIONS.NOTIFICATIONS,
+  auditLogs: () => COLLECTIONS.AUDIT_LOGS,
 };
 
 // Firestore indexes needed (create in Firebase Console)
@@ -105,6 +107,27 @@ export const REQUIRED_INDEXES = [
     fields: [
       { field: 'userId', order: 'ASCENDING' },
       { field: 'createdAt', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'auditLogs',
+    fields: [
+      { field: 'adminId', order: 'ASCENDING' },
+      { field: 'timestamp', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'auditLogs',
+    fields: [
+      { field: 'resourceType', order: 'ASCENDING' },
+      { field: 'timestamp', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'auditLogs',
+    fields: [
+      { field: 'action', order: 'ASCENDING' },
+      { field: 'timestamp', order: 'DESCENDING' },
     ],
   },
 ];

@@ -106,149 +106,149 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-4 md:space-y-6 max-w-4xl p-4 md:p-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Settings className="w-6 h-6" />
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Settings className="w-5 h-5 md:w-6 md:h-6" />
             System Settings
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm md:text-base text-gray-600 mt-1">
             Configure platform settings and preferences
           </p>
         </div>
 
         {/* General Settings */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Globe className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">General Settings</h2>
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">General Settings</h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Site Name
               </label>
               <input
                 type="text"
                 value={siteName}
                 onChange={(e) => setSiteName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Site Description
               </label>
               <textarea
                 value={siteDescription}
                 onChange={(e) => setSiteDescription(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Contact Email
               </label>
               <input
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
         </Card>
 
         {/* Notification Settings */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Notification Settings</h2>
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <Bell className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">Notification Settings</h2>
           </div>
 
-          <div className="space-y-4">
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Email Notifications</div>
-                <div className="text-sm text-gray-600">Send email notifications to users</div>
+          <div className="space-y-3 md:space-y-4">
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Email Notifications</div>
+                <div className="text-xs md:text-sm text-gray-600">Send email notifications to users</div>
               </div>
               <input
                 type="checkbox"
                 checked={emailNotifications}
                 onChange={(e) => setEmailNotifications(e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 flex-shrink-0"
               />
             </label>
 
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Application Notifications</div>
-                <div className="text-sm text-gray-600">Notify agencies of new applications</div>
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Application Notifications</div>
+                <div className="text-xs md:text-sm text-gray-600">Notify agencies of new applications</div>
               </div>
               <input
                 type="checkbox"
                 checked={applicationNotifications}
                 onChange={(e) => setApplicationNotifications(e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 flex-shrink-0"
               />
             </label>
 
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Job Post Notifications</div>
-                <div className="text-sm text-gray-600">Notify job hunters of new matching jobs</div>
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Job Post Notifications</div>
+                <div className="text-xs md:text-sm text-gray-600">Notify job hunters of new matching jobs</div>
               </div>
               <input
                 type="checkbox"
                 checked={jobPostNotifications}
                 onChange={(e) => setJobPostNotifications(e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 flex-shrink-0"
               />
             </label>
           </div>
         </Card>
 
         {/* Security Settings */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Security Settings</h2>
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <Shield className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">Security Settings</h2>
           </div>
 
-          <div className="space-y-4">
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Require Email Verification</div>
-                <div className="text-sm text-gray-600">Users must verify email before accessing features</div>
+          <div className="space-y-3 md:space-y-4">
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Require Email Verification</div>
+                <div className="text-xs md:text-sm text-gray-600">Users must verify email before accessing features</div>
               </div>
               <input
                 type="checkbox"
                 checked={requireEmailVerification}
                 onChange={(e) => setRequireEmailVerification(e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 flex-shrink-0"
               />
             </label>
 
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Require Agency Verification</div>
-                <div className="text-sm text-gray-600">Agencies must be verified before posting jobs</div>
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Require Agency Verification</div>
+                <div className="text-xs md:text-sm text-gray-600">Agencies must be verified before posting jobs</div>
               </div>
               <input
                 type="checkbox"
                 checked={requireAgencyVerification}
                 onChange={(e) => setRequireAgencyVerification(e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 flex-shrink-0"
               />
             </label>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
                 Max Login Attempts
               </label>
               <input
@@ -257,9 +257,9 @@ export default function AdminSettingsPage() {
                 onChange={(e) => setMaxLoginAttempts(parseInt(e.target.value))}
                 min={3}
                 max={10}
-                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full sm:w-32 px-3 md:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs md:text-sm text-gray-600 mt-1">
                 Account will be temporarily locked after this many failed attempts
               </p>
             </div>
@@ -267,43 +267,43 @@ export default function AdminSettingsPage() {
         </Card>
 
         {/* Feature Flags */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Database className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Feature Flags</h2>
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <Database className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">Feature Flags</h2>
           </div>
 
-          <div className="space-y-4">
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Enable Chat</div>
-                <div className="text-sm text-gray-600">Allow messaging between job hunters and agencies</div>
+          <div className="space-y-3 md:space-y-4">
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Enable Chat</div>
+                <div className="text-xs md:text-sm text-gray-600">Allow messaging between job hunters and agencies</div>
               </div>
               <input
                 type="checkbox"
                 checked={enableChat}
                 onChange={(e) => setEnableChat(e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 flex-shrink-0"
               />
             </label>
 
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Enable AI Assistant</div>
-                <div className="text-sm text-gray-600">Enable GABAY AI chatbot for users</div>
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Enable AI Assistant</div>
+                <div className="text-xs md:text-sm text-gray-600">Enable GABAY AI chatbot for users</div>
               </div>
               <input
                 type="checkbox"
                 checked={enableAIAssistant}
                 onChange={(e) => setEnableAIAssistant(e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 flex-shrink-0"
               />
             </label>
 
-            <label className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Maintenance Mode</div>
-                <div className="text-sm text-gray-600">
+            <label className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-medium text-gray-900">Maintenance Mode</div>
+                <div className="text-xs md:text-sm text-gray-600">
                   <span className="text-red-600 font-medium">WARNING:</span> Site will be unavailable to users
                 </div>
               </div>
@@ -311,17 +311,18 @@ export default function AdminSettingsPage() {
                 type="checkbox"
                 checked={maintenanceMode}
                 onChange={(e) => setMaintenanceMode(e.target.checked)}
-                className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 flex-shrink-0"
               />
             </label>
           </div>
         </Card>
 
         {/* Save Button */}
-        <div className="flex justify-end gap-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-4">
           <Button
             variant="outline"
             onClick={() => router.push('/admin/dashboard')}
+            className="order-2 sm:order-1"
           >
             Cancel
           </Button>
@@ -330,6 +331,7 @@ export default function AdminSettingsPage() {
             onClick={handleSave}
             disabled={saving}
             icon={Save}
+            className="order-1 sm:order-2"
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </Button>

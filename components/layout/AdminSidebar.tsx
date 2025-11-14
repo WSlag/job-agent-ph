@@ -12,6 +12,8 @@ import {
   LogOut,
   Menu,
   X,
+  Briefcase,
+  ScrollText,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +23,16 @@ const navigation = [
     name: 'Dashboard',
     href: '/admin/dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    name: 'Jobs',
+    href: '/admin/jobs',
+    icon: Briefcase,
+  },
+  {
+    name: 'Users',
+    href: '/admin/users',
+    icon: Users,
   },
   {
     name: 'Featured Requests',
@@ -33,9 +45,9 @@ const navigation = [
     icon: Star,
   },
   {
-    name: 'Users',
-    href: '/admin/users',
-    icon: Users,
+    name: 'Audit Logs',
+    href: '/admin/audit-logs',
+    icon: ScrollText,
   },
   {
     name: 'Settings',
