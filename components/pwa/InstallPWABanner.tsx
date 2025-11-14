@@ -209,7 +209,6 @@ export default function InstallPWABanner() {
               "
               style={{
                 backgroundColor: COLORS.PRIMARY.BLUE,
-                focusRingColor: COLORS.PRIMARY.BLUE,
               }}
               aria-label="Install app"
             >
