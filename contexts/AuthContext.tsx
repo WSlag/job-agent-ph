@@ -26,6 +26,7 @@ interface AuthContextType {
   userProfile: JobHunter | Agency | Admin | null;
   userType: UserType | null;
   loading: boolean;
+  sessionReady: boolean;
   signUp: (
     email: string,
     password: string,
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<JobHunter | Agency | Admin | null>(null);
   const [userType, setUserType] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -283,6 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       console.log('[AuthContext] Starting sign in process...');
+      setSessionReady(false); // Reset session ready state
       const auth = getAuthInstance();
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log('[AuthContext] Firebase authentication successful');
@@ -304,32 +307,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('[AuthContext] Failed to create session cookie, status:', response.status);
         const errorData = await response.json().catch(() => ({}));
         console.error('[AuthContext] Session error details:', errorData);
-        // Don't throw error here - client-side auth still works
-      } else {
-        console.log('[AuthContext] Session cookie created successfully');
-
-        // Verify the cookie is actually set in the browser before proceeding
-        console.log('[AuthContext] Verifying session cookie is available...');
-        let cookieVerified = false;
-
-        for (let attempt = 0; attempt < 10; attempt++) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-
-          // Check if session cookie exists in document.cookie
-          if (document.cookie.includes('session=')) {
-            cookieVerified = true;
-            console.log('[AuthContext] Session cookie verified in browser (attempt', attempt + 1, ')');
-            break;
-          }
-        }
-
-        if (!cookieVerified) {
-          console.warn('[AuthContext] Could not verify session cookie after 10 attempts (2 seconds)');
-          console.warn('[AuthContext] Proceeding anyway - client-side auth will work');
-        }
-
-        console.log('[AuthContext] Session cookie should now be available');
+        throw new Error('Failed to create session cookie. Please try again.');
       }
+
+      const responseData = await response.json();
+      console.log('[AuthContext] Session cookie created successfully:', responseData);
+
+      // Wait a brief moment to ensure cookie is fully set
+      // Note: httpOnly cookies are not visible in document.cookie (by design for security)
+      // so we trust the server response and wait for cookie propagation
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Mark session as ready - this allows login page to redirect
+      setSessionReady(true);
+      console.log('[AuthContext] Session ready for redirect');
     } catch (error: any) {
       console.error('[AuthContext] Login error:', error);
 
@@ -381,6 +372,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userProfile,
     userType,
     loading,
+    sessionReady,
     signUp,
     signIn,
     signOut,

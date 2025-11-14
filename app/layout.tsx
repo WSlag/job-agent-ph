@@ -7,6 +7,8 @@ import ConditionalHeader from "@/components/layout/ConditionalHeader";
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import InstallPWABanner from "@/components/pwa/InstallPWABanner";
+import iOSInstallModal from "@/components/pwa/iOSInstallModal";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -57,6 +59,13 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <BottomNav />
             </Suspense>
+
+            {/* PWA Install Banner */}
+            <InstallPWABanner />
+
+            {/* iOS Install Modal */}
+            <iOSInstallModal />
+
             <Toaster
               position="top-right"
               toastOptions={{

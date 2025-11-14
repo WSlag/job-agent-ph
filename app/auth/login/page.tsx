@@ -10,7 +10,7 @@ import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirec
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signIn, user, userType, loading: authLoading } = useAuth();
+  const { signIn, user, userType, loading: authLoading, sessionReady } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,12 +25,13 @@ function LoginForm() {
       hasUser: !!user,
       userType,
       authLoading,
+      sessionReady,
       isRedirecting,
       hasRedirected: hasRedirected.current
     });
 
-    // Only redirect once - use ref to prevent multiple redirects
-    if (user && userType && !authLoading && !hasRedirected.current) {
+    // Only redirect once session is ready - use ref to prevent multiple redirects
+    if (user && userType && !authLoading && sessionReady && !hasRedirected.current) {
       const redirectParam = searchParams.get('redirect');
       const jobId = searchParams.get('jobId');
       const agencyId = searchParams.get('agencyId');
@@ -61,7 +62,7 @@ function LoginForm() {
         window.location.href = finalRedirect;
       }, 100);
     }
-  }, [user, userType, authLoading, router, searchParams]);
+  }, [user, userType, authLoading, sessionReady, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -25,7 +25,7 @@ const resources: Resource[] = [
     category: 'Guides',
     type: 'guide',
     icon: BookOpen,
-    href: '#',
+    href: '/resources/guides/working-abroad',
   },
   {
     id: '2',
@@ -34,7 +34,7 @@ const resources: Resource[] = [
     category: 'Guides',
     type: 'guide',
     icon: FileText,
-    href: '#',
+    href: '/resources/guides/poea-processing',
   },
   {
     id: '3',
@@ -43,7 +43,7 @@ const resources: Resource[] = [
     category: 'Guides',
     type: 'article',
     icon: Shield,
-    href: '#',
+    href: '/resources/guides/ofw-rights',
   },
 
   // Country Guides
@@ -54,7 +54,7 @@ const resources: Resource[] = [
     category: 'Country Guides',
     type: 'guide',
     icon: Globe,
-    href: '#',
+    href: '/resources/country-guides/saudi-arabia',
   },
   {
     id: '5',
@@ -63,7 +63,7 @@ const resources: Resource[] = [
     category: 'Country Guides',
     type: 'guide',
     icon: Globe,
-    href: '#',
+    href: '/resources/country-guides/uae',
   },
   {
     id: '6',
@@ -72,7 +72,7 @@ const resources: Resource[] = [
     category: 'Country Guides',
     type: 'guide',
     icon: Globe,
-    href: '#',
+    href: '/resources/country-guides/canada',
   },
 
   // Documents & Downloads
@@ -83,7 +83,7 @@ const resources: Resource[] = [
     category: 'Downloads',
     type: 'download',
     icon: Download,
-    href: '#',
+    href: '/resources/downloads/document-checklist',
   },
   {
     id: '8',
@@ -92,7 +92,7 @@ const resources: Resource[] = [
     category: 'Downloads',
     type: 'download',
     icon: FileText,
-    href: '#',
+    href: '/resources/downloads/employment-contract',
   },
 
   // Career Development
@@ -103,7 +103,7 @@ const resources: Resource[] = [
     category: 'Career',
     type: 'article',
     icon: FileText,
-    href: '#',
+    href: '/resources/career/resume-tips',
   },
   {
     id: '10',
@@ -112,7 +112,7 @@ const resources: Resource[] = [
     category: 'Career',
     type: 'article',
     icon: Video,
-    href: '#',
+    href: '/resources/career/interview-prep',
   },
   {
     id: '11',
@@ -121,7 +121,7 @@ const resources: Resource[] = [
     category: 'Career',
     type: 'article',
     icon: TrendingUp,
-    href: '#',
+    href: '/resources/career/skills-development',
   },
 
   // External Links
@@ -143,16 +143,6 @@ const resources: Resource[] = [
     type: 'article',
     icon: ExternalLink,
     href: 'https://owwa.gov.ph',
-    external: true,
-  },
-  {
-    id: '14',
-    title: 'Phil-JobNet Portal',
-    description: 'Government job portal with verified overseas job opportunities.',
-    category: 'Government',
-    type: 'article',
-    icon: ExternalLink,
-    href: 'https://philjobnet.gov.ph',
     external: true,
   },
 ];

@@ -6,7 +6,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Section from '@/components/ui/Section';
 import { validateEmail, validateMessage, sanitizeString } from '@/lib/validation';
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
+import { Mail, Send, CheckCircle } from 'lucide-react';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -200,57 +200,10 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                    <p className="text-gray-600">support@jobagencyph.com</p>
+                    <p className="text-gray-600">contact@jobagentph.com</p>
                     <p className="text-sm text-gray-500 mt-1">
                       We typically respond within 24 hours
                     </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-green-100 p-3 rounded-lg flex-shrink-0">
-                    <Phone className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
-                    <p className="text-gray-600">+63 2 1234 5678</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Monday - Friday, 9:00 AM - 6:00 PM (PHT)
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-purple-100 p-3 rounded-lg flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Office Address</h3>
-                    <p className="text-gray-600">
-                      123 Business Avenue<br />
-                      Makati City, Metro Manila<br />
-                      Philippines 1200
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-orange-100 p-3 rounded-lg flex-shrink-0">
-                    <Clock className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Business Hours</h3>
-                    <div className="text-gray-600 space-y-1">
-                      <p><strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM</p>
-                      <p><strong>Saturday:</strong> 10:00 AM - 3:00 PM</p>
-                      <p><strong>Sunday:</strong> Closed</p>
-                    </div>
                   </div>
                 </div>
               </Card>
@@ -304,7 +257,7 @@ export default function ContactPage() {
               <p className="text-gray-600 text-sm mb-4">
                 Experiencing technical issues with the platform or need account assistance?
               </p>
-              <a href="mailto:support@jobagencyph.com" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+              <a href="mailto:contact@jobagentph.com" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
                 Email Support →
               </a>
             </Card>

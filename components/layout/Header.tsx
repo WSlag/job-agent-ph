@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import Logo from '@/components/ui/Logo';
 import { subscribeToConversations } from '@/lib/messaging-helpers';
 import { subscribeToJobHunterApplications } from '@/lib/application-helpers';
+import InstallPWAButton from '@/components/pwa/InstallPWAButton';
 
 export default function Header() {
   const { user, userType, signOut, loading } = useOptionalAuth();
@@ -79,6 +80,9 @@ export default function Header() {
             <Link href="/jobs" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105">
               Browse Jobs
             </Link>
+
+            {/* PWA Install Button */}
+            <InstallPWAButton size="sm" />
 
             {loading ? (
               // Show loading skeleton to prevent flash

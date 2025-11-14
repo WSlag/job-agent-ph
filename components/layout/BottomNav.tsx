@@ -52,7 +52,7 @@ export default function BottomNav() {
     { href: '/', icon: Home, label: 'Home' },
     { href: '/jobs', icon: Briefcase, label: 'Jobs' },
     { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
-    { href: '/saved-jobs', icon: BookOpen, label: 'Save Jobs' },
+    { href: '/saved-jobs', icon: BookOpen, label: 'Saved Jobs' },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
 
@@ -186,7 +186,7 @@ export default function BottomNav() {
                   aria-hidden="true"
                 />
                 {/* Show unread badge if item has one */}
-                {(item as any).badge && (item as any).badge > 0 && (
+                {(item as any).badge > 0 && (
                   <MessageBadge count={(item as any).badge} size="sm" />
                 )}
               </div>
