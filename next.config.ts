@@ -18,6 +18,8 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Explicitly set workspace root for Firebase App Hosting
+  outputFileTracingRoot: require('path').join(__dirname),
   images: {
     remotePatterns: [
       // Firebase Storage - for uploaded images
