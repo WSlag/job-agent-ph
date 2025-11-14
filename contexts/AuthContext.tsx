@@ -49,6 +49,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const auth = getAuthInstance();
+
+    // Check for auth domain mismatch and clear if needed
+    const checkAuthDomainMismatch = async () => {
+      const expectedAuthDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+      const storedAuthDomain = localStorage.getItem('firebase:authDomain');
+
+      // Check if we have Firebase auth tokens but no stored auth domain
+      // This indicates tokens from before the domain tracking was implemented
+      const hasFirebaseTokens = Object.keys(localStorage).some(key =>
+        key.startsWith('firebase:authUser:')
+      );
+
+      if (hasFirebaseTokens && !storedAuthDomain) {
+        console.warn('[AuthContext] Found Firebase tokens without auth domain tracking!');
+        console.warn('[AuthContext] These tokens may be from the old auth domain.');
+        console.warn('[AuthContext] Clearing all Firebase auth state for safety...');
+
+        // Clear all Firebase localStorage items
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('firebase:')) {
+            localStorage.removeItem(key);
+          }
+        });
+
+        // Sign out to clear any remaining state
+        try {
+          await firebaseSignOut(auth);
+        } catch (error) {
+          console.error('[AuthContext] Error signing out during migration:', error);
+        }
+
+        console.log('[AuthContext] Auth state cleared. Please sign in again.');
+
+        // Set the correct auth domain for future reference
+        if (expectedAuthDomain) {
+          localStorage.setItem('firebase:authDomain', expectedAuthDomain);
+        }
+
+        return; // Exit early since we cleared everything
+      }
+
+      // Check for explicit domain mismatch
+      if (storedAuthDomain && storedAuthDomain !== expectedAuthDomain) {
+        console.warn('[AuthContext] Auth domain mismatch detected!');
+        console.warn('[AuthContext] Stored:', storedAuthDomain);
+        console.warn('[AuthContext] Expected:', expectedAuthDomain);
+        console.warn('[AuthContext] Clearing cached auth state...');
+
+        // Clear all Firebase localStorage items
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('firebase:')) {
+            localStorage.removeItem(key);
+          }
+        });
+
+        // Sign out to clear any remaining state
+        try {
+          await firebaseSignOut(auth);
+        } catch (error) {
+          console.error('[AuthContext] Error signing out during domain migration:', error);
+        }
+
+        console.log('[AuthContext] Auth state cleared. Please sign in again.');
+      }
+
+      // Store current auth domain for future checks
+      if (expectedAuthDomain) {
+        localStorage.setItem('firebase:authDomain', expectedAuthDomain);
+      }
+    };
+
+    // Run check before setting up auth listener
+    checkAuthDomainMismatch();
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
 
@@ -161,9 +235,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await firebaseSignOut(auth);
       setUserProfile(null);
       setUserType(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[AuthContext] CRITICAL ERROR loading user profile:', error);
       console.error('[AuthContext] Error details:', JSON.stringify(error, null, 2));
+
+      // Check if this is a permission error due to auth domain mismatch
+      if (error?.code === 'permission-denied') {
+        console.error('[AuthContext] PERMISSION DENIED - This is likely due to cached authentication tokens.');
+        console.error('[AuthContext] The auth domain may have changed. Clearing auth state...');
+
+        // Clear all Firebase localStorage items
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('firebase:')) {
+            localStorage.removeItem(key);
+          }
+        });
+
+        alert('Authentication configuration has been updated. Please clear your browser cache and login again, or use an incognito window.');
+      }
+
       // Sign out on error to prevent stuck auth state
       const auth = getAuthInstance();
       await firebaseSignOut(auth);
