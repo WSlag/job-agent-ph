@@ -44,7 +44,7 @@ export default function AdminConversationPage() {
   const router = useRouter();
   const params = useParams();
   const userId = params.userId as string;
-  const { user, userType } = useAuth();
+  const { user, userType, userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState('');
@@ -56,14 +56,14 @@ export default function AdminConversationPage() {
 
   // Check permissions
   useEffect(() => {
-    if (userType === 'admin' && user) {
-      const hasPermissions = canSendMessages({ ...user, role: 'moderator', permissions: [] });
+    if (userType === 'admin' && user && userProfile) {
+      const hasPermissions = canSendMessages(userProfile as any);
       if (!hasPermissions) {
         toast.error('You do not have permission to access messaging');
         router.push('/admin/dashboard');
       }
     }
-  }, [user, userType, router]);
+  }, [user, userType, userProfile, router]);
 
   // Load user info
   useEffect(() => {
