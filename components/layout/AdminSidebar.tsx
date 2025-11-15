@@ -110,7 +110,7 @@ export default function AdminSidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-280px)] lg:max-h-none">
             {navigation.map((item) => {
               const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
               return (

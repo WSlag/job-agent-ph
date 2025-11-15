@@ -12,7 +12,7 @@ import {
   deleteDoc,
   writeBatch,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Trash2, Check, UserPlus, Star, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -38,6 +38,7 @@ export default function AdminNotificationsPage() {
   useEffect(() => {
     if (!user) return;
 
+    const db = getDbInstance();
     const notificationsRef = collection(db, 'notifications');
     const q = query(
       notificationsRef,
@@ -66,6 +67,7 @@ export default function AdminNotificationsPage() {
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
+      const db = getDbInstance();
       const notifRef = doc(db, 'notifications', notificationId);
       await updateDoc(notifRef, {
         read: true,
@@ -80,6 +82,7 @@ export default function AdminNotificationsPage() {
     if (!user) return;
 
     try {
+      const db = getDbInstance();
       const batch = writeBatch(db);
       const unreadNotifications = notifications.filter((n) => !n.read);
 
@@ -99,6 +102,7 @@ export default function AdminNotificationsPage() {
 
   const handleDelete = async (notificationId: string) => {
     try {
+      const db = getDbInstance();
       await deleteDoc(doc(db, 'notifications', notificationId));
     } catch (error) {
       console.error('Error deleting notification:', error);
