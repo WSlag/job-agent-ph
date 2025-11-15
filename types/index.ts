@@ -42,6 +42,10 @@ export interface Agency extends User {
   logoUrl?: string;
   verified: boolean;
   responseTime?: string; // Expected response time (e.g., "2 hours", "1 day")
+  description?: string; // About Us section - agency description
+  bio?: string; // Alias for description (for backward compatibility)
+  specializations?: string[]; // Array of specialization areas (e.g., "Healthcare", "IT", "Construction")
+  certifications?: string[]; // Array of certifications/licenses
 }
 
 export interface Admin extends User {
@@ -76,6 +80,10 @@ export enum Permission {
   VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS',
   MANAGE_PERMISSIONS = 'MANAGE_PERMISSIONS',
   VIEW_ANALYTICS = 'VIEW_ANALYTICS',
+
+  // Messaging
+  SEND_MESSAGES = 'SEND_MESSAGES',
+  SEND_BULK_MESSAGES = 'SEND_BULK_MESSAGES',
 }
 
 // Job Types
@@ -298,4 +306,79 @@ export interface AuditLog {
 
 export interface AuditLogWithAdmin extends AuditLog {
   admin?: Admin;
+}
+
+// Admin Message Types
+export type AdminMessageType = 'individual' | 'bulk';
+export type AdminMessageStatus = 'draft' | 'sending' | 'sent' | 'failed';
+export type RecipientType = 'jobhunter' | 'agency' | 'all';
+
+export interface AdminMessage {
+  id: string;
+  adminId: string;
+  adminName: string;
+  messageType: AdminMessageType;
+  subject?: string;
+  content: string;
+  recipientType: RecipientType;
+  recipientIds: string[]; // Array of user IDs
+  status: AdminMessageStatus;
+  sentAt?: Date;
+  scheduledFor?: Date; // For scheduled messages
+  createdAt: Date;
+  updatedAt: Date;
+  // Statistics
+  deliveredCount?: number;
+  readCount?: number;
+  failedCount?: number;
+  // For tracking read status
+  readBy?: { [userId: string]: Date };
+  // For filtering recipients
+  filters?: RecipientFilters;
+}
+
+export interface RecipientFilters {
+  userType?: RecipientType;
+  location?: string[];
+  registrationDateFrom?: Date;
+  registrationDateTo?: Date;
+  activityStatus?: 'active' | 'inactive' | 'all';
+  // For job hunters
+  skills?: string[];
+  experienceMin?: number;
+  experienceMax?: number;
+  // For agencies
+  verified?: boolean;
+  specializations?: string[];
+}
+
+export interface AdminConversation {
+  id: string;
+  adminId: string;
+  userId: string;
+  userType: 'jobhunter' | 'agency';
+  lastMessage?: {
+    id: string;
+    content: string;
+    senderId: string;
+    senderType: 'admin' | 'user';
+    createdAt: Date;
+    read: boolean;
+  };
+  unreadCount: number;
+  unreadCount_admin?: number;
+  unreadCount_user?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AdminMessageThread {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderType: 'admin' | 'user';
+  content: string;
+  timestamp: Date;
+  read: boolean;
+  readAt?: Date;
 }

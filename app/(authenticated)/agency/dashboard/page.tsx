@@ -144,12 +144,23 @@ export default function AgencyDashboardPage() {
         {/* Agency Profile Card */}
         {userProfile && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4">
-                <div className="bg-blue-100 p-4 rounded-lg">
-                  <UserCircle size={48} className="text-blue-600" />
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+              <div className="flex items-start gap-4 flex-1">
+                {/* Agency Logo */}
+                <div className="bg-blue-100 rounded-lg overflow-hidden flex-shrink-0" style={{ width: '80px', height: '80px' }}>
+                  {(userProfile as Agency).logoUrl ? (
+                    <img
+                      src={(userProfile as Agency).logoUrl}
+                      alt={`${(userProfile as Agency).companyName} logo`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <UserCircle size={48} className="text-blue-600" />
+                    </div>
+                  )}
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <h2 className="text-2xl font-bold text-gray-900 mb-1">
                     {(userProfile as Agency).companyName}
                   </h2>
@@ -165,7 +176,7 @@ export default function AgencyDashboardPage() {
               </div>
               <Link
                 href="/agency/profile/edit"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm whitespace-nowrap self-start sm:self-auto"
               >
                 <Edit size={18} />
                 Edit Profile

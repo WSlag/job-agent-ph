@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
-import { Conversation, Job, Agency, JobHunter } from '@/types';
+import { Conversation, Job, Agency, JobHunter, AdminConversation } from '@/types';
 import { subscribeToConversations, getOrCreateConversation } from '@/lib/messaging-helpers';
-import { doc, getDoc } from 'firebase/firestore';
+import { subscribeToAdminConversations } from '@/lib/admin-messaging-helpers';
+import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, Loader2, Inbox } from 'lucide-react';
+import { MessageCircle, Loader2, Inbox, Shield } from 'lucide-react';
 import Link from 'next/link';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 
@@ -19,6 +20,7 @@ function MessagesContent() {
   const searchParams = useSearchParams();
   const { user, userType, userProfile, loading: authLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [adminConversations, setAdminConversations] = useState<AdminConversation[]>([]);
   const [conversationsWithDetails, setConversationsWithDetails] = useState<any[]>([]);
   const [conversationsLoading, setConversationsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -185,8 +187,8 @@ function MessagesContent() {
       handleCreateConversationFromJob(jobId);
     }
 
-    // Subscribe to conversations
-    const unsubscribe = subscribeToConversations(
+    // Subscribe to regular conversations
+    const unsubscribeRegular = subscribeToConversations(
       user.uid,
       userType,
       (updatedConversations) => {
@@ -195,7 +197,36 @@ function MessagesContent() {
       }
     );
 
-    return () => unsubscribe();
+    // Subscribe to admin conversations
+    const db = getDbInstance();
+    const adminConvRef = collection(db, 'adminConversations');
+    const adminConvQuery = query(adminConvRef, where('userId', '==', user.uid));
+
+    const unsubscribeAdmin = onSnapshot(adminConvQuery, async (snapshot) => {
+      const adminConvos: AdminConversation[] = [];
+
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+
+        // Get admin details
+        const adminDoc = await getDoc(doc(db, 'admins', data.adminId));
+        const adminData = adminDoc.data();
+
+        adminConvos.push({
+          id: doc.id,
+          ...data,
+          adminName: adminData ? `${adminData.firstName} ${adminData.lastName}` : 'Admin',
+        } as AdminConversation);
+      }
+
+      setAdminConversations(adminConvos);
+      setConversationsLoading(false);
+    });
+
+    return () => {
+      unsubscribeRegular();
+      unsubscribeAdmin();
+    };
   }, [authLoading, user, userType, searchParams, router, handleCreateConversationFromJob, loadConversationDetails]);
 
   // Show loading state while authenticating or while userType/conversations are loading
@@ -261,7 +292,78 @@ function MessagesContent() {
 
           {/* Conversations List */}
           <div className="divide-y">
-            {conversationsWithDetails.length === 0 ? (
+            {/* Admin Conversations */}
+            {adminConversations.map((convo) => {
+              const adminName = (convo as any).adminName || 'Admin';
+              const unreadCount = convo.unreadCount_user || 0;
+
+              return (
+                <Link
+                  key={`admin-${convo.id}`}
+                  href={`/messages/admin/${convo.id}`}
+                  className="block hover:bg-gray-50 transition-colors"
+                >
+                  <div className="p-6">
+                    <div className="flex items-start gap-4">
+                      {/* Admin Avatar */}
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white flex-shrink-0">
+                        <Shield className="w-6 h-6" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        {/* Admin Name and Badge */}
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-gray-900">
+                                {adminName}
+                              </h3>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                                Admin
+                              </span>
+                              {unreadCount > 0 && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white">
+                                  {unreadCount} new
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              Job Agent PH Support
+                            </p>
+                          </div>
+                          {convo.lastMessage && convo.lastMessage.createdAt &&
+                           !isNaN(new Date(convo.lastMessage.createdAt).getTime()) && (
+                            <span className="text-xs text-gray-500 whitespace-nowrap">
+                              {formatDistanceToNow(
+                                new Date(convo.lastMessage.createdAt),
+                                { addSuffix: true }
+                              )}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Last Message */}
+                        {convo.lastMessage ? (
+                          <p className="text-sm text-gray-600 line-clamp-2">
+                            {convo.lastMessage.senderType === 'user'
+                              ? 'You: '
+                              : ''}
+                            {convo.lastMessage.content}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-400 italic">
+                            No messages yet
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+
+            {/* Regular Conversations */}
+            {conversationsWithDetails.length === 0 && adminConversations.length === 0 ? (
               <div className="p-12 text-center">
                 <Inbox size={64} className="mx-auto text-gray-300 mb-4" />
                 <h2 className="text-xl font-semibold text-gray-700 mb-2">

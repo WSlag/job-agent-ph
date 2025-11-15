@@ -117,6 +117,7 @@ export function getDefaultPermissions(
     Permission.VIEW_FEATURED_REQUESTS,
     Permission.VIEW_AUDIT_LOGS,
     Permission.VIEW_ANALYTICS,
+    Permission.SEND_MESSAGES,
   ];
 }
 
@@ -142,6 +143,9 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   [Permission.VIEW_AUDIT_LOGS]: 'View admin activity logs',
   [Permission.MANAGE_PERMISSIONS]: 'Manage admin roles and permissions',
   [Permission.VIEW_ANALYTICS]: 'View platform analytics',
+
+  [Permission.SEND_MESSAGES]: 'Send individual messages to users',
+  [Permission.SEND_BULK_MESSAGES]: 'Send bulk messages to multiple users',
 };
 
 /**
@@ -170,6 +174,10 @@ export const PERMISSION_CATEGORIES = {
     Permission.VIEW_AUDIT_LOGS,
     Permission.MANAGE_PERMISSIONS,
     Permission.VIEW_ANALYTICS,
+  ],
+  'Messaging': [
+    Permission.SEND_MESSAGES,
+    Permission.SEND_BULK_MESSAGES,
   ],
 };
 
@@ -212,3 +220,9 @@ export const canViewAuditLogs = (admin: Admin | null | undefined) =>
 
 export const canManagePermissions = (admin: Admin | null | undefined) =>
   hasPermission(admin, Permission.MANAGE_PERMISSIONS);
+
+export const canSendMessages = (admin: Admin | null | undefined) =>
+  hasPermission(admin, Permission.SEND_MESSAGES);
+
+export const canSendBulkMessages = (admin: Admin | null | undefined) =>
+  hasPermission(admin, Permission.SEND_BULK_MESSAGES);

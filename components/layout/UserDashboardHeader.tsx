@@ -8,6 +8,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
+import { useAllNotificationCounts } from '@/hooks/useNotificationCounts';
 
 interface UserDashboardHeaderProps {
   showNotifications?: boolean;
@@ -21,6 +22,7 @@ export default function UserDashboardHeader({
   const pathname = usePathname();
   const { unreadCount } = useUnreadMessages();
   const { unreadCount: notificationCount } = useUnreadNotifications();
+  const { counts: allCounts } = useAllNotificationCounts();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   // Only show for job hunter users
@@ -30,9 +32,9 @@ export default function UserDashboardHeader({
 
   const navItems = [
     { href: '/profile', icon: User, label: 'Profile' },
-    { href: '/profile/applications', icon: Briefcase, label: 'Applications' },
-    { href: '/saved-jobs', icon: BookOpen, label: 'Saved Jobs' },
-    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
+    { href: '/profile/applications', icon: Briefcase, label: 'Applications', badge: allCounts.applications },
+    { href: '/saved-jobs', icon: BookOpen, label: 'Saved Jobs', badge: allCounts.jobs },
+    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: allCounts.messages },
   ];
 
   const isActive = (href: string) => {

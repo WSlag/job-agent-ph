@@ -412,6 +412,83 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Admin Messages collection (Bulk messages from admins to users)
+    match /adminMessages/{messageId} {
+      // Admins can read their own messages
+      allow read: if isAdmin() &&
+                    (resource.data.adminId == request.auth.uid ||
+                     hasPermission('SEND_MESSAGES') ||
+                     hasPermission('SEND_BULK_MESSAGES'));
+
+      // Users can read messages sent to them
+      allow read: if isAuthenticated() &&
+                    request.auth.uid in resource.data.recipientIds;
+
+      // Only admins with messaging permissions can create messages
+      allow create: if isAdmin() &&
+                      (hasPermission('SEND_MESSAGES') ||
+                       hasPermission('SEND_BULK_MESSAGES')) &&
+                      request.resource.data.adminId == request.auth.uid;
+
+      // Only the admin who created the message can update it
+      allow update: if isAdmin() &&
+                      resource.data.adminId == request.auth.uid &&
+                      request.resource.data.adminId == request.auth.uid;
+
+      // Only the admin who created the message can delete it
+      allow delete: if isAdmin() &&
+                      resource.data.adminId == request.auth.uid;
+    }
+
+    // Admin Conversations collection (Individual conversations between admins and users)
+    match /adminConversations/{conversationId} {
+      // Admins can read their own conversations
+      allow read: if isAdmin() &&
+                    resource.data.adminId == request.auth.uid;
+
+      // Users can read conversations they're part of
+      allow read: if isAuthenticated() &&
+                    resource.data.userId == request.auth.uid;
+
+      // Admins with messaging permissions can create conversations
+      allow create: if isAdmin() &&
+                      hasPermission('SEND_MESSAGES') &&
+                      request.resource.data.adminId == request.auth.uid;
+
+      // Both admin and user can update conversation (for read status)
+      allow update: if isAuthenticated() &&
+                      (resource.data.adminId == request.auth.uid ||
+                       resource.data.userId == request.auth.uid);
+
+      // Only the admin can delete the conversation
+      allow delete: if isAdmin() &&
+                      resource.data.adminId == request.auth.uid;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Admin can read messages in their conversations
+        allow read: if isAdmin() &&
+                      get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.adminId == request.auth.uid;
+
+        // User can read messages in their conversations
+        allow read: if isAuthenticated() &&
+                      get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.userId == request.auth.uid;
+
+        // Both admin and user can create messages in their conversations
+        allow create: if isAuthenticated() &&
+                        (get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.adminId == request.auth.uid ||
+                         get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.userId == request.auth.uid) &&
+                        request.resource.data.senderId == request.auth.uid &&
+                        validateStringLength(request.resource.data.content, 1, 2000);
+
+        // Messages cannot be updated once sent
+        allow update: if false;
+
+        // Messages cannot be deleted
+        allow delete: if false;
+      }
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

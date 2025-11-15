@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOptionalAuth } from '@/contexts/AuthContext'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
+import { useAllNotificationCounts } from '@/hooks/useNotificationCounts'
 import MessageBadge from '@/components/common/MessageBadge'
 import Logo from '@/components/ui/Logo'
 import { useState, useEffect, FormEvent } from 'react'
@@ -17,6 +18,7 @@ export default function BottomNav() {
   const { user, userType, loading } = useOptionalAuth()
   const { unreadCount } = useUnreadMessages()
   const { unreadCount: notificationCount } = useUnreadNotifications()
+  const { counts: allCounts } = useAllNotificationCounts()
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
   const [isMounted, setIsMounted] = useState(false)
 
@@ -50,17 +52,17 @@ export default function BottomNav() {
   // Different nav items based on user type
   const jobHunterNavItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/jobs', icon: Briefcase, label: 'Jobs' },
-    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
+    { href: '/jobs', icon: Briefcase, label: 'Jobs', badge: allCounts?.jobs },
+    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: allCounts?.messages },
     { href: '/saved-jobs', icon: BookOpen, label: 'Saved Jobs' },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
 
   const agencyNavItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/agency/dashboard', icon: Grid, label: 'Dashboard' },
+    { href: '/agency/dashboard', icon: Grid, label: 'Dashboard', badge: allCounts?.applications },
     { href: '/jobs/post', icon: Briefcase, label: 'Post Job' },
-    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadCount },
+    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: allCounts?.messages },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
 

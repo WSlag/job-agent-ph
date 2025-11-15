@@ -14,9 +14,21 @@ export {
 } from './notifications/message-notifications';
 
 export {
+  onJobCreated,
+  onJobFeatured,
+  onJobMatchingSavedSearch,
+} from './notifications/job-notifications';
+
+export {
   onFeaturedRequestCreated,
   onUserCreated,
 } from './notifications/admin-notifications';
+
+export {
+  onAdminMessageSent,
+  onAdminBulkMessageSent,
+  onUserReplyToAdmin,
+} from './notifications/admin-message-notifications';
 
 // Export rating aggregation function
 export {

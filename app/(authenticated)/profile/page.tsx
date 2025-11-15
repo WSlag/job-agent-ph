@@ -639,7 +639,13 @@ export default function ProfilePage() {
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Add a skill (press Enter)"
                       />
-                      <Button onClick={handleAddSkill} type="button">Add</Button>
+                      <Button
+                        onClick={handleAddSkill}
+                        type="button"
+                        className="!rounded-lg text-sm sm:text-base px-3 sm:px-6 py-2 sm:py-3"
+                      >
+                        Add
+                      </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {('skills' in profile ? (profile.skills || []) : []).map((skill, index) => (
@@ -870,18 +876,19 @@ export default function ProfilePage() {
                 </>
               )}
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                 <Button
                   onClick={handleSaveProfile}
                   disabled={saving}
-                  className="flex-1"
+                  className="w-full sm:flex-1"
                 >
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-4 h-4" />
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
                 <Button
                   onClick={() => router.back()}
                   variant="secondary"
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>

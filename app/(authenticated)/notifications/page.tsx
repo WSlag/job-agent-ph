@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { Bell, Check, Trash2, MessageSquare } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { NoNotificationsEmptyState } from '@/components/ui/EmptyState';
-import { collection, query, where, orderBy, onSnapshot, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, updateDoc, deleteDoc, doc, writeBatch, Timestamp, getDoc } from 'firebase/firestore';
 import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import toast from 'react-hot-toast';
@@ -24,10 +24,20 @@ interface Notification {
   actionUrl?: string;
 }
 
+interface UnreadConversation {
+  id: string;
+  otherUserName: string;
+  otherUserAvatar?: string;
+  lastMessage: string;
+  unreadCount: number;
+  updatedAt: Date;
+}
+
 export default function NotificationsPage() {
-  const { user } = useAuth();
+  const { user, userType } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadConversations, setUnreadConversations] = useState<UnreadConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'all' | 'jobs' | 'messages' | 'applications'>('all');
 
@@ -70,6 +80,59 @@ export default function NotificationsPage() {
 
     return () => unsubscribe();
   }, [user, router]);
+
+  // Load unread conversations for message notifications fallback
+  useEffect(() => {
+    if (!user || !userType) return;
+
+    const db = getDbInstance();
+    const conversationsRef = collection(db, 'conversations');
+
+    // Query conversations based on user type
+    const conversationsQuery = userType === 'agency'
+      ? query(conversationsRef, where('agencyId', '==', user.uid))
+      : query(conversationsRef, where('jobHunterId', '==', user.uid));
+
+    const unsubscribe = onSnapshot(conversationsQuery, async (snapshot) => {
+      const unreadConvs: UnreadConversation[] = [];
+
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+        const userUnreadKey = `unreadCount_${user.uid}`;
+        const userUnreadCount = data[userUnreadKey] || 0;
+
+        if (userUnreadCount > 0) {
+          // Get the other user's info
+          const otherUserId = userType === 'agency' ? data.jobHunterId : data.agencyId;
+          const otherUserType = userType === 'agency' ? 'jobHunters' : 'agencies';
+
+          try {
+            // Fetch other user's data
+            const userDocRef = doc(db, otherUserType, otherUserId);
+            const userSnapshot = await getDoc(userDocRef);
+            const userData = userSnapshot.data();
+
+            unreadConvs.push({
+              id: doc.id,
+              otherUserName: userData?.name || userData?.companyName || 'Unknown User',
+              otherUserAvatar: userData?.profilePicture || userData?.logo,
+              lastMessage: data.lastMessage?.content || '',
+              unreadCount: userUnreadCount,
+              updatedAt: data.updatedAt?.toDate() || new Date(),
+            });
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+          }
+        }
+      }
+
+      // Sort by most recent first
+      unreadConvs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      setUnreadConversations(unreadConvs);
+    });
+
+    return () => unsubscribe();
+  }, [user, userType]);
 
   const handleMarkAllRead = async () => {
     if (!user) return;
@@ -127,6 +190,36 @@ export default function NotificationsPage() {
     if (activeTab === 'applications') return n.type === 'application_update' || n.type === 'interview';
     return true;
   });
+
+  // For messages tab, also include unread conversations as pseudo-notifications
+  const getDisplayItems = () => {
+    if (activeTab === 'messages') {
+      // Combine message notifications with unread conversations
+      const messageNotifs = filteredNotifications;
+
+      // Convert unread conversations to notification-like format
+      const conversationNotifs: Notification[] = unreadConversations.map(conv => ({
+        id: `conv-${conv.id}`,
+        type: 'message' as const,
+        title: `New message from ${conv.otherUserName}`,
+        message: conv.lastMessage.length > 100
+          ? `${conv.lastMessage.substring(0, 100)}...`
+          : conv.lastMessage,
+        read: false,
+        createdAt: conv.updatedAt,
+        actionUrl: `/messages?conversationId=${conv.id}`,
+      }));
+
+      // Combine and sort by date
+      const allItems = [...messageNotifs, ...conversationNotifs];
+      allItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      return allItems;
+    }
+
+    return filteredNotifications;
+  };
+
+  const displayItems = getDisplayItems();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -251,13 +344,13 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notifications List */}
-        {filteredNotifications.length === 0 ? (
+        {displayItems.length === 0 ? (
           <Card className="p-8">
             <NoNotificationsEmptyState />
           </Card>
         ) : (
           <div className="space-y-2">
-            {filteredNotifications.map((notification) => (
+            {displayItems.map((notification) => (
               <Card
                 key={notification.id}
                 className={`p-4 cursor-pointer transition-all hover:shadow-md ${

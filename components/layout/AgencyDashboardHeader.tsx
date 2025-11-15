@@ -7,6 +7,7 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications';
+import { useAllNotificationCounts } from '@/hooks/useNotificationCounts';
 
 interface Breadcrumb {
   label: string;
@@ -31,6 +32,7 @@ export default function AgencyDashboardHeader({
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const { unreadCount: notificationCount } = useUnreadNotifications();
+  const { counts: allCounts } = useAllNotificationCounts();
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -331,7 +331,14 @@ export default function AgencyOnboardingWizard() {
     await dismissWizard()
   }
 
+  // Early returns after all hooks
   if (!showWizard) return null
+
+  // Safety check: Prevent crash if currentStep is undefined during dismissal
+  if (!currentStep) {
+    console.warn('[AgencyOnboardingWizard] Invalid step index:', currentStepIndex)
+    return null
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
