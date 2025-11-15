@@ -13,12 +13,25 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Log Firebase configuration on initialization
+console.log('[Firebase Init] Initializing with configuration:');
+console.log('[Firebase Init] Auth Domain:', firebaseConfig.authDomain);
+console.log('[Firebase Init] Project ID:', firebaseConfig.projectId);
+console.log('[Firebase Init] Timestamp:', new Date().toISOString());
+
 // Initialize Firebase app (lazy initialization)
 let app: FirebaseApp | null = null;
 
 function getApp(): FirebaseApp {
   if (!app) {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+      console.log('[Firebase Init] Creating new Firebase app instance');
+      app = initializeApp(firebaseConfig);
+    } else {
+      console.log('[Firebase Init] Reusing existing Firebase app instance');
+      app = existingApps[0];
+    }
   }
   return app;
 }

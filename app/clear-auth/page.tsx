@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { clearAllFirebaseCache } from '@/lib/firebase-cleanup';
 
 export default function ClearAuthPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function ClearAuthPage() {
         logs.push('Clearing localStorage...');
         const firebaseKeys = Object.keys(localStorage).filter(k => k.startsWith('firebase:'));
         logs.push(`Found ${firebaseKeys.length} Firebase keys in localStorage`);
-        localStorage.clear();
+        firebaseKeys.forEach(key => localStorage.removeItem(key));
         logs.push('✓ localStorage cleared');
         setDetails([...logs]);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -27,8 +28,49 @@ export default function ClearAuthPage() {
         // Clear sessionStorage
         setStatus('Clearing sessionStorage...');
         logs.push('Clearing sessionStorage...');
-        sessionStorage.clear();
+        const sessionKeys = Object.keys(sessionStorage).filter(k => k.startsWith('firebase:'));
+        logs.push(`Found ${sessionKeys.length} Firebase keys in sessionStorage`);
+        sessionKeys.forEach(key => sessionStorage.removeItem(key));
         logs.push('✓ sessionStorage cleared');
+        setDetails([...logs]);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Clear IndexedDB
+        setStatus('Clearing IndexedDB...');
+        logs.push('Clearing IndexedDB...');
+        try {
+          if ('databases' in indexedDB) {
+            const databases = await indexedDB.databases();
+            const firebaseDbs = databases.filter(db =>
+              db.name && (db.name.includes('firebase') || db.name.includes('firebaseLocal'))
+            );
+            logs.push(`Found ${firebaseDbs.length} Firebase databases in IndexedDB`);
+
+            for (const db of firebaseDbs) {
+              if (db.name) {
+                await new Promise<void>((resolve) => {
+                  const request = indexedDB.deleteDatabase(db.name!);
+                  request.onsuccess = () => resolve();
+                  request.onerror = () => resolve(); // Continue even if error
+                  request.onblocked = () => resolve(); // Continue even if blocked
+                });
+                logs.push(`✓ Deleted database: ${db.name}`);
+                setDetails([...logs]);
+              }
+            }
+          } else {
+            logs.push('IndexedDB.databases() not supported, using fallback...');
+            await new Promise<void>((resolve) => {
+              const request = indexedDB.deleteDatabase('firebaseLocalStorageDb');
+              request.onsuccess = () => resolve();
+              request.onerror = () => resolve();
+              request.onblocked = () => resolve();
+            });
+            logs.push('✓ Cleared firebaseLocalStorageDb');
+          }
+        } catch (error) {
+          logs.push('⚠ IndexedDB clearing had issues (will still reload)');
+        }
         setDetails([...logs]);
         await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -57,13 +99,26 @@ export default function ClearAuthPage() {
         setStatus('✓ Authentication state cleared successfully!');
         logs.push('');
         logs.push('✓ All authentication data cleared successfully!');
+        logs.push('Page will reload in 2 seconds...');
         setDetails([...logs]);
         setCleared(true);
+
+        // Auto-reload after showing success message
+        setTimeout(() => {
+          window.location.href = '/auth/login';
+        }, 2000);
+
       } catch (error) {
         console.error('Error clearing auth:', error);
         setStatus('✗ Error clearing auth state');
         logs.push('✗ Error: ' + (error as Error).message);
+        logs.push('Reloading anyway to ensure clean state...');
         setDetails([...logs]);
+
+        // Still reload even if error
+        setTimeout(() => {
+          window.location.href = '/auth/login';
+        }, 2000);
       }
     };
 

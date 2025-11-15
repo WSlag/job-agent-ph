@@ -65,7 +65,11 @@ service cloud.firestore {
 
     // Admins collection
     match /admins/{userId} {
-      allow read: if isAdmin();
+      // Allow users to read their OWN admin profile for auth flow
+      // This prevents permission-denied errors during initial profile load
+      allow get: if isAuthenticated() && request.auth.uid == userId;
+      // Only admins can list/query all admin profiles
+      allow list: if isAdmin();
       allow create: if isOwner(userId); // Allow users to create their own admin profile
       allow update: if isOwner(userId) || hasPermission('MANAGE_PERMISSIONS');
       allow delete: if hasPermission('MANAGE_PERMISSIONS');

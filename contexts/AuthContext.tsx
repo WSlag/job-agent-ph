@@ -48,213 +48,238 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    const auth = getAuthInstance();
+    let unsubscribe: (() => void) | undefined;
+    let isCleaningUp = false;
 
-    // Check for auth domain mismatch and clear if needed
-    const checkAuthDomainMismatch = async () => {
+    const initialize = async () => {
+      const auth = getAuthInstance();
       const expectedAuthDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
-      const storedAuthDomain = localStorage.getItem('firebase:authDomain');
 
-      // Check if we have Firebase auth tokens but no stored auth domain
-      // This indicates tokens from before the domain tracking was implemented
+      console.log('[AuthContext] Initializing with auth domain:', expectedAuthDomain);
+
+      // Check for auth domain mismatch
+      const storedAuthDomain = localStorage.getItem('firebase:authDomain');
       const hasFirebaseTokens = Object.keys(localStorage).some(key =>
         key.startsWith('firebase:authUser:')
       );
 
-      if (hasFirebaseTokens && !storedAuthDomain) {
-        console.warn('[AuthContext] Found Firebase tokens without auth domain tracking!');
-        console.warn('[AuthContext] These tokens may be from the old auth domain.');
-        console.warn('[AuthContext] Clearing all Firebase auth state for safety...');
+      // Detect mismatch
+      const hasMismatch = hasFirebaseTokens && (!storedAuthDomain || storedAuthDomain !== expectedAuthDomain);
 
-        // Clear all Firebase localStorage items
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('firebase:')) {
-            localStorage.removeItem(key);
-          }
-        });
-
-        // Sign out to clear any remaining state
-        try {
-          await firebaseSignOut(auth);
-        } catch (error) {
-          console.error('[AuthContext] Error signing out during migration:', error);
-        }
-
-        console.log('[AuthContext] Auth state cleared. Please sign in again.');
-
-        // Set the correct auth domain for future reference
-        if (expectedAuthDomain) {
-          localStorage.setItem('firebase:authDomain', expectedAuthDomain);
-        }
-
-        return; // Exit early since we cleared everything
-      }
-
-      // Check for explicit domain mismatch
-      if (storedAuthDomain && storedAuthDomain !== expectedAuthDomain) {
-        console.warn('[AuthContext] Auth domain mismatch detected!');
-        console.warn('[AuthContext] Stored:', storedAuthDomain);
+      if (hasMismatch) {
+        console.warn('[AuthContext] ⚠️ AUTH DOMAIN MISMATCH DETECTED!');
         console.warn('[AuthContext] Expected:', expectedAuthDomain);
-        console.warn('[AuthContext] Clearing cached auth state...');
+        console.warn('[AuthContext] Stored:', storedAuthDomain || '(none)');
+        console.warn('[AuthContext] Redirecting to /clear-auth for complete cleanup...');
 
-        // Clear all Firebase localStorage items
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('firebase:')) {
-            localStorage.removeItem(key);
-          }
-        });
+        // Mark as cleaning up to prevent listener from being set up
+        isCleaningUp = true;
 
-        // Sign out to clear any remaining state
-        try {
-          await firebaseSignOut(auth);
-        } catch (error) {
-          console.error('[AuthContext] Error signing out during domain migration:', error);
-        }
-
-        console.log('[AuthContext] Auth state cleared. Please sign in again.');
+        // Redirect to clear-auth page which handles complete cleanup
+        window.location.href = '/clear-auth';
+        return; // Don't set up auth listener
       }
 
-      // Store current auth domain for future checks
-      if (expectedAuthDomain) {
+      // Store auth domain for future checks
+      if (expectedAuthDomain && !storedAuthDomain) {
         localStorage.setItem('firebase:authDomain', expectedAuthDomain);
+        console.log('[AuthContext] Stored auth domain for tracking:', expectedAuthDomain);
+      }
+
+      // Only set up listener if not cleaning up
+      if (!isCleaningUp) {
+        console.log('[AuthContext] Setting up auth state listener...');
+        unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          console.log('[AuthContext] Auth state changed:', firebaseUser ? `User ${firebaseUser.uid}` : 'No user');
+          setUser(firebaseUser);
+
+          if (firebaseUser) {
+            await loadUserProfile(firebaseUser.uid);
+          } else {
+            setUserProfile(null);
+            setUserType(null);
+          }
+
+          setLoading(false);
+        });
       }
     };
 
-    // Run check before setting up auth listener
-    checkAuthDomainMismatch();
+    initialize();
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-
-      if (firebaseUser) {
-        await loadUserProfile(firebaseUser.uid);
-      } else {
-        setUserProfile(null);
-        setUserType(null);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
       }
-
-      setLoading(false);
-    });
-
-    return unsubscribe;
+    };
   }, []);
 
   const loadUserProfile = async (userId: string, retryCount: number = 0) => {
     try {
       console.log('[AuthContext] Loading user profile for ID:', userId, 'retry:', retryCount);
-
-      // OPTIMIZATION: Check all user types in parallel instead of sequential
-      console.log('[AuthContext] Querying Firestore collections...');
       const db = getDbInstance();
       const auth = getAuthInstance();
-      const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
-        getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
-        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
-        getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
-      ]);
 
-      console.log('[AuthContext] Firestore queries completed successfully');
-      console.log('[AuthContext] Admin exists:', adminDoc.exists());
-      console.log('[AuthContext] JobHunter exists:', jobHunterDoc.exists());
-      console.log('[AuthContext] Agency exists:', agencyDoc.exists());
+      // Query collections SEQUENTIALLY to avoid amplifying permission errors
+      // Most users are job hunters, so check that first for performance
 
-      if (adminDoc.exists()) {
-        console.log('[AuthContext] User is an ADMIN');
-        const adminData = { id: adminDoc.id, ...adminDoc.data() } as Admin;
+      console.log('[AuthContext] Checking jobHunters collection...');
+      try {
+        const jobHunterDoc = await getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId));
+        if (jobHunterDoc.exists()) {
+          console.log('[AuthContext] User is a JOB HUNTER');
+          const jobHunterData = { id: jobHunterDoc.id, ...jobHunterDoc.data() } as JobHunter;
 
-        // Check if admin is suspended or deleted
-        if (adminData.status === 'suspended' || adminData.status === 'deleted') {
-          console.log('[AuthContext] Admin account is', adminData.status);
-          alert(`Your account has been ${adminData.status}. ${adminData.suspensionReason || ''}`);
-          await firebaseSignOut(auth);
-          setUserProfile(null);
-          setUserType(null);
+          if (jobHunterData.status === 'suspended' || jobHunterData.status === 'deleted') {
+            console.log('[AuthContext] Job hunter account is', jobHunterData.status);
+            const message = jobHunterData.status === 'suspended'
+              ? `Your account has been suspended. ${jobHunterData.suspensionReason || ''}`
+              : 'Your account has been deleted.';
+            alert(message);
+            await firebaseSignOut(auth);
+            setUserProfile(null);
+            setUserType(null);
+            return;
+          }
+
+          setUserProfile(jobHunterData);
+          setUserType('jobhunter');
           return;
         }
-
-        setUserProfile(adminData);
-        setUserType('admin');
-        return;
+      } catch (error: any) {
+        // Permission denied on jobHunters is unusual but can happen during token propagation
+        console.warn('[AuthContext] Error checking jobHunters (code: ' + error?.code + '). This may be normal during initial auth.');
       }
 
-      if (jobHunterDoc.exists()) {
-        console.log('[AuthContext] User is a JOB HUNTER');
-        const jobHunterData = { id: jobHunterDoc.id, ...jobHunterDoc.data() } as JobHunter;
+      console.log('[AuthContext] Checking agencies collection...');
+      try {
+        const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, userId));
+        if (agencyDoc.exists()) {
+          console.log('[AuthContext] User is an AGENCY');
+          const agencyData = { id: agencyDoc.id, ...agencyDoc.data() } as Agency;
 
-        // Check if user is suspended or deleted
-        if (jobHunterData.status === 'suspended' || jobHunterData.status === 'deleted') {
-          console.log('[AuthContext] Job hunter account is', jobHunterData.status);
-          const message = jobHunterData.status === 'suspended'
-            ? `Your account has been suspended. ${jobHunterData.suspensionReason || ''}`
-            : 'Your account has been deleted.';
-          alert(message);
-          await firebaseSignOut(auth);
-          setUserProfile(null);
-          setUserType(null);
+          if (agencyData.status === 'suspended' || agencyData.status === 'deleted') {
+            console.log('[AuthContext] Agency account is', agencyData.status);
+            const message = agencyData.status === 'suspended'
+              ? `Your account has been suspended. ${agencyData.suspensionReason || ''}`
+              : 'Your account has been deleted.';
+            alert(message);
+            await firebaseSignOut(auth);
+            setUserProfile(null);
+            setUserType(null);
+            return;
+          }
+
+          setUserProfile(agencyData);
+          setUserType('agency');
           return;
         }
-
-        setUserProfile(jobHunterData);
-        setUserType('jobhunter');
-        return;
+      } catch (error: any) {
+        console.warn('[AuthContext] Error checking agencies (code: ' + error?.code + ')');
       }
 
-      if (agencyDoc.exists()) {
-        console.log('[AuthContext] User is an AGENCY');
-        const agencyData = { id: agencyDoc.id, ...agencyDoc.data() } as Agency;
+      console.log('[AuthContext] Checking admins collection...');
+      try {
+        const adminDoc = await getDoc(doc(db, COLLECTIONS.ADMINS, userId));
+        if (adminDoc.exists()) {
+          console.log('[AuthContext] User is an ADMIN');
+          const adminData = { id: adminDoc.id, ...adminDoc.data() } as Admin;
 
-        // Check if agency is suspended or deleted
-        if (agencyData.status === 'suspended' || agencyData.status === 'deleted') {
-          console.log('[AuthContext] Agency account is', agencyData.status);
-          const message = agencyData.status === 'suspended'
-            ? `Your account has been suspended. ${agencyData.suspensionReason || ''}`
-            : 'Your account has been deleted.';
-          alert(message);
-          await firebaseSignOut(auth);
-          setUserProfile(null);
-          setUserType(null);
+          if (adminData.status === 'suspended' || adminData.status === 'deleted') {
+            console.log('[AuthContext] Admin account is', adminData.status);
+            alert(`Your account has been ${adminData.status}. ${adminData.suspensionReason || ''}`);
+            await firebaseSignOut(auth);
+            setUserProfile(null);
+            setUserType(null);
+            return;
+          }
+
+          setUserProfile(adminData);
+          setUserType('admin');
           return;
         }
-
-        setUserProfile(agencyData);
-        setUserType('agency');
-        return;
+      } catch (error: any) {
+        // Permission denied on admins is EXPECTED for non-admins - don't treat as error
+        console.log('[AuthContext] Not an admin (expected for non-admin users, code: ' + error?.code + ')');
       }
 
-      // Profile not found - retry up to 3 times with delay (for signup race condition)
+      // Profile not found - retry with exponential backoff
       if (retryCount < 3) {
-        console.log('[AuthContext] Profile not found, retrying in 1 second... (attempt', retryCount + 1, 'of 3)');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const waitTime = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`[AuthContext] Profile not found, retrying in ${waitTime/1000}s... (attempt ${retryCount + 1} of 3)`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
         return loadUserProfile(userId, retryCount + 1);
       }
 
-      // Profile not found after retries - sign out the user to prevent issues
-      console.error('[AuthContext] ERROR: User profile not found in database after', retryCount, 'retries. User ID:', userId);
+      // Profile not found after retries
+      console.error('[AuthContext] ERROR: User profile not found after', retryCount, 'retries. User ID:', userId);
       console.error('[AuthContext] No profile document found in jobHunters, agencies, or admins collections.');
-      console.error('[AuthContext] Please create a profile document in Firestore with this user ID.');
+      alert('Could not load your profile. Please contact support if this persists.');
       await firebaseSignOut(auth);
       setUserProfile(null);
       setUserType(null);
+
     } catch (error: any) {
-      console.error('[AuthContext] CRITICAL ERROR loading user profile:', error);
+      // Handle unexpected errors
+      console.error('[AuthContext] UNEXPECTED ERROR loading profile:', error);
       console.error('[AuthContext] Error details:', JSON.stringify(error, null, 2));
 
-      // Check if this is a permission error due to auth domain mismatch
+      // IMPORTANT: Not all permission-denied errors are auth domain mismatches!
+      // They can be caused by:
+      // 1. Normal Firestore security rule rejections (e.g., non-admin querying admin collection)
+      // 2. Token not yet propagated to Firestore
+      // 3. IndexedDB sync delays
+
       if (error?.code === 'permission-denied') {
-        console.error('[AuthContext] PERMISSION DENIED - This is likely due to cached authentication tokens.');
-        console.error('[AuthContext] The auth domain may have changed. Clearing auth state...');
+        console.warn('[AuthContext] Permission denied error during profile load');
 
-        // Clear all Firebase localStorage items
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('firebase:')) {
-            localStorage.removeItem(key);
+        // Only treat as auth domain mismatch if we have SPECIFIC indicators
+        const isAuthDomainIssue = error?.message?.includes('auth/invalid-user-token') ||
+                                   error?.message?.includes('auth/user-token-expired') ||
+                                   error?.code === 'auth/invalid-credential';
+
+        if (isAuthDomainIssue) {
+          console.error('[AuthContext] ⚠️ ACTUAL AUTH DOMAIN MISMATCH DETECTED!');
+          alert('Authentication error detected. Your browser will be redirected to clear cached data.');
+          window.location.href = '/clear-auth';
+          return;
+        }
+
+        // For regular permission-denied, retry with token refresh
+        if (retryCount < 2) {
+          console.log('[AuthContext] Retrying with fresh token (attempt', retryCount + 1, ')...');
+
+          try {
+            const auth = getAuthInstance();
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+              await currentUser.reload();
+              await currentUser.getIdToken(true); // Force refresh
+              console.log('[AuthContext] Token refreshed, waiting for propagation...');
+
+              // Exponential backoff: 2s, 4s
+              const waitTime = Math.pow(2, retryCount + 1) * 1000;
+              await new Promise(r => setTimeout(r, waitTime));
+
+              // Retry loading profile
+              return await loadUserProfile(userId, retryCount + 1);
+            }
+          } catch (refreshError) {
+            console.error('[AuthContext] Failed to refresh token:', refreshError);
           }
-        });
+        }
 
-        alert('Authentication configuration has been updated. Please clear your browser cache and login again, or use an incognito window.');
+        // After retries failed, this is likely a real permission issue
+        console.error('[AuthContext] Permission denied after retries. User may not have a profile.');
+        alert('Could not load your profile. Please contact support if this persists.');
+        const auth = getAuthInstance();
+        await firebaseSignOut(auth);
+        setUserProfile(null);
+        setUserType(null);
+        return;
       }
 
-      // Sign out on error to prevent stuck auth state
+      // For other errors, sign out
       const auth = getAuthInstance();
       await firebaseSignOut(auth);
       setUserProfile(null);
@@ -422,9 +447,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log('[AuthContext] Firebase authentication successful');
 
-      // Get the ID token and create a session cookie
-      const idToken = await userCredential.user.getIdToken();
-      console.log('[AuthContext] ID token obtained, creating session cookie...');
+      // Force token refresh to ensure it's created with current auth domain
+      console.log('[AuthContext] Forcing token refresh to ensure correct auth domain...');
+      await userCredential.user.reload();
+      const idToken = await userCredential.user.getIdToken(true); // true = force refresh
+      console.log('[AuthContext] Fresh ID token obtained');
+
+      // Log token details for debugging
+      try {
+        const tokenParts = idToken.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('[AuthContext] Token details:');
+          console.log('  - Issued at:', new Date(payload.iat * 1000).toLocaleString());
+          console.log('  - Expires at:', new Date(payload.exp * 1000).toLocaleString());
+          console.log('  - Audience:', payload.aud);
+        }
+      } catch (e) {
+        // Ignore token parsing errors
+      }
+
+      console.log('[AuthContext] Creating session cookie...');
 
       // Call the session API to create a server-side session cookie
       const response = await fetch('/api/auth/session', {
@@ -445,10 +488,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const responseData = await response.json();
       console.log('[AuthContext] Session cookie created successfully:', responseData);
 
-      // Wait a brief moment to ensure cookie is fully set
-      // Note: httpOnly cookies are not visible in document.cookie (by design for security)
-      // so we trust the server response and wait for cookie propagation
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait longer to ensure token is fully propagated before Firestore queries
+      console.log('[AuthContext] Waiting for token propagation to Firestore...');
+      await new Promise(resolve => setTimeout(resolve, 2500)); // Increased from 1000ms to 2500ms
 
       // Mark session as ready - this allows login page to redirect
       setSessionReady(true);
