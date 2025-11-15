@@ -289,6 +289,7 @@ export interface AuditLog {
   action: AuditAction;
   resourceType: AuditResourceType;
   resourceId: string;
+  resourceName?: string; // Human-readable name of the resource (e.g., job title, user name)
   details: Record<string, any>; // Additional context (e.g., reason, old values, new values)
   timestamp: Date;
   ipAddress?: string | null;

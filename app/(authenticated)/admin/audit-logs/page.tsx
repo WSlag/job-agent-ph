@@ -43,12 +43,13 @@ export default function AuditLogsPage() {
   }
 
   function exportToCSV() {
-    const headers = ['Timestamp', 'Admin', 'Action', 'Resource Type', 'Resource ID', 'Details'];
+    const headers = ['Timestamp', 'Admin', 'Action', 'Resource Type', 'Resource Name', 'Resource ID', 'Details'];
     const rows = logs.map((log) => [
       log.timestamp.toISOString(),
       log.adminName,
       formatAuditAction(log.action),
       log.resourceType,
+      log.resourceName || 'N/A',
       log.resourceId,
       JSON.stringify(log.details),
     ]);
@@ -271,9 +272,15 @@ export default function AuditLogsPage() {
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-900">
                           <div className="font-medium capitalize">{log.resourceType}</div>
-                          <div className="text-xs text-gray-500 font-mono">
-                            {log.resourceId.substring(0, 12)}...
-                          </div>
+                          {log.resourceName ? (
+                            <div className="text-xs text-gray-700" title={log.resourceId}>
+                              {log.resourceName}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-500 font-mono">
+                              {log.resourceId.substring(0, 12)}...
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {log.details.reason && (
@@ -321,9 +328,15 @@ export default function AuditLogsPage() {
                           <p>
                             <span className="font-medium capitalize">{log.resourceType}</span>
                           </p>
-                          <p className="font-mono text-xs break-all">
-                            {log.resourceId}
-                          </p>
+                          {log.resourceName ? (
+                            <p className="text-xs text-gray-700" title={log.resourceId}>
+                              {log.resourceName}
+                            </p>
+                          ) : (
+                            <p className="font-mono text-xs break-all">
+                              {log.resourceId}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="text-xs text-gray-500 text-right ml-3">

@@ -9,6 +9,8 @@ import {
   limit,
   Timestamp,
   QueryConstraint,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { AuditLog, AuditAction, AuditResourceType } from '@/types';
 import { COLLECTIONS } from './collections';
@@ -62,6 +64,74 @@ export async function logAdminAction(
   } catch (error) {
     console.error('Error logging admin action:', error);
     // Don't throw error - audit logging should not break the main operation
+  }
+}
+
+/**
+ * Helper function to fetch resource name from Firestore
+ * @param resourceType - Type of the resource
+ * @param resourceId - ID of the resource
+ * @returns Human-readable name of the resource
+ */
+async function fetchResourceName(
+  resourceType: AuditResourceType,
+  resourceId: string
+): Promise<string | undefined> {
+  try {
+    const db = getDbInstance();
+    let collectionName: string;
+    let nameField: string;
+
+    // Determine which collection to query based on resource type
+    switch (resourceType) {
+      case 'job':
+        collectionName = COLLECTIONS.JOBS;
+        nameField = 'title';
+        break;
+      case 'user':
+        collectionName = COLLECTIONS.USERS;
+        nameField = 'name';
+        break;
+      case 'agency':
+        collectionName = COLLECTIONS.AGENCIES;
+        nameField = 'agencyName';
+        break;
+      case 'jobhunter':
+        collectionName = COLLECTIONS.JOB_HUNTERS;
+        nameField = 'name';
+        break;
+      case 'featured_request':
+        collectionName = COLLECTIONS.FEATURED_REQUESTS;
+        // For featured requests, we'll fetch the job title
+        const featuredDoc = await getDoc(doc(db, collectionName, resourceId));
+        if (featuredDoc.exists()) {
+          const jobId = featuredDoc.data()?.jobId;
+          if (jobId) {
+            const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId));
+            return jobDoc.exists() ? jobDoc.data()?.title : undefined;
+          }
+        }
+        return undefined;
+      case 'settings':
+      case 'admin':
+        // These don't have meaningful names to display
+        return undefined;
+      default:
+        return undefined;
+    }
+
+    // Fetch the document
+    const docRef = doc(db, collectionName, resourceId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data()?.[nameField];
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error(`Error fetching resource name for ${resourceType}:${resourceId}:`, error);
+    return undefined;
   }
 }
 
@@ -120,7 +190,18 @@ export async function getAdminAuditLogs(
       logs = logs.filter((log) => log.timestamp <= filters.dateTo!);
     }
 
-    return logs;
+    // Fetch resource names for all logs
+    const logsWithNames = await Promise.all(
+      logs.map(async (log) => {
+        const resourceName = await fetchResourceName(log.resourceType, log.resourceId);
+        return {
+          ...log,
+          resourceName,
+        };
+      })
+    );
+
+    return logsWithNames;
   } catch (error) {
     console.error('Error getting audit logs:', error);
     return [];
