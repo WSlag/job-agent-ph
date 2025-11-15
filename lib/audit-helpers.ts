@@ -51,8 +51,8 @@ export async function logAdminAction(
       resourceId: params.resourceId,
       details: params.details || {},
       timestamp: new Date(),
-      ipAddress: params.ipAddress,
-      userAgent: params.userAgent,
+      ipAddress: params.ipAddress || null,
+      userAgent: params.userAgent || null,
     };
 
     await addDoc(collection(db, COLLECTIONS.AUDIT_LOGS), {

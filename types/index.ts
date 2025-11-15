@@ -291,8 +291,8 @@ export interface AuditLog {
   resourceId: string;
   details: Record<string, any>; // Additional context (e.g., reason, old values, new values)
   timestamp: Date;
-  ipAddress?: string;
-  userAgent?: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }
 
 export interface AuditLogWithAdmin extends AuditLog {
