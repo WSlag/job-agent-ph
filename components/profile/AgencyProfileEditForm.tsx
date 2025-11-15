@@ -158,6 +158,7 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
                   src={logoPreview}
                   alt="Company logo preview"
                   fill
+                  sizes="192px"
                   className="object-contain p-2"
                 />
               </div>

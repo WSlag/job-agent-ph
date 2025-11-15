@@ -80,6 +80,7 @@ export default function JobList({ jobs, loading = false, onLoadMore, hasMore = f
               onSave={handleSave}
               onMessage={handleMessage}
               isSaved={savedJobs.has(job.id)}
+              priority={index < 6}
             />
           </motion.div>
         ))}

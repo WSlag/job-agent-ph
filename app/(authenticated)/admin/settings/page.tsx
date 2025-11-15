@@ -9,6 +9,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getDbInstance } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/collections';
 import toast from 'react-hot-toast';
 
 export default function AdminSettingsPage() {
@@ -47,7 +48,7 @@ export default function AdminSettingsPage() {
     const loadSettings = async () => {
       try {
         const db = getDbInstance();
-        const settingsDoc = await getDoc(doc(db, 'settings', 'platform'));
+        const settingsDoc = await getDoc(doc(db, COLLECTIONS.SETTINGS, 'platform'));
         if (settingsDoc.exists()) {
           const data = settingsDoc.data();
           setSiteName(data.siteName || 'Job Agent PH');
@@ -78,7 +79,7 @@ export default function AdminSettingsPage() {
     try {
       const db = getDbInstance();
       // Save settings to Firestore
-      await setDoc(doc(db, 'settings', 'platform'), {
+      await setDoc(doc(db, COLLECTIONS.SETTINGS, 'platform'), {
         siteName,
         siteDescription,
         contactEmail,

@@ -391,6 +391,27 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Platform Settings collection
+    match /settings/{settingId} {
+      // Only admins can read settings
+      allow read: if isAdmin();
+
+      // Only super admins can write settings, or admins with MANAGE_SETTINGS permission
+      allow write: if isAdmin() &&
+                   (getAdmin().role == 'super_admin' ||
+                    'MANAGE_SETTINGS' in getAdmin().permissions);
+    }
+
+    // Contacts collection (Contact form submissions)
+    match /contacts/{contactId} {
+      // Authenticated users (admins/agencies) can read contacts
+      allow read: if isAuthenticated();
+
+      // Only server-side (Admin SDK) can write to contacts
+      // Client-side writes are blocked - submissions go through API route
+      allow write: if false;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

@@ -75,6 +75,8 @@ export default function AgencyInfoCard({ agencyId, jobId }: AgencyInfoCardProps)
                 src={agency.logoUrl}
                 alt={agency.companyName}
                 fill
+                sizes="64px"
+                priority
                 className="object-cover rounded-lg"
               />
             </div>

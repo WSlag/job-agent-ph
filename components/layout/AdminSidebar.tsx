@@ -14,6 +14,7 @@ import {
   X,
   Briefcase,
   ScrollText,
+  Mail,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,6 +34,11 @@ const navigation = [
     name: 'Users',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    name: 'Contacts',
+    href: '/agency/dashboard/contacts',
+    icon: Mail,
   },
   {
     name: 'Featured Requests',
@@ -94,6 +100,7 @@ export default function AdminSidebar() {
                   src="/job.agent.ph.png"
                   alt="Job Agent PH"
                   fill
+                  sizes="(max-width: 1024px) 200px, 256px"
                   className="object-contain"
                   priority
                 />

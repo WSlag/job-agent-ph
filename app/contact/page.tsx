@@ -6,7 +6,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Section from '@/components/ui/Section';
 import { validateEmail, validateMessage, sanitizeString } from '@/lib/validation';
-import { Mail, Send, CheckCircle } from 'lucide-react';
+import { Mail, Send, CheckCircle, Copy, Check } from 'lucide-react';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -18,6 +18,8 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [referenceNumber, setReferenceNumber] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,22 +51,37 @@ export default function ContactPage() {
     try {
       setLoading(true);
 
-      // TODO: Implement actual email sending via API route
-      // For now, just simulate the submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      console.log('Contact form submission:', {
-        name: sanitizeString(formData.name, 100),
-        email: formData.email,
-        subject: sanitizeString(formData.subject, 200),
-        message: messageValidation.sanitized
+      // Submit to API endpoint
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        }),
       });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
+      console.log('Contact form submitted successfully:', data.referenceNumber);
+      setReferenceNumber(data.referenceNumber);
       setSuccess(true);
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
       console.error('Contact form error:', error);
-      setError('Failed to send message. Please try again or email us directly.');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Failed to send message. Please try again or email us directly at contact@jobagentph.com');
+      }
     } finally {
       setLoading(false);
     }
@@ -72,6 +89,12 @@ export default function ContactPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const copyEmail = () => {
+    navigator.clipboard.writeText('contact@jobagentph.com');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -95,13 +118,41 @@ export default function ContactPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Send Us a Message</h2>
 
             {success && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-green-900">Message sent successfully!</p>
-                  <p className="text-sm text-green-700 mt-1">
-                    We've received your message and will get back to you soon.
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start gap-3 mb-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-green-900">Message successfully sent!</p>
+                    <p className="text-sm text-green-700 mt-1">
+                      Your message has been saved. Reference: <span className="font-mono font-semibold">{referenceNumber}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-green-200">
+                  <p className="text-sm text-green-800 mb-2">
+                    Our team will review your message and respond soon. You can also email us directly:
                   </p>
+                  <div className="flex items-center gap-2">
+                    <code className="px-3 py-2 bg-white border border-green-300 rounded text-sm text-green-900 flex-1">
+                      contact@jobagentph.com
+                    </code>
+                    <button
+                      onClick={copyEmail}
+                      className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-1 text-sm"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

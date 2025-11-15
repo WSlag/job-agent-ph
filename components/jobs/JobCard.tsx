@@ -28,9 +28,10 @@ interface JobCardProps {
   onMessage?: (jobId: string) => void;
   isSaved?: boolean;
   applicantCount?: number; // Pre-calculated count to avoid N+1 queries
+  priority?: boolean; // For above-fold image optimization
 }
 
-export default function JobCard({ job, onSave, onMessage, isSaved = false, applicantCount: providedCount }: JobCardProps) {
+export default function JobCard({ job, onSave, onMessage, isSaved = false, applicantCount: providedCount, priority = false }: JobCardProps) {
   const { userType, user } = useOptionalAuth();
   const [saved, setSaved] = useState(isSaved);
   const [imageError, setImageError] = useState(false);
@@ -145,6 +146,8 @@ export default function JobCard({ job, onSave, onMessage, isSaved = false, appli
             src={job.imageUrl}
             alt={`${job.companyName} - ${job.title}`}
             fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+            priority={priority}
             className="object-cover"
             onError={() => setImageError(true)}
           />
