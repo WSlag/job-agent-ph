@@ -290,7 +290,7 @@ export default function UserAdminConversationPage() {
                 icon={Send}
                 onClick={handleSend}
                 disabled={!message.trim() || sending || !adminInfo}
-                loading={sending}
+                isLoading={sending}
               >
                 Send
               </Button>
