@@ -365,7 +365,7 @@ export default function AdminConversationPage() {
               icon={Send}
               onClick={handleSend}
               disabled={!message.trim() || sending || !userInfo}
-              loading={sending}
+              isLoading={sending}
             >
               Send
             </Button>

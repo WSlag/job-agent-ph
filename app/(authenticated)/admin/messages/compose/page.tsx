@@ -293,7 +293,7 @@ export default function ComposeMessagePage() {
                     icon={Send}
                     onClick={handleSend}
                     disabled={sending || selectedRecipients.length === 0 || !content.trim()}
-                    loading={sending}
+                    isLoading={sending}
                   >
                     {sending ? 'Sending...' : 'Send Message'}
                   </Button>
