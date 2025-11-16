@@ -273,7 +273,12 @@ export default function AdminMessagesPage() {
                                   {lastMessage.content}
                                 </p>
                                 <p className="text-xs text-gray-400 mt-1">
-                                  {formatDistanceToNow(lastMessage.createdAt.toDate(), { addSuffix: true })}
+                                  {formatDistanceToNow(
+                                    (lastMessage.createdAt as any).toDate
+                                      ? (lastMessage.createdAt as any).toDate()
+                                      : new Date(lastMessage.createdAt),
+                                    { addSuffix: true }
+                                  )}
                                 </p>
                               </div>
                             )}
@@ -336,7 +341,14 @@ export default function AdminMessagesPage() {
 
                             <div className="flex items-center gap-4 mt-2">
                               <p className="text-xs text-gray-400">
-                                Sent {formatDistanceToNow(message.sentAt?.toDate() || new Date(), { addSuffix: true })}
+                                Sent {formatDistanceToNow(
+                                  message.sentAt
+                                    ? (message.sentAt as any).toDate
+                                      ? (message.sentAt as any).toDate()
+                                      : new Date(message.sentAt)
+                                    : new Date(),
+                                  { addSuffix: true }
+                                )}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <span>Delivered: {message.deliveredCount || 0}</span>

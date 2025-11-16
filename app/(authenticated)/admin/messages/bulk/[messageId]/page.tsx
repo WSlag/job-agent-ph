@@ -197,7 +197,14 @@ export default function BulkMessageDetailsPage() {
               <div className="flex items-center gap-3 mt-1">
                 {getStatusBadge()}
                 <span className="text-sm text-gray-600">
-                  Sent {formatDistanceToNow(message.sentAt?.toDate() || new Date(), { addSuffix: true })}
+                  Sent {formatDistanceToNow(
+                    message.sentAt
+                      ? (message.sentAt as any).toDate
+                        ? (message.sentAt as any).toDate()
+                        : new Date(message.sentAt)
+                      : new Date(),
+                    { addSuffix: true }
+                  )}
                 </span>
               </div>
             </div>
@@ -324,14 +331,20 @@ export default function BulkMessageDetailsPage() {
               <div>
                 <span className="text-gray-600">Created:</span>
                 <span className="ml-2 text-gray-900">
-                  {message.createdAt?.toDate().toLocaleString()}
+                  {message.createdAt
+                    ? (message.createdAt as any).toDate
+                      ? (message.createdAt as any).toDate().toLocaleString()
+                      : new Date(message.createdAt).toLocaleString()
+                    : ''}
                 </span>
               </div>
               {message.sentAt && (
                 <div>
                   <span className="text-gray-600">Sent:</span>
                   <span className="ml-2 text-gray-900">
-                    {message.sentAt.toDate().toLocaleString()}
+                    {(message.sentAt as any).toDate
+                      ? (message.sentAt as any).toDate().toLocaleString()
+                      : new Date(message.sentAt).toLocaleString()}
                   </span>
                 </div>
               )}
