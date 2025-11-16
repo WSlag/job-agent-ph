@@ -8,6 +8,7 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
+  getRedirectResult,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getAuthInstance, getDbInstance } from '@/lib/firebase';
@@ -57,6 +58,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('[AuthContext] Initializing with auth domain:', expectedAuthDomain);
 
+      // Check for pending redirect result (from Google sign-in)
+      // NOTE: This is now handled in the login/signup pages directly
+      // We check here only for debugging purposes
+      try {
+        const redirectResult = await getRedirectResult(auth);
+        if (redirectResult) {
+          console.log('[AuthContext] Found pending redirect result for user:', redirectResult.user.uid);
+          console.log('[AuthContext] This should have been handled by the login/signup page');
+        }
+      } catch (error) {
+        console.error('[AuthContext] Error checking redirect result:', error);
+      }
+
       // Check for auth domain mismatch
       const storedAuthDomain = localStorage.getItem('firebase:authDomain');
       const hasFirebaseTokens = Object.keys(localStorage).some(key =>
@@ -95,9 +109,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (firebaseUser) {
             await loadUserProfile(firebaseUser.uid);
+
+            // Check if session cookie exists when user is authenticated
+            const sessionCookie = document.cookie.includes('session=');
+            console.log('[AuthContext] Session cookie present:', sessionCookie);
+            setSessionReady(sessionCookie);
           } else {
             setUserProfile(null);
             setUserType(null);
+            setSessionReady(false);
           }
 
           setLoading(false);
@@ -501,10 +521,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Provide user-friendly error messages
       if (error.code === 'auth/user-not-found') {
         throw new Error('No account found with this email. Please sign up first.');
-      } else if (error.code === 'auth/wrong-password') {
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/missing-password') {
+        // Check if this user signed up with Google instead
+        try {
+          const auth = getAuthInstance();
+          const { fetchSignInMethodsForEmail } = await import('firebase/auth');
+          const methods = await fetchSignInMethodsForEmail(auth, email);
+          if (methods.includes('google.com')) {
+            throw new Error('This account uses Google sign-in. Please click "Continue with Google" instead.');
+          }
+        } catch (checkError) {
+          // If we can't check, provide generic error
+        }
         throw new Error('Incorrect password. Please try again.');
       } else if (error.code === 'auth/invalid-credential') {
-        throw new Error('Invalid email or password. If you don\'t have an account, please sign up first.');
+        // Check if this user signed up with Google instead
+        try {
+          const auth = getAuthInstance();
+          const { fetchSignInMethodsForEmail } = await import('firebase/auth');
+          const methods = await fetchSignInMethodsForEmail(auth, email);
+          if (methods.includes('google.com')) {
+            throw new Error('This account uses Google sign-in. Please click "Continue with Google" instead.');
+          }
+        } catch (checkError) {
+          // If we can't check, provide generic error
+        }
+        throw new Error('Invalid email or password. If you signed up with Google, please use "Continue with Google" instead.');
       } else if (error.code === 'auth/invalid-email') {
         throw new Error('Invalid email address format.');
       } else if (error.code === 'auth/user-disabled') {

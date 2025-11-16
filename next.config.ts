@@ -20,6 +20,24 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Explicitly set workspace root for Firebase App Hosting
   outputFileTracingRoot: require('path').join(__dirname),
+  // Add security headers to handle COOP policy
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
+          },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       // Firebase Storage - for uploaded images

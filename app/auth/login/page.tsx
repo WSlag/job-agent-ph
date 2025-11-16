@@ -7,6 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirect';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
+import { getRedirectResult } from 'firebase/auth';
+import { getAuthInstance, getDbInstance } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { COLLECTIONS } from '@/lib/collections';
 
 function LoginForm() {
   const router = useRouter();
@@ -19,6 +23,184 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
   const hasRedirected = useRef(false);
+
+  // Helper function to process Google authentication result
+  const processGoogleAuthResult = async (user: any) => {
+    try {
+      const db = getDbInstance();
+      const userId = user.uid;
+
+      console.log('[Login] Processing Google auth for user:', userId);
+
+      // Get stored user type and return URL from sessionStorage
+      const storedUserType = sessionStorage.getItem('googleAuthUserType') || 'jobhunter';
+      const storedReturnUrl = sessionStorage.getItem('googleAuthReturnUrl');
+
+      // Check if user profile already exists in any collection
+      const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
+        getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
+        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
+        getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
+      ]);
+
+      // If no profile exists, create one based on stored userType
+      if (!adminDoc.exists() && !jobHunterDoc.exists() && !agencyDoc.exists()) {
+        const displayName = user.displayName || 'User';
+        const nameParts = displayName.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        // Create user document
+        await setDoc(doc(db, COLLECTIONS.USERS, userId), {
+          email: user.email,
+          userType: storedUserType,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        // Create profile based on user type
+        if (storedUserType === 'jobhunter') {
+          await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), {
+            firstName,
+            lastName,
+            email: user.email,
+            userType: 'jobhunter',
+            location: '',
+            skills: [],
+            experience: 0,
+            profileImageUrl: user.photoURL || '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        } else if (storedUserType === 'agency') {
+          await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
+            companyName: displayName,
+            email: user.email,
+            userType: 'agency',
+            registrationNumber: '',
+            contactPerson: displayName,
+            phone: '',
+            address: '',
+            logoUrl: user.photoURL || '',
+            verified: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+      }
+
+      // CRITICAL: Create session cookie
+      console.log('[Login] Creating session cookie...');
+      const idToken = await user.getIdToken(true);
+
+      const sessionResponse = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!sessionResponse.ok) {
+        console.error('[Login] Failed to create session cookie');
+        const errorData = await sessionResponse.json().catch(() => ({}));
+        console.error('[Login] Session error details:', errorData);
+        throw new Error('Failed to create session cookie. Please try again.');
+      }
+
+      const sessionData = await sessionResponse.json();
+      console.log('[Login] Session cookie created successfully:', sessionData);
+
+      // Clean up sessionStorage
+      sessionStorage.removeItem('googleAuthUserType');
+      sessionStorage.removeItem('googleAuthReturnUrl');
+
+      // Wait for session cookie to propagate
+      console.log('[Login] Waiting for session propagation...');
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+      // Determine the appropriate redirect URL
+      let finalRedirect = storedReturnUrl || '/';
+
+      // If no stored URL, determine based on user type
+      if (!storedReturnUrl) {
+        const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
+        const userData = userDoc.data();
+        const actualUserType = userData?.userType || storedUserType;
+
+        console.log('[Login] User type:', actualUserType);
+
+        if (actualUserType === 'admin') {
+          finalRedirect = '/admin/dashboard';
+        } else if (actualUserType === 'agency') {
+          finalRedirect = '/agency/dashboard';
+        } else if (actualUserType === 'jobhunter') {
+          finalRedirect = '/jobs';
+        }
+      }
+
+      console.log('[Login] Redirecting to:', finalRedirect);
+      setIsRedirecting(true);
+
+      // Use window.location for full page reload
+      window.location.href = finalRedirect;
+    } catch (error) {
+      console.error('[Login] Error processing Google auth:', error);
+      setError('Failed to complete Google sign-in. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  // Handle Google redirect result when page loads
+  useEffect(() => {
+    const handleGoogleRedirect = async () => {
+      try {
+        console.log('[Login] Checking for Google redirect result...');
+
+        // Check if we're expecting a Google redirect
+        const googleAuthPending = sessionStorage.getItem('googleAuthPending');
+        console.log('[Login] Google auth pending flag:', googleAuthPending);
+
+        const auth = getAuthInstance();
+        console.log('[Login] Auth instance obtained, calling getRedirectResult...');
+
+        const result = await getRedirectResult(auth);
+        console.log('[Login] getRedirectResult returned:', {
+          hasResult: !!result,
+          hasUser: !!result?.user,
+          userId: result?.user?.uid
+        });
+
+        if (result && result.user) {
+          // Clear the pending flag
+          sessionStorage.removeItem('googleAuthPending');
+
+          // Google sign-in successful, handle session creation HERE
+          console.log('[Login] Google redirect result received, processing authentication...');
+          console.log('[Login] User details:', {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName
+          });
+
+          // Process the authentication result directly here
+          await processGoogleAuthResult(result.user);
+        } else if (googleAuthPending) {
+          console.log('[Login] Google auth was pending but no result received');
+          sessionStorage.removeItem('googleAuthPending');
+        }
+      } catch (error: any) {
+        console.error('[Login] Error handling Google redirect:', error);
+        console.error('[Login] Error code:', error?.code);
+        console.error('[Login] Error message:', error?.message);
+
+        // Clean up pending flag on error
+        sessionStorage.removeItem('googleAuthPending');
+      }
+    };
+
+    handleGoogleRedirect();
+  }, [router]);
 
   // Handle redirect after authentication
   useEffect(() => {
@@ -128,8 +310,17 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className={`px-4 py-3 rounded-lg ${
+                error.includes('Google sign-in')
+                  ? 'bg-blue-50 border border-blue-200 text-blue-700'
+                  : 'bg-red-50 border border-red-200 text-red-700'
+              }`}>
                 {error}
+                {error.includes('Google sign-in') && (
+                  <p className="mt-2 text-sm font-medium">
+                    👆 Use the "Continue with Google" button above
+                  </p>
+                )}
               </div>
             )}
 

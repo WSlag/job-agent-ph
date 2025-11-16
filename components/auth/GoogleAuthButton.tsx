@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithRedirect, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getAuthInstance, getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
@@ -42,7 +42,8 @@ interface GoogleAuthButtonProps {
 /**
  * GoogleAuthButton Component
  *
- * Reusable Google authentication button with popup sign-in flow.
+ * Reusable Google authentication button with redirect sign-in flow (primary)
+ * and popup fallback. Uses redirect flow to avoid COOP policy issues.
  * Handles both new user registration and existing user login.
  * Automatically creates user profile if it doesn't exist.
  *
@@ -67,80 +68,184 @@ export default function GoogleAuthButton({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Helper function to handle the authentication result
+  const handleAuthResult = async (user: any) => {
+    const db = getDbInstance();
+    const userId = user.uid;
+
+    console.log('[GoogleAuthButton] Processing authentication for user:', userId);
+
+    // Check if user profile already exists in any collection
+    const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
+      getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
+      getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
+      getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
+    ]);
+
+    // Determine actual user type
+    let actualUserType = userType;
+    if (adminDoc.exists()) actualUserType = 'admin';
+    else if (agencyDoc.exists()) actualUserType = 'agency';
+    else if (jobHunterDoc.exists()) actualUserType = 'jobhunter';
+
+    // If no profile exists, create one based on specified userType
+    if (!adminDoc.exists() && !jobHunterDoc.exists() && !agencyDoc.exists()) {
+      console.log('[GoogleAuthButton] Creating new user profile for type:', userType);
+      const displayName = user.displayName || 'User';
+      const nameParts = displayName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Create user document
+      await setDoc(doc(db, COLLECTIONS.USERS, userId), {
+        email: user.email,
+        userType,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // Create profile based on user type
+      if (userType === 'jobhunter') {
+        await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), {
+          firstName,
+          lastName,
+          email: user.email,
+          userType: 'jobhunter',
+          location: '',
+          skills: [],
+          experience: 0,
+          profileImageUrl: user.photoURL || '',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      } else if (userType === 'agency') {
+        await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
+          companyName: displayName,
+          email: user.email,
+          userType: 'agency',
+          registrationNumber: '',
+          contactPerson: displayName,
+          phone: '',
+          address: '',
+          logoUrl: user.photoURL || '',
+          verified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    }
+
+    // CRITICAL: Create session cookie
+    console.log('[GoogleAuthButton] Creating session cookie...');
+    try {
+      const idToken = await user.getIdToken(true);
+      console.log('[GoogleAuthButton] Got ID token, creating session...');
+
+      const sessionResponse = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!sessionResponse.ok) {
+        const errorData = await sessionResponse.json().catch(() => ({}));
+        console.error('[GoogleAuthButton] Session creation failed:', errorData);
+        throw new Error('Failed to create session cookie');
+      }
+
+      const sessionData = await sessionResponse.json();
+      console.log('[GoogleAuthButton] Session cookie created successfully:', sessionData);
+
+      // Wait for session to propagate
+      console.log('[GoogleAuthButton] Waiting for session propagation...');
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+    } catch (error) {
+      console.error('[GoogleAuthButton] Error creating session:', error);
+      throw error;
+    }
+
+    // Determine redirect URL based on user type
+    let finalRedirect = returnUrl || '/';
+    if (!returnUrl) {
+      if (actualUserType === 'admin') {
+        finalRedirect = '/admin/dashboard';
+      } else if (actualUserType === 'agency') {
+        finalRedirect = '/agency/dashboard';
+      } else if (actualUserType === 'jobhunter') {
+        finalRedirect = '/jobs';
+      }
+    }
+
+    console.log('[GoogleAuthButton] Redirecting to:', finalRedirect);
+
+    // Success callback
+    if (onSuccess) {
+      onSuccess();
+    }
+
+    // Use window.location for a full page reload to ensure session is recognized
+    window.location.href = finalRedirect;
+  };
+
   const handleGoogleLogin = async () => {
     setIsLoading(true);
 
     try {
       const auth = getAuthInstance();
-      const db = getDbInstance();
       const provider = new GoogleAuthProvider();
 
-      // Open Google sign-in popup
-      const result = await signInWithPopup(auth, provider);
-      const userId = result.user.uid;
+      // Force account selection
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
 
-      // Check if user profile already exists in any collection
-      const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
-        getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
-        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
-        getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
-      ]);
+      console.log('[GoogleAuthButton] Starting Google sign-in...');
+      console.log('[GoogleAuthButton] Current URL:', window.location.href);
+      console.log('[GoogleAuthButton] Auth domain:', auth.config.authDomain);
 
-      // If no profile exists, create one based on specified userType
-      if (!adminDoc.exists() && !jobHunterDoc.exists() && !agencyDoc.exists()) {
-        const displayName = result.user.displayName || 'User';
-        const nameParts = displayName.split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
+      // Store the intended user type and return URL in sessionStorage for redirect flow
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('googleAuthUserType', userType);
+        if (returnUrl) {
+          sessionStorage.setItem('googleAuthReturnUrl', returnUrl);
+        }
 
-        // Create user document
-        await setDoc(doc(db, COLLECTIONS.USERS, userId), {
-          email: result.user.email,
-          userType,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+        // Store a flag to indicate we're expecting a Google redirect
+        sessionStorage.setItem('googleAuthPending', 'true');
 
-        // Create profile based on user type
-        if (userType === 'jobhunter') {
-          await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), {
-            firstName,
-            lastName,
-            email: result.user.email,
-            userType: 'jobhunter',
-            location: '',
-            skills: [],
-            experience: 0,
-            profileImageUrl: result.user.photoURL || '',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
-        } else if (userType === 'agency') {
-          await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
-            companyName: displayName,
-            email: result.user.email,
-            userType: 'agency',
-            registrationNumber: '',
-            contactPerson: displayName,
-            phone: '',
-            address: '',
-            logoUrl: result.user.photoURL || '',
-            verified: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
+        // Also store the current page URL for debugging
+        sessionStorage.setItem('googleAuthOriginUrl', window.location.href);
+      }
+
+      // Try popup first for better UX, fall back to redirect if it fails
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+      if (isLocal) {
+        console.log('[GoogleAuthButton] Using popup method for localhost...');
+        try {
+          const result = await signInWithPopup(auth, provider);
+          console.log('[GoogleAuthButton] Popup sign-in successful:', result.user.uid);
+
+          // Clear the pending flag since we got immediate result
+          sessionStorage.removeItem('googleAuthPending');
+          sessionStorage.removeItem('googleAuthOriginUrl');
+
+          // Process the result immediately
+          await handleAuthResult(result.user);
+          return;
+        } catch (popupError: any) {
+          console.log('[GoogleAuthButton] Popup failed, falling back to redirect:', popupError.code);
+          // Fall through to redirect method
         }
       }
 
-      // Success callback
-      if (onSuccess) {
-        onSuccess();
-      } else if (returnUrl) {
-        router.push(returnUrl);
-      } else {
-        // Default redirect to home
-        router.push('/');
-      }
+      // Use redirect method as fallback or for production
+      console.log('[GoogleAuthButton] Using redirect method for Google sign-in...');
+      await signInWithRedirect(auth, provider);
+      // Page will redirect to Google, then come back
     } catch (error: any) {
       console.error('Google login error:', error);
 
@@ -155,13 +260,21 @@ export default function GoogleAuthButton({
         errorMessage = 'Popup was blocked by your browser. Please allow popups for this site.';
       } else if (error.code === 'auth/cancelled-popup-request') {
         errorMessage = 'Login cancelled. Please try again.';
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = 'This domain is not authorized for authentication. Please contact support.';
       }
 
       // Error callback
       if (onError) {
         onError(errorMessage);
       }
-    } finally {
+
+      // Clean up sessionStorage on error
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('googleAuthUserType');
+        sessionStorage.removeItem('googleAuthReturnUrl');
+      }
+
       setIsLoading(false);
     }
   };

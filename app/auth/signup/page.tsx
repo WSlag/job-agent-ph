@@ -8,6 +8,10 @@ import { UserType } from '@/types';
 import { Loader2, Briefcase, Building2 } from 'lucide-react';
 import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirect';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
+import { getRedirectResult } from 'firebase/auth';
+import { getAuthInstance, getDbInstance } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { COLLECTIONS } from '@/lib/collections';
 
 function SignUpForm() {
   const router = useRouter();
@@ -34,6 +38,184 @@ function SignUpForm() {
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+
+  // Helper function to process Google authentication result
+  const processGoogleAuthResult = async (user: any) => {
+    try {
+      const db = getDbInstance();
+      const userId = user.uid;
+
+      console.log('[Signup] Processing Google auth for user:', userId);
+
+      // Get stored user type and return URL from sessionStorage
+      const storedUserType = sessionStorage.getItem('googleAuthUserType') || userType || 'jobhunter';
+      const storedReturnUrl = sessionStorage.getItem('googleAuthReturnUrl');
+
+      // Check if user profile already exists in any collection
+      const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
+        getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
+        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
+        getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
+      ]);
+
+      // If no profile exists, create one based on stored userType
+      if (!adminDoc.exists() && !jobHunterDoc.exists() && !agencyDoc.exists()) {
+        const displayName = user.displayName || 'User';
+        const nameParts = displayName.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        // Create user document
+        await setDoc(doc(db, COLLECTIONS.USERS, userId), {
+          email: user.email,
+          userType: storedUserType,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        // Create profile based on user type
+        if (storedUserType === 'jobhunter') {
+          await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), {
+            firstName,
+            lastName,
+            email: user.email,
+            userType: 'jobhunter',
+            location: '',
+            skills: [],
+            experience: 0,
+            profileImageUrl: user.photoURL || '',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        } else if (storedUserType === 'agency') {
+          await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
+            companyName: displayName,
+            email: user.email,
+            userType: 'agency',
+            registrationNumber: '',
+            contactPerson: displayName,
+            phone: '',
+            address: '',
+            logoUrl: user.photoURL || '',
+            verified: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+      }
+
+      // CRITICAL: Create session cookie
+      console.log('[Signup] Creating session cookie...');
+      const idToken = await user.getIdToken(true);
+
+      const sessionResponse = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!sessionResponse.ok) {
+        console.error('[Signup] Failed to create session cookie');
+        const errorData = await sessionResponse.json().catch(() => ({}));
+        console.error('[Signup] Session error details:', errorData);
+        throw new Error('Failed to create session cookie. Please try again.');
+      }
+
+      const sessionData = await sessionResponse.json();
+      console.log('[Signup] Session cookie created successfully:', sessionData);
+
+      // Clean up sessionStorage
+      sessionStorage.removeItem('googleAuthUserType');
+      sessionStorage.removeItem('googleAuthReturnUrl');
+
+      // Wait for session cookie to propagate
+      console.log('[Signup] Waiting for session propagation...');
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+      // Determine the appropriate redirect URL
+      let finalRedirect = storedReturnUrl || '/';
+
+      // If no stored URL, determine based on user type
+      if (!storedReturnUrl) {
+        const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
+        const userData = userDoc.data();
+        const actualUserType = userData?.userType || storedUserType;
+
+        console.log('[Signup] User type:', actualUserType);
+
+        if (actualUserType === 'admin') {
+          finalRedirect = '/admin/dashboard';
+        } else if (actualUserType === 'agency') {
+          finalRedirect = '/agency/dashboard';
+        } else if (actualUserType === 'jobhunter') {
+          finalRedirect = '/jobs';
+        }
+      }
+
+      console.log('[Signup] Redirecting to:', finalRedirect);
+      setIsRedirecting(true);
+
+      // Use window.location for full page reload
+      window.location.href = finalRedirect;
+    } catch (error) {
+      console.error('[Signup] Error processing Google auth:', error);
+      setError('Failed to complete Google sign-in. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  // Handle Google redirect result when page loads
+  useEffect(() => {
+    const handleGoogleRedirect = async () => {
+      try {
+        console.log('[Signup] Checking for Google redirect result...');
+
+        // Check if we're expecting a Google redirect
+        const googleAuthPending = sessionStorage.getItem('googleAuthPending');
+        console.log('[Signup] Google auth pending flag:', googleAuthPending);
+
+        const auth = getAuthInstance();
+        console.log('[Signup] Auth instance obtained, calling getRedirectResult...');
+
+        const result = await getRedirectResult(auth);
+        console.log('[Signup] getRedirectResult returned:', {
+          hasResult: !!result,
+          hasUser: !!result?.user,
+          userId: result?.user?.uid
+        });
+
+        if (result && result.user) {
+          // Clear the pending flag
+          sessionStorage.removeItem('googleAuthPending');
+
+          // Google sign-in successful, handle session creation HERE
+          console.log('[Signup] Google redirect result received, processing authentication...');
+          console.log('[Signup] User details:', {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName
+          });
+
+          // Process the authentication result directly here
+          await processGoogleAuthResult(result.user);
+        } else if (googleAuthPending) {
+          console.log('[Signup] Google auth was pending but no result received');
+          sessionStorage.removeItem('googleAuthPending');
+        }
+      } catch (error: any) {
+        console.error('[Signup] Error handling Google redirect:', error);
+        console.error('[Signup] Error code:', error?.code);
+        console.error('[Signup] Error message:', error?.message);
+
+        // Clean up pending flag on error
+        sessionStorage.removeItem('googleAuthPending');
+      }
+    };
+
+    handleGoogleRedirect();
+  }, [router]);
 
   // Handle redirect after authentication - only redirect once
   useEffect(() => {
