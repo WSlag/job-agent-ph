@@ -133,7 +133,7 @@ export default function UserAdminConversationPage() {
         senderId: user.uid,
         senderType: 'user',
         content: messageContent,
-        timestamp: Timestamp.now(),
+        timestamp: Timestamp.now() as any,
         read: false,
       };
 
@@ -145,7 +145,7 @@ export default function UserAdminConversationPage() {
           content: messageContent,
           senderId: user.uid,
           senderType: 'user',
-          createdAt: Timestamp.now(),
+          createdAt: Timestamp.now() as any,
           read: false,
         },
         unreadCount_admin: increment(1),
