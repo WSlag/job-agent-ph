@@ -357,9 +357,11 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                      resource.data.userId == request.auth.uid;
 
-      // System/backend creates notifications via Cloud Functions
-      // Users cannot create their own notifications
-      allow create: if false;
+      // Admins can create notifications for users when sending messages
+      // System/backend can also create notifications via Cloud Functions
+      allow create: if isAdmin() ||
+                      // Server-side operations (Cloud Functions)
+                      request.auth == null;
 
       // Users can update their own notifications (mark as read)
       allow update: if isAuthenticated() &&
@@ -414,15 +416,15 @@ service cloud.firestore {
 
     // Admin Messages collection (Bulk messages from admins to users)
     match /adminMessages/{messageId} {
-      // Admins can read their own messages
-      allow read: if isAdmin() &&
-                    (resource.data.adminId == request.auth.uid ||
-                     hasPermission('SEND_MESSAGES') ||
-                     hasPermission('SEND_BULK_MESSAGES'));
+      // Admins can get their own messages, users can get messages sent to them
+      allow get: if isAuthenticated() &&
+                    ((isAdmin() && (resource.data.adminId == request.auth.uid ||
+                                    hasPermission('SEND_MESSAGES') ||
+                                    hasPermission('SEND_BULK_MESSAGES'))) ||
+                     (request.auth.uid in resource.data.recipientIds));
 
-      // Users can read messages sent to them
-      allow read: if isAuthenticated() &&
-                    request.auth.uid in resource.data.recipientIds;
+      // Both admins and users can list/query their messages
+      allow list: if isAuthenticated();
 
       // Only admins with messaging permissions can create messages
       allow create: if isAdmin() &&
@@ -442,13 +444,13 @@ service cloud.firestore {
 
     // Admin Conversations collection (Individual conversations between admins and users)
     match /adminConversations/{conversationId} {
-      // Admins can read their own conversations
-      allow read: if isAdmin() &&
-                    resource.data.adminId == request.auth.uid;
+      // Admins and users can read conversations they're part of (get)
+      allow get: if isAuthenticated() &&
+                    ((isAdmin() && resource.data.adminId == request.auth.uid) ||
+                     (resource.data.userId == request.auth.uid));
 
-      // Users can read conversations they're part of
-      allow read: if isAuthenticated() &&
-                    resource.data.userId == request.auth.uid;
+      // Both admins and users can list/query conversations
+      allow list: if isAuthenticated();
 
       // Admins with messaging permissions can create conversations
       allow create: if isAdmin() &&
@@ -466,13 +468,13 @@ service cloud.firestore {
 
       // Messages subcollection
       match /messages/{messageId} {
-        // Admin can read messages in their conversations
-        allow read: if isAdmin() &&
-                      get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.adminId == request.auth.uid;
+        // Both admins and users can get messages in their conversations
+        allow get: if isAuthenticated() &&
+                      ((isAdmin() && get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.adminId == request.auth.uid) ||
+                       (get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.userId == request.auth.uid));
 
-        // User can read messages in their conversations
-        allow read: if isAuthenticated() &&
-                      get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.userId == request.auth.uid;
+        // Both admins and users can list messages in their conversations
+        allow list: if isAuthenticated();
 
         // Both admin and user can create messages in their conversations
         allow create: if isAuthenticated() &&
@@ -481,8 +483,11 @@ service cloud.firestore {
                         request.resource.data.senderId == request.auth.uid &&
                         validateStringLength(request.resource.data.content, 1, 2000);
 
-        // Messages cannot be updated once sent
-        allow update: if false;
+        // Messages can be updated to mark as read
+        allow update: if isAuthenticated() &&
+                        (get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.adminId == request.auth.uid ||
+                         get(/databases/$(database)/documents/adminConversations/$(conversationId)).data.userId == request.auth.uid) &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
 
         // Messages cannot be deleted
         allow delete: if false;

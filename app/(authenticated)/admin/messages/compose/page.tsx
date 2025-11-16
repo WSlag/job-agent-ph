@@ -46,7 +46,7 @@ interface Recipient {
 
 export default function ComposeMessagePage() {
   const router = useRouter();
-  const { user, userType } = useAuth();
+  const { user, userType, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [messageType, setMessageType] = useState<MessageType>('individual');
@@ -65,19 +65,19 @@ export default function ComposeMessagePage() {
 
   // Check permissions
   useEffect(() => {
-    if (userType === 'admin' && user) {
-      const hasPermissions = canSendMessages({ ...user, role: 'moderator', permissions: [] });
+    if (userType === 'admin' && userProfile) {
+      const hasPermissions = canSendMessages(userProfile as any);
       if (!hasPermissions) {
         toast.error('You do not have permission to send messages');
         router.push('/admin/dashboard');
       }
 
       // Check bulk message permission
-      if (messageType === 'bulk' && !canSendBulkMessages({ ...user, role: 'moderator', permissions: [] })) {
+      if (messageType === 'bulk' && !canSendBulkMessages(userProfile as any)) {
         setMessageType('individual');
       }
     }
-  }, [user, userType, router, messageType]);
+  }, [userProfile, userType, router, messageType]);
 
   // Load recipients based on filters
   useEffect(() => {
@@ -229,7 +229,7 @@ export default function ComposeMessagePage() {
                       <span className="text-sm text-gray-700">Individual</span>
                     </label>
 
-                    {canSendBulkMessages({ ...user, role: 'moderator', permissions: [] } as any) && (
+                    {canSendBulkMessages(userProfile as any) && (
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -327,11 +327,12 @@ export default function ComposeMessagePage() {
                       <Select
                         value={filters.userType || 'all'}
                         onChange={(e) => setFilters({ ...filters, userType: e.target.value as RecipientType })}
-                      >
-                        <option value="all">All Users</option>
-                        <option value="jobhunter">Job Hunters</option>
-                        <option value="agency">Agencies</option>
-                      </Select>
+                        options={[
+                          { value: 'all', label: 'All Users' },
+                          { value: 'jobhunter', label: 'Job Hunters' },
+                          { value: 'agency', label: 'Agencies' },
+                        ]}
+                      />
                     </div>
                   </div>
                 )}

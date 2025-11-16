@@ -40,7 +40,7 @@ type TabType = 'individual' | 'bulk' | 'stats';
 
 export default function AdminMessagesPage() {
   const router = useRouter();
-  const { user, userType } = useAuth();
+  const { user, userType, userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('individual');
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,14 +55,14 @@ export default function AdminMessagesPage() {
 
   // Check permissions
   useEffect(() => {
-    if (userType === 'admin' && user) {
-      const hasPermissions = canSendMessages({ ...user, role: 'moderator', permissions: [] });
+    if (userType === 'admin' && userProfile) {
+      const hasPermissions = canSendMessages(userProfile as any);
       if (!hasPermissions) {
         toast.error('You do not have permission to access messaging');
         router.push('/admin/dashboard');
       }
     }
-  }, [user, userType, router]);
+  }, [userProfile, userType, router]);
 
   // Load data based on active tab
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function AdminMessagesPage() {
               </div>
             </button>
 
-            {canSendBulkMessages(user as any) && (
+            {canSendBulkMessages(userProfile as any) && (
               <button
                 onClick={() => setActiveTab('bulk')}
                 className={`

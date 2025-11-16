@@ -101,18 +101,18 @@ export async function sendBulkMessage(
     });
 
     // Log the action
-    await logAdminAction(
+    await logAdminAction({
       adminId,
       adminName,
-      'message_sent_bulk',
-      'message',
-      adminMessageRef.id,
-      {
+      action: 'message_sent_bulk',
+      resourceType: 'message',
+      resourceId: adminMessageRef.id,
+      details: {
         recipientCount: recipientIds.length,
         recipientType,
         subject,
       }
-    );
+    });
 
     return adminMessageRef.id;
   } catch (error) {
@@ -136,7 +136,6 @@ export async function sendIndividualMessage(
   }
 
   const db = getDbInstance();
-  const batch = writeBatch(db);
 
   try {
     // Check if conversation exists
@@ -153,7 +152,7 @@ export async function sendIndividualMessage(
     let conversationRef: any;
 
     if (snapshot.empty) {
-      // Create new conversation
+      // Create new conversation first (not in batch to avoid permission issues)
       conversationRef = doc(conversationsRef);
       conversationId = conversationRef.id;
 
@@ -168,21 +167,28 @@ export async function sendIndividualMessage(
         updatedAt: Timestamp.now(),
       };
 
-      batch.set(conversationRef, conversationData);
+      await setDoc(conversationRef, conversationData);
     } else {
       // Use existing conversation
       conversationRef = snapshot.docs[0].ref;
       conversationId = snapshot.docs[0].id;
-
-      // Update unread count
-      batch.update(conversationRef, {
-        unreadCount_user: increment(1),
-        updatedAt: serverTimestamp(),
-      });
     }
+
+    // Now create message and notification in a batch
+    const batch = writeBatch(db);
 
     // Add message to conversation
     const messageRef = doc(collection(db, `adminConversations/${conversationId}/messages`));
+
+    const lastMessageData = {
+      id: messageRef.id,
+      content,
+      senderId: adminId,
+      senderType: 'admin',
+      createdAt: Timestamp.now(),
+      read: false,
+    };
+
     const messageData: Partial<AdminMessageThread> = {
       conversationId,
       senderId: adminId,
@@ -194,16 +200,11 @@ export async function sendIndividualMessage(
 
     batch.set(messageRef, messageData);
 
-    // Update last message in conversation
+    // Update conversation with last message and unread count
     batch.update(conversationRef, {
-      lastMessage: {
-        id: messageRef.id,
-        content,
-        senderId: adminId,
-        senderType: 'admin',
-        createdAt: Timestamp.now(),
-        read: false,
-      },
+      unreadCount_user: increment(1),
+      lastMessage: lastMessageData,
+      updatedAt: serverTimestamp(),
     });
 
     // Create notification for recipient
@@ -222,17 +223,17 @@ export async function sendIndividualMessage(
     await batch.commit();
 
     // Log the action
-    await logAdminAction(
+    await logAdminAction({
       adminId,
       adminName,
-      'message_sent_individual',
-      'message',
-      conversationId,
-      {
+      action: 'message_sent_individual',
+      resourceType: 'message',
+      resourceId: conversationId,
+      details: {
         recipientId: userId,
         recipientType: userType,
       }
-    );
+    });
 
     return conversationId;
   } catch (error) {
@@ -352,8 +353,8 @@ export async function getAdminConversations(
   const snapshot = await getDocs(q);
   const conversations: AdminConversation[] = [];
 
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
 
     // Get user details
     const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
@@ -361,7 +362,7 @@ export async function getAdminConversations(
     const userData = userDoc.data();
 
     conversations.push({
-      id: doc.id,
+      id: docSnap.id,
       ...data,
       userName: data.userType === 'jobhunter'
         ? `${userData?.firstName} ${userData?.lastName}`
@@ -475,8 +476,8 @@ export function subscribeToAdminConversations(
   const unsubscribe = onSnapshot(q, async (snapshot) => {
     const conversations: AdminConversation[] = [];
 
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
 
       // Get user details
       const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
@@ -484,7 +485,7 @@ export function subscribeToAdminConversations(
       const userData = userDoc.data();
 
       conversations.push({
-        id: doc.id,
+        id: docSnap.id,
         ...data,
         userName: data.userType === 'jobhunter'
           ? `${userData?.firstName} ${userData?.lastName}`
