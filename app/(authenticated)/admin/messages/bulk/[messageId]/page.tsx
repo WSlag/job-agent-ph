@@ -69,8 +69,8 @@ export default function BulkMessageDetailsPage() {
         }
 
         setMessage({
-          id: messageDoc.id,
           ...data,
+          id: messageDoc.id,
         });
 
         setRecipientDetails({
