@@ -149,7 +149,14 @@ export default function UserBulkMessagePage() {
             <div className="text-right">
               <p className="text-sm text-gray-500 flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                {formatDistanceToNow(message.sentAt?.toDate() || new Date(), { addSuffix: true })}
+                {formatDistanceToNow(
+                  message.sentAt
+                    ? (message.sentAt as any).toDate
+                      ? (message.sentAt as any).toDate()
+                      : new Date(message.sentAt)
+                    : new Date(),
+                  { addSuffix: true }
+                )}
               </p>
             </div>
           </div>
