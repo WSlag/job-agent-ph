@@ -205,15 +205,15 @@ function MessagesContent() {
     const unsubscribeAdmin = onSnapshot(adminConvQuery, async (snapshot) => {
       const adminConvos: AdminConversation[] = [];
 
-      for (const doc of snapshot.docs) {
-        const data = doc.data();
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
 
         // Get admin details
         const adminDoc = await getDoc(doc(db, 'admins', data.adminId));
         const adminData = adminDoc.data();
 
         adminConvos.push({
-          id: doc.id,
+          id: docSnap.id,
           ...data,
           adminName: adminData ? `${adminData.firstName} ${adminData.lastName}` : 'Admin',
         } as AdminConversation);

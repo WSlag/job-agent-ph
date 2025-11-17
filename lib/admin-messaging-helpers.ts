@@ -353,8 +353,8 @@ export async function getAdminConversations(
   const snapshot = await getDocs(q);
   const conversations: AdminConversation[] = [];
 
-  for (const docSnap of snapshot.docs) {
-    const data = docSnap.data();
+  for (const document of snapshot.docs) {
+    const data = document.data();
 
     // Get user details
     const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
@@ -362,7 +362,7 @@ export async function getAdminConversations(
     const userData = userDoc.data();
 
     conversations.push({
-      id: docSnap.id,
+      id: document.id,
       ...data,
       userName: data.userType === 'jobhunter'
         ? `${userData?.firstName} ${userData?.lastName}`
@@ -476,8 +476,8 @@ export function subscribeToAdminConversations(
   const unsubscribe = onSnapshot(q, async (snapshot) => {
     const conversations: AdminConversation[] = [];
 
-    for (const docSnap of snapshot.docs) {
-      const data = docSnap.data();
+    for (const document of snapshot.docs) {
+      const data = document.data();
 
       // Get user details
       const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
@@ -485,7 +485,7 @@ export function subscribeToAdminConversations(
       const userData = userDoc.data();
 
       conversations.push({
-        id: docSnap.id,
+        id: document.id,
         ...data,
         userName: data.userType === 'jobhunter'
           ? `${userData?.firstName} ${userData?.lastName}`

@@ -38,12 +38,12 @@ export const onJobCreated = functions.firestore
 
       const notificationPromises: Promise<void>[] = [];
 
-      for (const doc of jobHuntersSnapshot.docs) {
-        const jobHunter = doc.data();
+      for (const docSnap of jobHuntersSnapshot.docs) {
+        const jobHunter = docSnap.data();
 
         // Create notification for each matching job hunter
         const notificationPromise = createNotification({
-          userId: doc.id,
+          userId: docSnap.id,
           type: 'job_match',
           title: 'New Job Match!',
           message: `${agencyName} posted "${jobData.title}" - ${jobData.type} in ${jobData.location}`,
@@ -55,7 +55,7 @@ export const onJobCreated = functions.firestore
         // Send email notification if enabled
         if (jobHunter.email) {
           const emailPromise = sendEmail({
-            userId: doc.id,
+            userId: docSnap.id,
             type: 'job_match',
             title: 'New Job Match!',
             message: `${agencyName} posted "${jobData.title}" - ${jobData.type} in ${jobData.location}`,
@@ -108,12 +108,12 @@ export const onJobFeatured = functions.firestore
 
         const notificationPromises: Promise<void>[] = [];
 
-        for (const doc of jobHuntersSnapshot.docs) {
-          const jobHunter = doc.data();
+        for (const docSnap of jobHuntersSnapshot.docs) {
+          const jobHunter = docSnap.data();
 
           // Create notification
           const notificationPromise = createNotification({
-            userId: doc.id,
+            userId: docSnap.id,
             type: 'job_match',
             title: 'Featured Job Alert!',
             message: `Check out this featured position: "${afterData.title}" at ${agencyName}`,
@@ -125,7 +125,7 @@ export const onJobFeatured = functions.firestore
           // Send email if enabled
           if (jobHunter.email) {
             const emailPromise = sendEmail({
-              userId: doc.id,
+              userId: docSnap.id,
               type: 'job_match',
               title: 'Featured Job Alert!',
               message: `Check out this featured position: "${afterData.title}" at ${agencyName}`,
@@ -169,8 +169,8 @@ export const onJobMatchingSavedSearch = functions.firestore
 
       const notificationPromises: Promise<void>[] = [];
 
-      for (const doc of jobHuntersSnapshot.docs) {
-        const jobHunter = doc.data();
+      for (const docSnap of jobHuntersSnapshot.docs) {
+        const jobHunter = docSnap.data();
 
         // Check if this job matches the job hunter's preferences
         // This is a simplified check - you can make it more sophisticated
@@ -186,7 +186,7 @@ export const onJobMatchingSavedSearch = functions.firestore
 
           // Create targeted notification
           const notificationPromise = createNotification({
-            userId: doc.id,
+            userId: docSnap.id,
             type: 'job_match',
             title: 'Job Matches Your Preferences!',
             message: `"${jobData.title}" at ${agencyName} matches your saved search criteria`,

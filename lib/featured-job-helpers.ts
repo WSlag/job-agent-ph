@@ -180,7 +180,7 @@ export async function getAgencyFeaturedRequests(
 
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as FeaturedJobRequest)
+      (doc) => ({ ...doc.data(), id: doc.id } as FeaturedJobRequest)
     )
   } catch (error) {
     console.error('Error fetching agency featured requests:', error)
@@ -320,7 +320,7 @@ export async function getFeaturedJobs(): Promise<Job[]> {
     )
 
     const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Job))
+    return querySnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id } as Job))
   } catch (error) {
     console.error('Error fetching featured jobs:', error)
     throw new Error('Failed to fetch featured jobs')

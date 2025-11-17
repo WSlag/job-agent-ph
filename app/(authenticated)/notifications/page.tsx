@@ -96,8 +96,8 @@ export default function NotificationsPage() {
     const unsubscribe = onSnapshot(conversationsQuery, async (snapshot) => {
       const unreadConvs: UnreadConversation[] = [];
 
-      for (const doc of snapshot.docs) {
-        const data = doc.data();
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
         const userUnreadKey = `unreadCount_${user.uid}`;
         const userUnreadCount = data[userUnreadKey] || 0;
 
@@ -113,7 +113,7 @@ export default function NotificationsPage() {
             const userData = userSnapshot.data();
 
             unreadConvs.push({
-              id: doc.id,
+              id: docSnap.id,
               otherUserName: userData?.name || userData?.companyName || 'Unknown User',
               otherUserAvatar: userData?.profilePicture || userData?.logo,
               lastMessage: data.lastMessage?.content || '',

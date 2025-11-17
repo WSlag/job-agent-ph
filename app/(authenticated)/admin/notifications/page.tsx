@@ -51,7 +51,7 @@ export default function AdminNotificationsPage() {
       (snapshot) => {
         const notifs: Notification[] = [];
         snapshot.forEach((doc) => {
-          notifs.push({ id: doc.id, ...doc.data() } as Notification);
+          notifs.push({ ...doc.data(), id: doc.id } as Notification);
         });
         setNotifications(notifs);
         setLoading(false);
