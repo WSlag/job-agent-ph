@@ -56,8 +56,8 @@ export default function UserBulkMessagePage() {
         }
 
         setMessage({
-          id: messageDoc.id,
           ...data,
+          id: messageDoc.id,
         });
 
         // Get admin info
