@@ -213,8 +213,8 @@ function MessagesContent() {
         const adminData = adminDoc.data();
 
         adminConvos.push({
-          id: docSnap.id,
           ...data,
+          id: docSnap.id,
           adminName: adminData ? `${adminData.firstName} ${adminData.lastName}` : 'Admin',
         } as AdminConversation);
       }
