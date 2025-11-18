@@ -60,16 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Check for pending redirect result (from Google sign-in)
       // NOTE: This is now handled in the login/signup pages directly
-      // We check here only for debugging purposes
-      try {
-        const redirectResult = await getRedirectResult(auth);
-        if (redirectResult) {
-          console.log('[AuthContext] Found pending redirect result for user:', redirectResult.user.uid);
-          console.log('[AuthContext] This should have been handled by the login/signup page');
-        }
-      } catch (error) {
-        console.error('[AuthContext] Error checking redirect result:', error);
-      }
+      // DO NOT call getRedirectResult() here as it can only be called once
+      // and will consume the result, preventing the login/signup page from processing it
 
       // Check for auth domain mismatch
       const storedAuthDomain = localStorage.getItem('firebase:authDomain');

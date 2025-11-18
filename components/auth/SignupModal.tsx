@@ -314,12 +314,14 @@ export default function SignupModal({
                 </label>
                 <input
                   id="name"
+                  name="name"
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Juan Dela Cruz"
+                  autoComplete="name"
                   disabled={isLoading}
                 />
               </div>
@@ -332,6 +334,7 @@ export default function SignupModal({
                 <div className="relative">
                   <input
                     id="email"
+                    name="email"
                     type="email"
                     required
                     value={formData.email}
@@ -344,6 +347,7 @@ export default function SignupModal({
                         : 'border-gray-300'
                     }`}
                     placeholder="juan@example.com"
+                    autoComplete="email"
                     disabled={isLoading}
                   />
                   {validation.email.checked && (
@@ -366,6 +370,7 @@ export default function SignupModal({
                 <div className="relative">
                   <input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={formData.password}
@@ -378,6 +383,7 @@ export default function SignupModal({
                         : 'border-gray-300'
                     }`}
                     placeholder="••••••••"
+                    autoComplete="new-password"
                     disabled={isLoading}
                   />
                   <button
@@ -463,12 +469,14 @@ export default function SignupModal({
                 </label>
                 <input
                   id="login-email"
+                  name="email"
                   type="email"
                   required
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="juan@example.com"
+                  autoComplete="email"
                   disabled={isLoading}
                 />
               </div>
@@ -481,12 +489,14 @@ export default function SignupModal({
                 <div className="relative">
                   <input
                     id="login-password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-10"
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     disabled={isLoading}
                   />
                   <button

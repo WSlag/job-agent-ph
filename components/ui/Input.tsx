@@ -7,16 +7,21 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, className = '', ...props }, ref) => {
+  ({ label, error, helperText, className = '', id, name, ...props }, ref) => {
+    // Generate a fallback id if not provided, using the name attribute
+    const inputId = id || name || `input-${Math.random().toString(36).substr(2, 9)}`;
+
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
             {label}
           </label>
         )}
         <input
           ref={ref}
+          id={inputId}
+          name={name || inputId}
           className={`
             block w-full px-4 py-2 rounded-lg border
             ${error

@@ -76,17 +76,26 @@ export default function GoogleAuthButton({
     console.log('[GoogleAuthButton] Processing authentication for user:', userId);
 
     // Check if user profile already exists in any collection
-    const [adminDoc, jobHunterDoc, agencyDoc] = await Promise.all([
-      getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
-      getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
-      getDoc(doc(db, COLLECTIONS.AGENCIES, userId))
-    ]);
+    // Use sequential queries instead of parallel to avoid permission error amplification
+    // This prevents multiplying permission denied errors across multiple collections
+    console.log('[GoogleAuthButton] Checking for existing user profile...');
 
-    // Determine actual user type
+    const adminDoc = await getDoc(doc(db, COLLECTIONS.ADMINS, userId));
+    const jobHunterDoc = await getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId));
+    const agencyDoc = await getDoc(doc(db, COLLECTIONS.AGENCIES, userId));
+
+    // Determine actual user type based on existing profiles
     let actualUserType = userType;
-    if (adminDoc.exists()) actualUserType = 'admin';
-    else if (agencyDoc.exists()) actualUserType = 'agency';
-    else if (jobHunterDoc.exists()) actualUserType = 'jobhunter';
+    if (adminDoc.exists()) {
+      actualUserType = 'admin';
+      console.log('[GoogleAuthButton] Found existing admin profile');
+    } else if (agencyDoc.exists()) {
+      actualUserType = 'agency';
+      console.log('[GoogleAuthButton] Found existing agency profile');
+    } else if (jobHunterDoc.exists()) {
+      actualUserType = 'jobhunter';
+      console.log('[GoogleAuthButton] Found existing jobhunter profile');
+    }
 
     // If no profile exists, create one based on specified userType
     if (!adminDoc.exists() && !jobHunterDoc.exists() && !agencyDoc.exists()) {
@@ -220,29 +229,31 @@ export default function GoogleAuthButton({
         sessionStorage.setItem('googleAuthOriginUrl', window.location.href);
       }
 
-      // Try popup first for better UX, fall back to redirect if it fails
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      // Try popup first for better UX in all environments, fall back to redirect if it fails
+      // Popup works better because it doesn't require page reload and is more reliable
+      console.log('[GoogleAuthButton] Attempting popup method for Google sign-in...');
+      try {
+        const result = await signInWithPopup(auth, provider);
+        console.log('[GoogleAuthButton] Popup sign-in successful:', result.user.uid);
 
-      if (isLocal) {
-        console.log('[GoogleAuthButton] Using popup method for localhost...');
-        try {
-          const result = await signInWithPopup(auth, provider);
-          console.log('[GoogleAuthButton] Popup sign-in successful:', result.user.uid);
+        // Clear the pending flag since we got immediate result
+        sessionStorage.removeItem('googleAuthPending');
+        sessionStorage.removeItem('googleAuthOriginUrl');
 
-          // Clear the pending flag since we got immediate result
-          sessionStorage.removeItem('googleAuthPending');
-          sessionStorage.removeItem('googleAuthOriginUrl');
+        // Process the result immediately
+        await handleAuthResult(result.user);
+        return;
+      } catch (popupError: any) {
+        console.log('[GoogleAuthButton] Popup failed, falling back to redirect:', popupError.code);
 
-          // Process the result immediately
-          await handleAuthResult(result.user);
-          return;
-        } catch (popupError: any) {
-          console.log('[GoogleAuthButton] Popup failed, falling back to redirect:', popupError.code);
-          // Fall through to redirect method
+        // Only fall back to redirect if popup was explicitly blocked
+        // Don't fall back for auth errors or other issues
+        if (popupError.code !== 'auth/popup-blocked' && popupError.code !== 'auth/popup-closed-by-user') {
+          throw popupError;
         }
       }
 
-      // Use redirect method as fallback or for production
+      // Use redirect method as fallback only when popup is blocked
       console.log('[GoogleAuthButton] Using redirect method for Google sign-in...');
       await signInWithRedirect(auth, provider);
       // Page will redirect to Google, then come back

@@ -55,11 +55,13 @@ export function isSuperAdmin(admin: Admin | null): boolean {
 
 /**
  * Validate admin secret key
+ * Note: This function should ONLY be called server-side (API routes, server components)
+ * The ADMIN_SECRET_KEY environment variable is server-side only and not exposed to the client
  * @param secretKey The secret key to validate
  * @returns boolean indicating if key is valid
  */
 export function validateAdminSecretKey(secretKey: string): boolean {
-  const validKey = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY
+  const validKey = process.env.ADMIN_SECRET_KEY
 
   if (!validKey) {
     console.error('Admin secret key not configured in environment variables')

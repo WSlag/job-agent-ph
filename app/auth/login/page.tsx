@@ -156,10 +156,22 @@ function LoginForm() {
     const handleGoogleRedirect = async () => {
       try {
         console.log('[Login] Checking for Google redirect result...');
+        console.log('[Login] Environment:', {
+          protocol: window.location.protocol,
+          hostname: window.location.hostname,
+          href: window.location.href,
+          cookieEnabled: navigator.cookieEnabled,
+          userAgent: navigator.userAgent.substring(0, 50) + '...'
+        });
 
         // Check if we're expecting a Google redirect
         const googleAuthPending = sessionStorage.getItem('googleAuthPending');
-        console.log('[Login] Google auth pending flag:', googleAuthPending);
+        const googleAuthReturnUrl = sessionStorage.getItem('googleAuthReturnUrl');
+        console.log('[Login] Session storage state:', {
+          googleAuthPending,
+          googleAuthReturnUrl,
+          allKeys: Object.keys(sessionStorage)
+        });
 
         const auth = getAuthInstance();
         console.log('[Login] Auth instance obtained, calling getRedirectResult...');
@@ -168,7 +180,8 @@ function LoginForm() {
         console.log('[Login] getRedirectResult returned:', {
           hasResult: !!result,
           hasUser: !!result?.user,
-          userId: result?.user?.uid
+          userId: result?.user?.uid,
+          email: result?.user?.email
         });
 
         if (result && result.user) {
@@ -186,13 +199,16 @@ function LoginForm() {
           // Process the authentication result directly here
           await processGoogleAuthResult(result.user);
         } else if (googleAuthPending) {
-          console.log('[Login] Google auth was pending but no result received');
+          console.log('[Login] Google auth was pending but no result received - this may indicate an issue');
           sessionStorage.removeItem('googleAuthPending');
         }
       } catch (error: any) {
         console.error('[Login] Error handling Google redirect:', error);
-        console.error('[Login] Error code:', error?.code);
-        console.error('[Login] Error message:', error?.message);
+        console.error('[Login] Error details:', {
+          code: error?.code,
+          message: error?.message,
+          stack: error?.stack?.substring(0, 200)
+        });
 
         // Clean up pending flag on error
         sessionStorage.removeItem('googleAuthPending');
@@ -325,10 +341,12 @@ function LoginForm() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email
               </label>
               <input
+                id="login-email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -340,7 +358,7 @@ function LoginForm() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
                 <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
@@ -348,6 +366,8 @@ function LoginForm() {
                 </Link>
               </div>
               <input
+                id="login-password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
