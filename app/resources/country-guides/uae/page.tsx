@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Globe, DollarSign, Home, Briefcase, Users, AlertCircle, CheckCircle, Phone, MapPin } from 'lucide-react';
+import { ArrowLeft, Globe, DollarSign, Home, Briefcase, Users, AlertCircle, CheckCircle, MapPin } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Section from '@/components/ui/Section';
 
@@ -371,31 +371,6 @@ export default function UAEGuidePage() {
               </ul>
             </Card>
           </div>
-
-          {/* Emergency Contacts */}
-          <Card className="p-8 mb-8 bg-blue-50 border-blue-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <Phone className="text-blue-600" />
-              Philippine Embassy & Consulates in UAE
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Embassy Abu Dhabi</h3>
-                <p className="text-sm text-gray-700">Phone: +971-2-639-9800</p>
-                <p className="text-sm text-gray-700">Helpline: +971-2-639-9803</p>
-                <p className="text-sm text-gray-700">Email: abudhabipe@gmail.com</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Consulate General Dubai</h3>
-                <p className="text-sm text-gray-700">Phone: +971-4-398-7100</p>
-                <p className="text-sm text-gray-700">Helpline: +971-4-220-7100</p>
-                <p className="text-sm text-gray-700">Email: dubai.pcg@gmail.com</p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mt-4">
-              <strong>UAE Police Emergency:</strong> 999 | <strong>Ambulance:</strong> 998 | <strong>Ministry of Human Resources:</strong> 600-590000
-            </p>
-          </Card>
 
           {/* CTA Section */}
           <Card className="p-8 bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200 text-center">
