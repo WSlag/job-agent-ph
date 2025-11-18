@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Globe, DollarSign, Home, Briefcase, Users, AlertCircle, CheckCircle, Phone } from 'lucide-react';
+import { ArrowLeft, Globe, DollarSign, Home, Briefcase, Users, AlertCircle, CheckCircle } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Section from '@/components/ui/Section';
 
@@ -256,31 +256,6 @@ export default function SaudiArabiaGuidePage() {
               </ul>
             </Card>
           </div>
-
-          {/* Emergency Contacts */}
-          <Card className="p-8 mb-8 bg-blue-50 border-blue-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <Phone className="text-blue-600" />
-              Philippine Embassy in Saudi Arabia
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Embassy Riyadh</h3>
-                <p className="text-sm text-gray-700">Phone: +966-11-488-7988</p>
-                <p className="text-sm text-gray-700">Helpline: +966-11-488-1040</p>
-                <p className="text-sm text-gray-700">Email: riyadhpe@gmail.com</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Consulate General Jeddah</h3>
-                <p className="text-sm text-gray-700">Phone: +966-12-667-0808</p>
-                <p className="text-sm text-gray-700">Helpline: +966-12-668-6544</p>
-                <p className="text-sm text-gray-700">Email: jeddahpcg@gmail.com</p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mt-4">
-              For emergencies involving OFWs, contact the Philippine Overseas Labor Office (POLO): +966-11-488-7989
-            </p>
-          </Card>
 
           {/* CTA Section */}
           <Card className="p-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-center">
