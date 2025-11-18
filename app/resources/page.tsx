@@ -67,15 +67,6 @@ const resources: Resource[] = [
     icon: Download,
     href: '/resources/downloads/document-checklist',
   },
-  {
-    id: '8',
-    title: 'Sample Employment Contract',
-    description: 'What to look for in your employment contract and sample templates.',
-    category: 'Downloads',
-    type: 'download',
-    icon: FileText,
-    href: '/resources/downloads/employment-contract',
-  },
 
   // Career Development
   {
