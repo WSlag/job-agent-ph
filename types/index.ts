@@ -372,6 +372,9 @@ export interface AdminConversation {
   unreadCount_user?: number;
   createdAt: Date;
   updatedAt: Date;
+  // Optional properties added for UI display
+  adminName?: string;
+  userName?: string;
 }
 
 export interface AdminMessageThread {
