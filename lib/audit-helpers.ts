@@ -353,6 +353,8 @@ export function formatAuditAction(action: AuditAction): string {
     featured_request_approved: 'Approved Featured Request',
     featured_request_rejected: 'Rejected Featured Request',
     featured_job_removed: 'Removed Featured Job',
+    message_sent_bulk: 'Sent Bulk Message',
+    message_sent_individual: 'Sent Individual Message',
     settings_updated: 'Updated Settings',
     permissions_updated: 'Updated Permissions',
   };
