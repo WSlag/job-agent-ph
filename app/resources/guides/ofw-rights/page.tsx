@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Shield, CheckCircle, AlertTriangle, Phone } from 'lucide-react';
+import { ArrowLeft, Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Section from '@/components/ui/Section';
 
@@ -89,33 +89,6 @@ export default function OFWRightsPage() {
     'Accommodation or food provided is inadequate',
   ];
 
-  const emergencyContacts = [
-    {
-      country: 'Saudi Arabia',
-      embassy: 'Philippine Embassy Riyadh',
-      phone: '+966-11-488-7988',
-      helpline: '+966-11-488-1040',
-    },
-    {
-      country: 'UAE',
-      embassy: 'Philippine Embassy Abu Dhabi',
-      phone: '+971-2-639-9800',
-      helpline: '+971-2-639-9803',
-    },
-    {
-      country: 'Kuwait',
-      embassy: 'Philippine Embassy Kuwait',
-      phone: '+965-2256-3843',
-      helpline: '+965-2256-3019',
-    },
-    {
-      country: 'Qatar',
-      embassy: 'Philippine Embassy Doha',
-      phone: '+974-4487-1502',
-      helpline: '+974-4487-4769',
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20 mt-16">
@@ -200,43 +173,6 @@ export default function OFWRightsPage() {
                 </li>
               ))}
             </ul>
-          </Card>
-
-          {/* Emergency Contacts */}
-          <Card className="p-8 mb-12 bg-blue-50 border-blue-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <Phone className="text-blue-600" />
-              Emergency Contacts
-            </h2>
-            <p className="text-gray-700 mb-6">
-              Philippine Embassy and Consulate hotlines (available 24/7 for emergencies):
-            </p>
-            <div className="grid md:grid-cols-2 gap-4">
-              {emergencyContacts.map((contact, idx) => (
-                <div key={idx} className="bg-white p-4 rounded-lg border border-blue-200">
-                  <h3 className="font-semibold text-gray-900 mb-2">{contact.country}</h3>
-                  <p className="text-sm text-gray-600">{contact.embassy}</p>
-                  <p className="text-sm text-gray-700 mt-2">
-                    <strong>Phone:</strong> {contact.phone}
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    <strong>Helpline:</strong> {contact.helpline}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 p-4 bg-white rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Philippines Hotlines</h3>
-              <p className="text-sm text-gray-700">
-                <strong>DMW Hotline:</strong> 1348 (within Philippines)
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>OWWA Hotline:</strong> +63-2-8722-1348
-              </p>
-              <p className="text-sm text-gray-700">
-                <strong>DFA-OUMWA:</strong> +63-2-8834-4000
-              </p>
-            </div>
           </Card>
 
           {/* Important Reminders */}
