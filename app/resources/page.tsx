@@ -19,15 +19,6 @@ interface Resource {
 const resources: Resource[] = [
   // OFW Guides
   {
-    id: '2',
-    title: 'POEA Processing Guide',
-    description: 'Step-by-step guide to POEA processing, requirements, and timelines.',
-    category: 'Guides',
-    type: 'guide',
-    icon: FileText,
-    href: '/resources/guides/poea-processing',
-  },
-  {
     id: '3',
     title: 'OFW Rights and Responsibilities',
     description: 'Know your rights as an OFW and what you need to do to protect yourself.',
