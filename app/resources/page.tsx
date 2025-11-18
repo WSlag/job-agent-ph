@@ -19,15 +19,6 @@ interface Resource {
 const resources: Resource[] = [
   // OFW Guides
   {
-    id: '1',
-    title: 'Complete Guide to Working Abroad',
-    description: 'Everything you need to know about becoming an OFW, from preparation to deployment.',
-    category: 'Guides',
-    type: 'guide',
-    icon: BookOpen,
-    href: '/resources/guides/working-abroad',
-  },
-  {
     id: '2',
     title: 'POEA Processing Guide',
     description: 'Step-by-step guide to POEA processing, requirements, and timelines.',
