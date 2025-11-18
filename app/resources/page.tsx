@@ -117,16 +117,6 @@ const resources: Resource[] = [
 
   // External Links
   {
-    id: '12',
-    title: 'DMW Official Website',
-    description: 'Department of Migrant Workers - Verify agencies, check requirements, file complaints.',
-    category: 'Government',
-    type: 'article',
-    icon: ExternalLink,
-    href: 'https://dmw.gov.ph',
-    external: true,
-  },
-  {
     id: '13',
     title: 'OWWA Programs and Services',
     description: 'Learn about OWWA benefits, programs, and services for OFWs and their families.',
