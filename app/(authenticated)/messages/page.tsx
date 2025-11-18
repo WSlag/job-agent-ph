@@ -212,11 +212,12 @@ function MessagesContent() {
         const adminDoc = await getDoc(doc(db, 'admins', data.adminId));
         const adminData = adminDoc.data();
 
+        const conversationData = data as Omit<AdminConversation, 'id' | 'adminName'>;
         adminConvos.push({
-          ...data,
+          ...conversationData,
           id: docSnap.id,
           adminName: adminData ? `${adminData.firstName} ${adminData.lastName}` : 'Admin',
-        } as AdminConversation);
+        });
       }
 
       setAdminConversations(adminConvos);

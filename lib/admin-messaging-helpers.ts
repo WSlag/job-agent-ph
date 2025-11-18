@@ -65,8 +65,8 @@ export async function sendBulkMessage(
       recipientType,
       recipientIds,
       status: 'sending',
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       deliveredCount: 0,
       readCount: 0,
       failedCount: 0,
@@ -163,8 +163,8 @@ export async function sendIndividualMessage(
         unreadCount: 1,
         unreadCount_admin: 0,
         unreadCount_user: 1,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       await setDoc(conversationRef, conversationData);
@@ -185,7 +185,7 @@ export async function sendIndividualMessage(
       content,
       senderId: adminId,
       senderType: 'admin',
-      createdAt: Timestamp.now(),
+      createdAt: new Date(),
       read: false,
     };
 
@@ -194,7 +194,7 @@ export async function sendIndividualMessage(
       senderId: adminId,
       senderType: 'admin',
       content,
-      timestamp: Timestamp.now(),
+      timestamp: new Date(),
       read: false,
     };
 
@@ -361,13 +361,14 @@ export async function getAdminConversations(
     const userDoc = await getDoc(doc(db, userCollection, data.userId));
     const userData = userDoc.data();
 
+    const conversationData = data as Omit<AdminConversation, 'id' | 'userName'>;
     conversations.push({
+      ...conversationData,
       id: document.id,
-      ...data,
       userName: data.userType === 'jobhunter'
         ? `${userData?.firstName} ${userData?.lastName}`
         : userData?.companyName,
-    } as AdminConversation);
+    });
   }
 
   return {
@@ -484,13 +485,14 @@ export function subscribeToAdminConversations(
       const userDoc = await getDoc(doc(db, userCollection, data.userId));
       const userData = userDoc.data();
 
+      const conversationData = data as Omit<AdminConversation, 'id' | 'userName'>;
       conversations.push({
+        ...conversationData,
         id: document.id,
-        ...data,
         userName: data.userType === 'jobhunter'
           ? `${userData?.firstName} ${userData?.lastName}`
           : userData?.companyName,
-      } as AdminConversation);
+      });
     }
 
     callback(conversations);

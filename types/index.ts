@@ -283,12 +283,14 @@ export type AuditAction =
   | 'user_suspended' | 'user_unsuspended' | 'user_deleted'
   // Featured job actions
   | 'featured_request_approved' | 'featured_request_rejected' | 'featured_job_removed'
+  // Message actions
+  | 'message_sent_bulk' | 'message_sent_individual'
   // Settings actions
   | 'settings_updated'
   // Permission actions
   | 'permissions_updated';
 
-export type AuditResourceType = 'job' | 'user' | 'agency' | 'jobhunter' | 'featured_request' | 'settings' | 'admin';
+export type AuditResourceType = 'job' | 'user' | 'agency' | 'jobhunter' | 'featured_request' | 'message' | 'settings' | 'admin';
 
 export interface AuditLog {
   id: string;
