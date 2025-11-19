@@ -187,6 +187,12 @@ export async function POST(request: NextRequest) {
               'lastMessage.id': messageRef.id,
             });
 
+            // Update contact with conversation ID
+            await contactRef.update({
+              conversationId: conversationRef.id,
+              updatedAt: new Date().toISOString(),
+            });
+
             // Create notification for admin
             await adminDb.collection(COLLECTIONS.NOTIFICATIONS).add({
               userId: adminId,

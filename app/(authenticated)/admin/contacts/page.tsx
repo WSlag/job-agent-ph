@@ -92,11 +92,16 @@ export default function AdminContactsPage() {
   };
 
   const convertToConversation = async (contact: Contact) => {
-    if (contact.userId || converting) return;
+    if (converting) return;
 
     setConverting(true);
     try {
-      const response = await fetch(`/api/contacts/${contact.id}/convert`, {
+      // Use different API based on whether user is authenticated
+      const apiUrl = contact.userId
+        ? `/api/contacts/${contact.id}/recover`  // Authenticated users
+        : `/api/contacts/${contact.id}/convert`; // Guest users
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -309,7 +314,7 @@ export default function AdminContactsPage() {
                         className="w-full sm:w-auto whitespace-nowrap"
                       >
                         <MessageSquare className="w-4 h-4 mr-1" />
-                        Convert to Chat
+                        {contact.userId ? 'Recover Chat' : 'Convert to Chat'}
                       </Button>
                     )}
 
