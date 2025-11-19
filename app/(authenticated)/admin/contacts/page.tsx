@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, addDoc, serverTimestamp, where, getDocs, limit } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -41,6 +41,9 @@ export default function AdminContactsPage() {
   useEffect(() => {
     if (!user) return;
 
+    // Get Firestore instance
+    const db = getDbInstance();
+
     // Subscribe to contacts collection
     const contactsQuery = query(
       collection(db, COLLECTIONS.CONTACTS),
@@ -61,6 +64,7 @@ export default function AdminContactsPage() {
 
   const updateContactStatus = async (contactId: string, newStatus: Contact['status']) => {
     try {
+      const db = getDbInstance();
       await updateDoc(doc(db, COLLECTIONS.CONTACTS, contactId), {
         status: newStatus,
         updatedAt: new Date().toISOString()
@@ -77,6 +81,8 @@ export default function AdminContactsPage() {
 
     setConverting(true);
     try {
+      const db = getDbInstance();
+
       // Create a guest user conversation
       const conversationData = {
         adminId: user?.uid,
