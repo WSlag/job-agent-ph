@@ -7,13 +7,31 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const withPWA = withPWAInit({
   dest: "public",
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  cacheOnFrontEndNav: false, // Disable to avoid async issues
+  aggressiveFrontEndNavCaching: false, // Disable to avoid async issues
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
   workboxOptions: {
     disableDevLogs: true,
+    skipWaiting: true,
+    clientsClaim: true,
+    // Use simpler caching strategy to avoid transpilation issues
+    runtimeCaching: [
+      {
+        urlPattern: /^https?.*/,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'offlineCache',
+          expiration: {
+            maxEntries: 200,
+          },
+        },
+      },
+    ],
   },
+  // Disable features that cause transpilation issues
+  cacheStartUrl: false,
+  fallbacks: undefined,
 });
 
 const nextConfig: NextConfig = {
@@ -66,7 +84,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com",
-              "frame-src 'self' https://accounts.google.com https://www.google.com",
+              "frame-src 'self' https://accounts.google.com https://www.google.com https://*.firebaseapp.com",
               "media-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
