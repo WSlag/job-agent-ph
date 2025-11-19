@@ -51,10 +51,16 @@ export default function AdminContactsPage() {
     );
 
     const unsubscribe = onSnapshot(contactsQuery, (snapshot) => {
-      const contactsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Contact[];
+      const contactsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Convert Firestore Timestamp to ISO string if needed
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+        };
+      }) as Contact[];
       setContacts(contactsData);
       setLoading(false);
     });
