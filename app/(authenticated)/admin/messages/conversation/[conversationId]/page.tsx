@@ -240,9 +240,9 @@ export default function AdminGuestConversationPage() {
             <div className="space-y-4">
               {messages.map((msg, index) => {
                 const isAdmin = msg.senderType === 'admin';
-                const msgTimestamp = msg.timestamp || msg.createdAt;
+                const msgTimestamp = msg.timestamp;
                 const showDate = index === 0 ||
-                  new Date(messages[index - 1].timestamp || messages[index - 1].createdAt).toDateString() !==
+                  new Date(messages[index - 1].timestamp).toDateString() !==
                   new Date(msgTimestamp).toDateString();
 
                 return (
