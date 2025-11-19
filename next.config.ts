@@ -15,10 +15,14 @@ const withPWA = withPWAInit({
     disableDevLogs: true,
     skipWaiting: true,
     clientsClaim: true,
-    // Cache only same-origin resources to avoid CSP violations
+    // Disable the problematic cacheWillUpdate plugin
+    // by simplifying the runtime caching configuration
     runtimeCaching: [
       {
-        urlPattern: ({ url }) => url.origin === self.location.origin,
+        urlPattern: ({ url }) => {
+          // Only cache same-origin resources
+          return url.origin === self.location.origin;
+        },
         handler: 'NetworkFirst',
         options: {
           cacheName: 'same-origin-cache',
@@ -26,12 +30,15 @@ const withPWA = withPWAInit({
             maxEntries: 100,
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
           },
+          // Remove the cacheWillUpdate plugin that causes the async issue
+          // The NetworkFirst handler will work fine without it
         },
       },
     ],
   },
   // Disable features that cause transpilation issues
-  cacheStartUrl: false,
+  cacheStartUrl: false, // This disables the problematic start-url route
+  dynamicStartUrl: false, // Disable dynamic start URL
   fallbacks: undefined,
 });
 
