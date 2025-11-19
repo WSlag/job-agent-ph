@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getDbInstance } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, addDoc, serverTimestamp, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
@@ -90,70 +90,24 @@ export default function AdminContactsPage() {
 
     setConverting(true);
     try {
-      const db = getDbInstance();
-
-      // Create a guest user conversation
-      const conversationData = {
-        adminId: user?.uid,
-        userId: `guest_${contact.email.replace('@', '_at_')}`,
-        userType: 'guest',
-        guestEmail: contact.email,
-        guestName: contact.name,
-        contactRef: contact.id,
-        referenceNumber: contact.referenceNumber,
-        lastMessage: {
-          id: '',
-          content: `[Contact Form: ${contact.subject}] ${contact.message.substring(0, 100)}...`,
-          senderId: `guest_${contact.email.replace('@', '_at_')}`,
-          senderType: 'user',
-          createdAt: serverTimestamp(),
-          read: false,
+      const response = await fetch(`/api/contacts/${contact.id}/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        unreadCount: 0,
-        unreadCount_admin: 1,
-        unreadCount_user: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      const conversationRef = await addDoc(collection(db, COLLECTIONS.ADMIN_CONVERSATIONS), conversationData);
-
-      // Add the first message
-      const messageData = {
-        content: `Subject: ${contact.subject}\n\n${contact.message}\n\nReference: ${contact.referenceNumber}`,
-        senderId: `guest_${contact.email.replace('@', '_at_')}`,
-        senderType: 'user',
-        createdAt: serverTimestamp(),
-        read: false,
-        metadata: {
-          isContactForm: true,
-          referenceNumber: contact.referenceNumber,
-          contactId: contact.id,
-        },
-      };
-
-      const messageRef = await addDoc(
-        collection(db, COLLECTIONS.ADMIN_CONVERSATIONS, conversationRef.id, 'messages'),
-        messageData
-      );
-
-      // Update conversation with message ID
-      await updateDoc(conversationRef, {
-        'lastMessage.id': messageRef.id,
       });
 
-      // Update contact with conversation ID
-      await updateDoc(doc(db, COLLECTIONS.CONTACTS, contact.id), {
-        conversationId: conversationRef.id,
-        status: 'in_progress',
-        updatedAt: new Date().toISOString()
-      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create conversation');
+      }
 
       toast.success('Conversation created successfully');
       setSelectedContact(null);
     } catch (error) {
       console.error('Error converting to conversation:', error);
-      toast.error('Failed to create conversation');
+      toast.error(error instanceof Error ? error.message : 'Failed to create conversation');
     } finally {
       setConverting(false);
     }
