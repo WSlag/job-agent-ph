@@ -222,7 +222,12 @@ function ConversationPageContent() {
     textareaRef.current?.focus();
   };
 
-  const formatMessageTime = (date: Date) => {
+  const formatMessageTime = (timestamp: Date | any) => {
+    if (!timestamp) return '';
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '';
+
     if (isToday(date)) {
       return format(date, 'h:mm a');
     } else if (isYesterday(date)) {
@@ -236,7 +241,11 @@ function ConversationPageContent() {
     const grouped: { [key: string]: Message[] } = {};
 
     messages.forEach((msg) => {
-      const date = format(new Date(msg.createdAt), 'yyyy-MM-dd');
+      if (!msg.createdAt) return;
+      const timestamp = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt);
+      if (isNaN(timestamp.getTime())) return;
+
+      const date = format(timestamp, 'yyyy-MM-dd');
       if (!grouped[date]) {
         grouped[date] = [];
       }
@@ -254,7 +263,12 @@ function ConversationPageContent() {
     if (currentMsg.senderId !== previousMsg.senderId) return false;
 
     // Group if within 5 minutes
-    const timeDiff = new Date(currentMsg.createdAt).getTime() - new Date(previousMsg.createdAt).getTime();
+    if (!currentMsg.createdAt || !previousMsg.createdAt) return false;
+    const currentDate = currentMsg.createdAt?.toDate ? currentMsg.createdAt.toDate() : new Date(currentMsg.createdAt);
+    const previousDate = previousMsg.createdAt?.toDate ? previousMsg.createdAt.toDate() : new Date(previousMsg.createdAt);
+    if (isNaN(currentDate.getTime()) || isNaN(previousDate.getTime())) return false;
+
+    const timeDiff = currentDate.getTime() - previousDate.getTime();
     return timeDiff < 5 * 60 * 1000; // 5 minutes
   };
 
@@ -429,7 +443,7 @@ function ConversationPageContent() {
                               isOwnMessage ? 'text-blue-100' : 'text-gray-500'
                             }`}
                           >
-                            {formatMessageTime(new Date(message.createdAt))}
+                            {formatMessageTime(message.createdAt)}
                           </p>
                         )}
                       </div>

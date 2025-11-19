@@ -60,6 +60,15 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+// Helper function to safely format timestamps
+const formatTimestamp = (timestamp: Date | any) => {
+  if (!timestamp) return '';
+  const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '';
+  return formatDistanceToNow(date, { addSuffix: true });
+};
+
 export default function JobDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -628,7 +637,7 @@ export default function JobDetailsPage() {
                     <div>
                       <p className="text-sm text-gray-500">Posted</p>
                       <p className="font-medium">
-                        {formatDistanceToNow(new Date(job.postedAt))} ago
+                        {formatTimestamp(job.postedAt)}
                       </p>
                     </div>
                   </div>

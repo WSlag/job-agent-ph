@@ -13,6 +13,15 @@ import { COLLECTIONS } from '@/lib/collections';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
+// Helper function to safely format timestamps
+const formatTimestamp = (timestamp: Date | any) => {
+  if (!timestamp) return '';
+  const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '';
+  return formatDistanceToNow(date, { addSuffix: true });
+};
+
 interface Contact {
   id: string;
   name: string;
@@ -248,7 +257,7 @@ export default function AdminContactsPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         {getStatusBadge(contact.status)}
                         <span className="text-xs text-gray-500">
-                          {formatDistanceToNow(new Date(contact.createdAt), { addSuffix: true })}
+                          {formatTimestamp(contact.createdAt)}
                         </span>
                       </div>
                     </div>
