@@ -242,7 +242,7 @@ function ConversationPageContent() {
 
     messages.forEach((msg) => {
       if (!msg.createdAt) return;
-      const timestamp = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt);
+      const timestamp = (msg.createdAt as any)?.toDate ? (msg.createdAt as any).toDate() : new Date(msg.createdAt);
       if (isNaN(timestamp.getTime())) return;
 
       const date = format(timestamp, 'yyyy-MM-dd');
@@ -264,8 +264,8 @@ function ConversationPageContent() {
 
     // Group if within 5 minutes
     if (!currentMsg.createdAt || !previousMsg.createdAt) return false;
-    const currentDate = currentMsg.createdAt?.toDate ? currentMsg.createdAt.toDate() : new Date(currentMsg.createdAt);
-    const previousDate = previousMsg.createdAt?.toDate ? previousMsg.createdAt.toDate() : new Date(previousMsg.createdAt);
+    const currentDate = (currentMsg.createdAt as any)?.toDate ? (currentMsg.createdAt as any).toDate() : new Date(currentMsg.createdAt);
+    const previousDate = (previousMsg.createdAt as any)?.toDate ? (previousMsg.createdAt as any).toDate() : new Date(previousMsg.createdAt);
     if (isNaN(currentDate.getTime()) || isNaN(previousDate.getTime())) return false;
 
     const timeDiff = currentDate.getTime() - previousDate.getTime();
