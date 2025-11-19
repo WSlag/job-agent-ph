@@ -356,18 +356,27 @@ export async function getAdminConversations(
   for (const document of snapshot.docs) {
     const data = document.data();
 
-    // Get user details
-    const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
-    const userDoc = await getDoc(doc(db, userCollection, data.userId));
-    const userData = userDoc.data();
+    let userName: string;
+
+    // Handle guest users differently
+    if (data.userType === 'guest') {
+      userName = data.guestName || data.guestEmail || 'Unknown Guest';
+    } else {
+      // Get user details for authenticated users
+      const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
+      const userDoc = await getDoc(doc(db, userCollection, data.userId));
+      const userData = userDoc.data();
+
+      userName = data.userType === 'jobhunter'
+        ? `${userData?.firstName} ${userData?.lastName}`
+        : userData?.companyName || 'Unknown User';
+    }
 
     const conversationData = data as Omit<AdminConversation, 'id' | 'userName'>;
     conversations.push({
       ...conversationData,
       id: document.id,
-      userName: data.userType === 'jobhunter'
-        ? `${userData?.firstName} ${userData?.lastName}`
-        : userData?.companyName,
+      userName,
     });
   }
 
@@ -480,18 +489,27 @@ export function subscribeToAdminConversations(
     for (const document of snapshot.docs) {
       const data = document.data();
 
-      // Get user details
-      const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
-      const userDoc = await getDoc(doc(db, userCollection, data.userId));
-      const userData = userDoc.data();
+      let userName: string;
+
+      // Handle guest users differently
+      if (data.userType === 'guest') {
+        userName = data.guestName || data.guestEmail || 'Unknown Guest';
+      } else {
+        // Get user details for authenticated users
+        const userCollection = data.userType === 'jobhunter' ? 'jobHunters' : 'agencies';
+        const userDoc = await getDoc(doc(db, userCollection, data.userId));
+        const userData = userDoc.data();
+
+        userName = data.userType === 'jobhunter'
+          ? `${userData?.firstName} ${userData?.lastName}`
+          : userData?.companyName || 'Unknown User';
+      }
 
       const conversationData = data as Omit<AdminConversation, 'id' | 'userName'>;
       conversations.push({
         ...conversationData,
         id: document.id,
-        userName: data.userType === 'jobhunter'
-          ? `${userData?.firstName} ${userData?.lastName}`
-          : userData?.companyName,
+        userName,
       });
     }
 

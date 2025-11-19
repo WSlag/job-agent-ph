@@ -114,8 +114,13 @@ export default function AdminMessagesPage() {
     msg.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleConversationClick = (conversationId: string, userId: string) => {
-    router.push(`/admin/messages/${userId}`);
+  const handleConversationClick = (conversationId: string, userId: string, userType: string) => {
+    // For guest users, navigate to conversation ID; for regular users, use userId
+    if (userType === 'guest') {
+      router.push(`/admin/messages/conversation/${conversationId}`);
+    } else {
+      router.push(`/admin/messages/${userId}`);
+    }
   };
 
   const handleComposeClick = () => {
@@ -248,7 +253,7 @@ export default function AdminMessagesPage() {
                       <Card
                         key={conversation.id}
                         className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => handleConversationClick(conversation.id, conversation.userId)}
+                        onClick={() => handleConversationClick(conversation.id, conversation.userId, conversation.userType)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
