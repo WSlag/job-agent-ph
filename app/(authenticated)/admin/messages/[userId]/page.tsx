@@ -222,8 +222,12 @@ export default function AdminConversationPage() {
     }
   };
 
-  const formatTimestamp = (timestamp: Date) => {
-    return formatDistanceToNow(timestamp, { addSuffix: true });
+  const formatTimestamp = (timestamp: Date | any) => {
+    if (!timestamp) return '';
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '';
+    return formatDistanceToNow(date, { addSuffix: true });
   };
 
   return (
