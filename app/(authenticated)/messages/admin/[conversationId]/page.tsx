@@ -36,7 +36,7 @@ export default function UserAdminConversationPage() {
   const router = useRouter();
   const params = useParams();
   const conversationId = params.conversationId as string;
-  const { user, userType } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState('');
@@ -163,7 +163,7 @@ export default function UserAdminConversationPage() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -285,7 +285,7 @@ export default function UserAdminConversationPage() {
                 placeholder="Type your message..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 disabled={sending || !adminInfo}
                 className="flex-1"
               />
