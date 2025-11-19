@@ -167,41 +167,53 @@ export default function AdminGuestConversationPage() {
   };
 
   const formatTimestamp = (timestamp: Date | any) => {
+    if (!timestamp) return '';
     const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '';
     return formatDistanceToNow(date, { addSuffix: true });
+  };
+
+  const formatDate = (timestamp: Date | any) => {
+    if (!timestamp) return '';
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString();
   };
 
   return (
     <AdminLayout>
       <div className="h-full flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-white">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border-b bg-white gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Button
               variant="ghost"
               icon={ArrowLeft}
               onClick={() => router.push('/admin/messages')}
+              className="flex-shrink-0"
             >
-              Back
+              <span className="hidden sm:inline">Back</span>
             </Button>
 
             {guestInfo && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-5 h-5 text-gray-500" />
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                 </div>
 
-                <div>
-                  <h2 className="font-semibold text-gray-900">{guestInfo.name}</h2>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Mail className="w-3 h-3" />
-                    <span>{guestInfo.email}</span>
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{guestInfo.name}</h2>
+                  <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 flex-wrap">
+                    <Mail className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{guestInfo.email}</span>
+                    <span className="px-1.5 sm:px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs whitespace-nowrap">
                       Guest
                     </span>
                   </div>
                   {guestInfo.referenceNumber && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-0.5 sm:mt-1 truncate">
                       Ref: {guestInfo.referenceNumber}
                     </p>
                   )}
@@ -216,6 +228,7 @@ export default function AdminGuestConversationPage() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/admin/contacts')}
+              className="w-full sm:w-auto text-xs sm:text-sm whitespace-nowrap"
             >
               View Contact Form
             </Button>
@@ -241,15 +254,17 @@ export default function AdminGuestConversationPage() {
               {messages.map((msg, index) => {
                 const isAdmin = msg.senderType === 'admin';
                 const msgTimestamp = msg.timestamp;
-                const showDate = index === 0 ||
-                  new Date(messages[index - 1].timestamp).toDateString() !==
-                  new Date(msgTimestamp).toDateString();
+
+                // Only show date separator if we have a valid timestamp
+                const currentDate = formatDate(msgTimestamp);
+                const previousDate = index > 0 ? formatDate(messages[index - 1].timestamp) : '';
+                const showDate = currentDate && (index === 0 || currentDate !== previousDate);
 
                 return (
                   <div key={msg.id}>
                     {showDate && (
                       <div className="text-center text-xs text-gray-500 py-2">
-                        {new Date(msgTimestamp).toLocaleDateString()}
+                        {currentDate}
                       </div>
                     )}
 
