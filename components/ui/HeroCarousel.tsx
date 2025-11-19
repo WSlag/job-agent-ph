@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, MapPin, Briefcase, DollarSign, Clock, ArrowRight, Star } from 'lucide-react';
@@ -9,8 +10,14 @@ import HeroCarouselSkeleton from './HeroCarouselSkeleton';
 import { Job } from '@/types';
 
 export default function HeroCarousel() {
+  const pathname = usePathname();
   const { featuredJobs, loading, error } = useFeaturedJobs();
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Only render on homepage
+  if (pathname !== '/') {
+    return null;
+  }
 
   // Auto-advance carousel
   useEffect(() => {

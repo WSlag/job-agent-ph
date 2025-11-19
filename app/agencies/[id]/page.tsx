@@ -374,26 +374,12 @@ export default function AgencyProfilePage() {
         </div>
 
         {/* Stats */}
-        <StatCardGrid cols={4} className="mb-6">
+        <StatCardGrid cols={2} className="mb-6">
           <StatCard
             icon={<Clock />}
             value={agency.responseTime}
             label="Response Time"
             variant="info"
-            size="md"
-          />
-          <StatCard
-            icon={<Users />}
-            value={`${agency.placementsCount}+`}
-            label="Successful Placements"
-            variant="success"
-            size="md"
-          />
-          <StatCard
-            icon={<Calendar />}
-            value={`${agency.yearsEstablished}`}
-            label="Years Established"
-            variant="warning"
             size="md"
           />
           <StatCard
@@ -495,17 +481,6 @@ export default function AgencyProfilePage() {
                   Get Directions
                 </a>
               </div>
-            </div>
-
-            {/* Success Rate */}
-            <div className="bg-gradient-to-br from-success-50 to-success-100 border-2 border-success-200 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Success Rate
-              </h3>
-              <p className="text-4xl font-bold text-success-700 mb-2">94%</p>
-              <p className="text-sm text-gray-700">
-                Of applicants successfully deployed within 3 months
-              </p>
             </div>
           </div>
         </div>

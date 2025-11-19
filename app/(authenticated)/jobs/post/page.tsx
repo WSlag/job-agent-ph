@@ -53,8 +53,8 @@ export default function PostJobPage() {
         title="Post New Job"
         onBack={() => router.back()}
       />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24">
+      <div className="min-h-screen bg-gray-50 py-8 relative z-10 overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 relative z-10">
           <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Post a New Job</h1>
           <p className="mt-2 text-gray-600">

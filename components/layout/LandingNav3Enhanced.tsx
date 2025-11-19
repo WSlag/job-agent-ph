@@ -132,7 +132,7 @@ export default function LandingNav3Enhanced() {
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 flex items-center gap-2">
               <Logo size="sm" showText={true} />
-              <div className="hidden md:flex items-center gap-2 ml-2">
+              <div className="hidden">
                 <div className="h-4 w-px bg-gray-300"></div>
                 <span className="text-[10px] font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   300K+ JOBS

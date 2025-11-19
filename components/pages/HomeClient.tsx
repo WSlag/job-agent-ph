@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, Suspense } from 'react';
+import { usePathname } from 'next/navigation';
 import { collection, query, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { getDbInstance } from '@/lib/firebase';
 import { useOptionalAuth } from '@/contexts/AuthContext';
@@ -32,7 +33,13 @@ export default function HomeClient({
   initialFeaturedJobs,
   initialCategoryCounts,
 }: HomeClientProps) {
+  const pathname = usePathname();
   const { user } = useOptionalAuth();
+
+  // Only render on homepage
+  if (pathname !== '/') {
+    return null;
+  }
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
   const [selectedFeature, setSelectedFeature] = useState<number | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
