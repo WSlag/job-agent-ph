@@ -64,15 +64,24 @@ export default function AdminContactsPage() {
 
   const updateContactStatus = async (contactId: string, newStatus: Contact['status']) => {
     try {
-      const db = getDbInstance();
-      await updateDoc(doc(db, COLLECTIONS.CONTACTS, contactId), {
-        status: newStatus,
-        updatedAt: new Date().toISOString()
+      const response = await fetch(`/api/contacts/${contactId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update status');
+      }
+
       toast.success(`Contact marked as ${newStatus}`);
     } catch (error) {
       console.error('Error updating contact status:', error);
-      toast.error('Failed to update contact status');
+      toast.error(error instanceof Error ? error.message : 'Failed to update contact status');
     }
   };
 
