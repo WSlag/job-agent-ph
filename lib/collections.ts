@@ -30,6 +30,9 @@ export const COLLECTIONS = {
   NOTIFICATIONS: 'notifications', // User notifications
   AUDIT_LOGS: 'auditLogs', // Admin action audit logs
   SETTINGS: 'settings', // Platform settings
+  CONTACTS: 'contacts', // Contact form submissions
+  ADMIN_CONVERSATIONS: 'adminConversations', // Admin-user conversations
+  ADMIN_MESSAGES: 'adminMessages', // Bulk admin messages
 } as const;
 
 // Helper to get collection paths
@@ -52,6 +55,9 @@ export const getCollectionPath = {
   notifications: () => COLLECTIONS.NOTIFICATIONS,
   auditLogs: () => COLLECTIONS.AUDIT_LOGS,
   settings: () => COLLECTIONS.SETTINGS,
+  contacts: () => COLLECTIONS.CONTACTS,
+  adminConversations: () => COLLECTIONS.ADMIN_CONVERSATIONS,
+  adminMessages: () => COLLECTIONS.ADMIN_MESSAGES,
 };
 
 // Firestore indexes needed (create in Firebase Console)
