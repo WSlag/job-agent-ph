@@ -281,17 +281,24 @@ export default function AdminContactsPage() {
 
                   <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto md:ml-4">
                     {contact.conversationId ? (
-                      <Link href={`/admin/messages/${contact.conversationId}`} className="w-full sm:w-auto">
+                      <Link
+                        href={
+                          contact.userId
+                            ? `/admin/messages/${contact.userId}`
+                            : `/admin/messages/conversation/${contact.conversationId}`
+                        }
+                        className="w-full sm:w-auto"
+                      >
                         <Button size="sm" className="w-full sm:w-auto whitespace-nowrap">
                           <MessageSquare className="w-4 h-4 mr-1" />
                           View Chat
                         </Button>
                       </Link>
                     ) : contact.userId ? (
-                      <Link href={`/admin/messages`} className="w-full sm:w-auto">
+                      <Link href={`/admin/messages/${contact.userId}`} className="w-full sm:w-auto">
                         <Button size="sm" className="w-full sm:w-auto whitespace-nowrap">
                           <MessageSquare className="w-4 h-4 mr-1" />
-                          Messages
+                          Start Chat
                         </Button>
                       </Link>
                     ) : (
