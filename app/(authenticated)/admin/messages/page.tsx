@@ -131,6 +131,14 @@ export default function AdminMessagesPage() {
     router.push(`/admin/messages/bulk/${messageId}`);
   };
 
+  const formatTimestamp = (timestamp: Date | any) => {
+    if (!timestamp) return '';
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return '';
+    return formatDistanceToNow(date, { addSuffix: true });
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -278,12 +286,7 @@ export default function AdminMessagesPage() {
                                   {lastMessage.content}
                                 </p>
                                 <p className="text-xs text-gray-400 mt-1">
-                                  {formatDistanceToNow(
-                                    (lastMessage.createdAt as any).toDate
-                                      ? (lastMessage.createdAt as any).toDate()
-                                      : new Date(lastMessage.createdAt),
-                                    { addSuffix: true }
-                                  )}
+                                  {formatTimestamp(lastMessage.createdAt)}
                                 </p>
                               </div>
                             )}
@@ -346,14 +349,7 @@ export default function AdminMessagesPage() {
 
                             <div className="flex items-center gap-4 mt-2">
                               <p className="text-xs text-gray-400">
-                                Sent {formatDistanceToNow(
-                                  message.sentAt
-                                    ? (message.sentAt as any).toDate
-                                      ? (message.sentAt as any).toDate()
-                                      : new Date(message.sentAt)
-                                    : new Date(),
-                                  { addSuffix: true }
-                                )}
+                                {message.sentAt && `Sent ${formatTimestamp(message.sentAt)}`}
                               </p>
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <span>Delivered: {message.deliveredCount || 0}</span>

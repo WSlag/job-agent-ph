@@ -15,6 +15,15 @@ import { MessageCircle, Loader2, Inbox, Shield } from 'lucide-react';
 import Link from 'next/link';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 
+// Helper function to safely format timestamps
+const formatTimestamp = (timestamp: Date | any) => {
+  if (!timestamp) return '';
+  const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '';
+  return formatDistanceToNow(date, { addSuffix: true });
+};
+
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -332,13 +341,9 @@ function MessagesContent() {
                               Job Agent PH Support
                             </p>
                           </div>
-                          {convo.lastMessage && convo.lastMessage.createdAt &&
-                           !isNaN(new Date(convo.lastMessage.createdAt).getTime()) && (
+                          {convo.lastMessage && convo.lastMessage.createdAt && formatTimestamp(convo.lastMessage.createdAt) && (
                             <span className="text-xs text-gray-500 whitespace-nowrap">
-                              {formatDistanceToNow(
-                                new Date(convo.lastMessage.createdAt),
-                                { addSuffix: true }
-                              )}
+                              {formatTimestamp(convo.lastMessage.createdAt)}
                             </span>
                           )}
                         </div>
@@ -419,13 +424,9 @@ function MessagesContent() {
                                 {convo.job?.title || 'Deleted Job'}
                               </p>
                             </div>
-                            {convo.lastMessage && convo.lastMessage.createdAt &&
-                             !isNaN(new Date(convo.lastMessage.createdAt).getTime()) && (
+                            {convo.lastMessage && convo.lastMessage.createdAt && formatTimestamp(convo.lastMessage.createdAt) && (
                               <span className="text-xs text-gray-500 whitespace-nowrap">
-                                {formatDistanceToNow(
-                                  new Date(convo.lastMessage.createdAt),
-                                  { addSuffix: true }
-                                )}
+                                {formatTimestamp(convo.lastMessage.createdAt)}
                               </span>
                             )}
                           </div>

@@ -20,6 +20,15 @@ import { markBulkMessageAsRead } from '@/lib/admin-messaging-helpers';
 import { AdminMessage } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 
+// Helper function to safely format timestamps
+const formatTimestamp = (timestamp: Date | any) => {
+  if (!timestamp) return '';
+  const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+  // Check if date is valid
+  if (isNaN(date.getTime())) return '';
+  return formatDistanceToNow(date, { addSuffix: true });
+};
+
 export default function UserBulkMessagePage() {
   const router = useRouter();
   const params = useParams();
@@ -149,14 +158,7 @@ export default function UserBulkMessagePage() {
             <div className="text-right">
               <p className="text-sm text-gray-500 flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                {formatDistanceToNow(
-                  message.sentAt
-                    ? (message.sentAt as any).toDate
-                      ? (message.sentAt as any).toDate()
-                      : new Date(message.sentAt)
-                    : new Date(),
-                  { addSuffix: true }
-                )}
+                {formatTimestamp(message.sentAt)}
               </p>
             </div>
           </div>
