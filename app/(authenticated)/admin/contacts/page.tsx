@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, addDoc, serverTimestamp, where, getDocs, limit } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
-import AdminPageLayout from '@/components/layout/AdminPageLayout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { formatDistanceToNow } from 'date-fns';
@@ -180,22 +180,27 @@ export default function AdminContactsPage() {
 
   if (loading) {
     return (
-      <AdminPageLayout title="Contact Submissions">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
-            ))}
+      <AdminLayout>
+        <div className="space-y-4 md:space-y-6 p-4 md:p-0">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Contact Submissions</h1>
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              ))}
+            </div>
           </div>
         </div>
-      </AdminPageLayout>
+      </AdminLayout>
     );
   }
 
   return (
-    <AdminPageLayout title="Contact Submissions">
-      <div className="space-y-6">
+    <AdminLayout>
+      <div className="space-y-4 md:space-y-6 p-4 md:p-0">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Contact Submissions</h1>
+        <div className="space-y-6">
         {/* Filters and Search */}
         <Card className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -361,6 +366,7 @@ export default function AdminContactsPage() {
           )}
         </div>
       </div>
-    </AdminPageLayout>
+      </div>
+    </AdminLayout>
   );
 }
