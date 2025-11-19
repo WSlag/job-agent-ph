@@ -266,23 +266,25 @@ export default function AdminContactsPage() {
             </Card>
           ) : (
             filteredContacts.map(contact => (
-              <Card key={contact.id} className="p-6">
-                <div className="flex items-start justify-between">
+              <Card key={contact.id} className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
                       <h3 className="text-lg font-semibold">{contact.name}</h3>
-                      {getStatusBadge(contact.status)}
-                      <span className="text-xs text-gray-500">
-                        {formatDistanceToNow(new Date(contact.createdAt), { addSuffix: true })}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {getStatusBadge(contact.status)}
+                        <span className="text-xs text-gray-500">
+                          {formatDistanceToNow(new Date(contact.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span>{contact.email}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="break-all">{contact.email}</span>
                         {contact.userId && (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs whitespace-nowrap">
                             Authenticated
                           </span>
                         )}
@@ -298,27 +300,27 @@ export default function AdminContactsPage() {
                           : contact.message}
                       </div>
 
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>Ref: {contact.referenceNumber}</span>
-                        <span>IP: {contact.ipAddress}</span>
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs text-gray-500 flex-wrap">
+                        <span className="whitespace-nowrap">Ref: {contact.referenceNumber}</span>
+                        <span className="whitespace-nowrap">IP: {contact.ipAddress}</span>
                         {contact.userType !== 'guest' && (
-                          <span>Type: {contact.userType}</span>
+                          <span className="whitespace-nowrap">Type: {contact.userType}</span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 ml-4">
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto md:ml-4">
                     {contact.conversationId ? (
-                      <Link href={`/admin/messages/${contact.conversationId}`}>
-                        <Button size="sm" className="whitespace-nowrap">
+                      <Link href={`/admin/messages/${contact.conversationId}`} className="w-full sm:w-auto">
+                        <Button size="sm" className="w-full sm:w-auto whitespace-nowrap">
                           <MessageSquare className="w-4 h-4 mr-1" />
                           View Chat
                         </Button>
                       </Link>
                     ) : contact.userId ? (
-                      <Link href={`/admin/messages`}>
-                        <Button size="sm" className="whitespace-nowrap">
+                      <Link href={`/admin/messages`} className="w-full sm:w-auto">
+                        <Button size="sm" className="w-full sm:w-auto whitespace-nowrap">
                           <MessageSquare className="w-4 h-4 mr-1" />
                           Messages
                         </Button>
@@ -328,7 +330,7 @@ export default function AdminContactsPage() {
                         size="sm"
                         onClick={() => convertToConversation(contact)}
                         disabled={converting}
-                        className="whitespace-nowrap"
+                        className="w-full sm:w-auto whitespace-nowrap"
                       >
                         <MessageSquare className="w-4 h-4 mr-1" />
                         Convert to Chat
@@ -340,6 +342,7 @@ export default function AdminContactsPage() {
                         size="sm"
                         variant="secondary"
                         onClick={() => updateContactStatus(contact.id, 'in_progress')}
+                        className="w-full sm:w-auto whitespace-nowrap"
                       >
                         Mark In Progress
                       </Button>
@@ -350,6 +353,7 @@ export default function AdminContactsPage() {
                         size="sm"
                         variant="secondary"
                         onClick={() => updateContactStatus(contact.id, 'resolved')}
+                        className="w-full sm:w-auto whitespace-nowrap"
                       >
                         Mark Resolved
                       </Button>
@@ -359,7 +363,7 @@ export default function AdminContactsPage() {
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="text-red-600 hover:bg-red-50"
+                        className="w-full sm:w-auto text-red-600 hover:bg-red-50 whitespace-nowrap"
                         onClick={() => updateContactStatus(contact.id, 'spam')}
                       >
                         Mark as Spam
