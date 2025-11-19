@@ -15,15 +15,16 @@ const withPWA = withPWAInit({
     disableDevLogs: true,
     skipWaiting: true,
     clientsClaim: true,
-    // Use simpler caching strategy to avoid transpilation issues
+    // Cache only same-origin resources to avoid CSP violations
     runtimeCaching: [
       {
-        urlPattern: /^https?.*/,
+        urlPattern: ({ url }) => url.origin === self.location.origin,
         handler: 'NetworkFirst',
         options: {
-          cacheName: 'offlineCache',
+          cacheName: 'same-origin-cache',
           expiration: {
-            maxEntries: 200,
+            maxEntries: 100,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
           },
         },
       },
