@@ -253,8 +253,8 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=jobs-agency-8f28b.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=926738060539
 NEXT_PUBLIC_FIREBASE_APP_ID=1:926738060539:web:b6534d906922dde2a2cc5e
 
-# Admin Config (Unchanged)
-NEXT_PUBLIC_ADMIN_SECRET_KEY=wTFuf7yrYxrWKPNToc7x3KF74bmsY3rSgHD9K6abpz8
+# Admin Config (Use server-side environment variable)
+ADMIN_SECRET_KEY=<your-secure-admin-secret-key>
 ```
 
 ---

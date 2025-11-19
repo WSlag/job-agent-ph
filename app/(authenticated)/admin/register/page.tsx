@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { validateAdminSecretKey } from '@/lib/admin-helpers';
 import { Shield, Lock, Mail, User, Phone, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -41,20 +40,38 @@ export default function AdminRegisterPage() {
     }
   }, [user, userType, authLoading, router]);
 
-  const handleSecretKeyValidation = (e: React.FormEvent) => {
+  const handleSecretKeyValidation = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    if (!secretKey.trim()) {
-      setError('Please enter the admin secret key');
-      return;
-    }
+    try {
+      if (!secretKey.trim()) {
+        setError('Please enter the admin secret key');
+        setLoading(false);
+        return;
+      }
 
-    if (validateAdminSecretKey(secretKey)) {
-      setSecretKeyValidated(true);
-      toast.success('Secret key validated successfully!');
-    } else {
-      setError('Invalid secret key. Please contact the system administrator.');
+      // Call server-side API route for validation
+      const response = await fetch('/api/admin/validate-secret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secretKey }),
+      });
+
+      const data = await response.json();
+
+      if (data.valid) {
+        setSecretKeyValidated(true);
+        toast.success('Secret key validated successfully!');
+      } else {
+        setError(data.error || 'Invalid secret key. Please contact the system administrator.');
+      }
+    } catch (error) {
+      console.error('Validation error:', error);
+      setError('Failed to validate secret key. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

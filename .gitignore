@@ -41,6 +41,8 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 firebase-service-account.json
+serviceAccountKey.json
+**/service-account*.json
 
 # PWA files
 /public/sw.js

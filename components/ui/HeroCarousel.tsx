@@ -14,11 +14,6 @@ export default function HeroCarousel() {
   const { featuredJobs, loading, error } = useFeaturedJobs();
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Only render on homepage
-  if (pathname !== '/') {
-    return null;
-  }
-
   // Auto-advance carousel
   useEffect(() => {
     if (featuredJobs.length === 0) return;
@@ -34,6 +29,11 @@ export default function HeroCarousel() {
   useEffect(() => {
     setCurrentSlide(0);
   }, [featuredJobs]);
+
+  // Only render on homepage
+  if (pathname !== '/') {
+    return null;
+  }
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % featuredJobs.length);

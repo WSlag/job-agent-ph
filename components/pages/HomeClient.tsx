@@ -37,9 +37,6 @@ export default function HomeClient({
   const { user } = useOptionalAuth();
 
   // Only render on homepage
-  if (pathname !== '/') {
-    return null;
-  }
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
   const [selectedFeature, setSelectedFeature] = useState<number | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -52,6 +49,10 @@ export default function HomeClient({
       setSavedJobs(new Set());
     }
   }, [user]);
+
+  if (pathname !== '/') {
+    return null;
+  }
 
   const loadSavedJobs = async () => {
     if (!user) return;

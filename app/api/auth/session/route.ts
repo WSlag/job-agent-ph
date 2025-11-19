@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase-admin';
+import { RateLimits } from '@/lib/rate-limit';
 
 /**
  * POST /api/auth/session
@@ -9,6 +10,10 @@ import { adminAuth } from '@/lib/firebase-admin';
  * to create a server-side session cookie that can be verified by middleware.
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResponse = await RateLimits.auth(request);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { idToken } = await request.json();
 

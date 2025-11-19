@@ -20,12 +20,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Explicitly set workspace root for Firebase App Hosting
   outputFileTracingRoot: require('path').join(__dirname),
-  // Add security headers to handle COOP policy
+  // Add comprehensive security headers
   async headers() {
     return [
       {
         source: '/:path*',
         headers: [
+          // Existing headers
           {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin-allow-popups',
@@ -33,6 +34,46 @@ const nextConfig: NextConfig = {
           {
             key: 'Cross-Origin-Embedder-Policy',
             value: 'unsafe-none',
+          },
+          // Additional security headers
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
+          },
+          // Content Security Policy - allowing necessary external resources
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://www.gstatic.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: https: blob:",
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com",
+              "frame-src 'self' https://accounts.google.com https://www.google.com",
+              "media-src 'self'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'self'",
+              "upgrade-insecure-requests",
+            ].join('; '),
           },
         ],
       },

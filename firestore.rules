@@ -52,8 +52,8 @@ service cloud.firestore {
 
     // Users collection - basic user info
     match /users/{userId} {
-      // Temporarily allow all authenticated reads to debug
-      allow read: if request.auth != null;
+      // Only allow users to read their own profile or admins to read any
+      allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) &&
                       request.resource.data.keys().hasAll(['email', 'userType']) &&
                       validateEmail(request.resource.data.email) &&
@@ -77,8 +77,8 @@ service cloud.firestore {
 
     // Job Hunters collection - extended profile
     match /jobHunters/{userId} {
-      // Temporarily allow all authenticated reads to debug
-      allow read: if request.auth != null;
+      // Allow users to read their own profile, agencies and admins to read any
+      allow read: if isOwner(userId) || isAgency() || isAdmin();
       allow create: if isOwner(userId) &&
                       request.resource.data.keys().hasAll(['email', 'userType']) &&
                       validateEmail(request.resource.data.email) &&
