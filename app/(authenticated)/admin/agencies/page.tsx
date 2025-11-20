@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { getAllAgencies, getAgencyVerificationStats, type AgencyVerificationStats } from '@/lib/agency-helpers'
 import { Agency } from '@/types'
-import AdminDashboardHeader from '@/components/layout/AdminDashboardHeader'
-import AdminMobileHeader from '@/components/layout/AdminMobileHeader'
+import AdminLayout from '@/components/layout/AdminLayout'
 import Card from '@/components/ui/Card'
 import AgencyVerificationModal from '@/components/admin/AgencyVerificationModal'
 import { Search, Filter, Building2, CheckCircle, XCircle, FileText, Download, ChevronDown } from 'lucide-react'
@@ -97,15 +96,11 @@ export default function AdminAgenciesPage() {
 
   if (authLoading || loading) {
     return (
-      <>
-        <div className="hidden md:block">
-          <AdminDashboardHeader />
-        </div>
-        <AdminMobileHeader title="Agencies" />
-        <div className="min-h-screen flex items-center justify-center pt-20">
+      <AdminLayout>
+        <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      </>
+      </AdminLayout>
     )
   }
 
@@ -114,14 +109,10 @@ export default function AdminAgenciesPage() {
   }
 
   return (
-    <>
-      <div className="hidden md:block">
-        <AdminDashboardHeader />
-      </div>
-      <AdminMobileHeader title="Agencies" />
+    <AdminLayout>
 
-      <div className="min-h-screen bg-gray-50 py-8 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -432,6 +423,6 @@ export default function AdminAgenciesPage() {
           onVerificationChange={handleVerificationChange}
         />
       )}
-    </>
+    </AdminLayout>
   )
 }
