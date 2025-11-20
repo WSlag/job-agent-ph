@@ -410,6 +410,93 @@ Browse Jobs: https://www.jobagentph.com/jobs
 My Profile: https://www.jobagentph.com/profile
     `,
   }),
+
+  // Reply to contact form submission
+  contactReply: (data: {
+    recipientName: string;
+    recipientEmail: string;
+    replyMessage: string;
+    originalSubject: string;
+    referenceNumber: string;
+  }) => ({
+    from: DEFAULT_FROM,
+    to: data.recipientEmail,
+    replyTo: DEFAULT_FROM,
+    subject: `Re: ${data.originalSubject}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+            .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; }
+            .message-box { background: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2563eb; }
+            .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+            .reference { display: inline-block; background: #dbeafe; color: #1e40af; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-size: 11px; }
+            .signature { margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2 style="margin: 0;">Job Agent PH</h2>
+              <p style="margin: 5px 0 0 0; opacity: 0.9;">Response to your inquiry</p>
+            </div>
+            <div class="content">
+              <p>Hi ${data.recipientName},</p>
+
+              <p>Thank you for contacting Job Agent PH. We're writing in response to your inquiry regarding "<strong>${data.originalSubject}</strong>".</p>
+
+              <div class="message-box">
+                ${data.replyMessage.replace(/\n/g, '<br>')}
+              </div>
+
+              <p>If you have any additional questions or need further assistance, please don't hesitate to reply to this email. We're here to help!</p>
+
+              <div class="signature">
+                <p style="margin: 0;"><strong>Best regards,</strong></p>
+                <p style="margin: 5px 0;"><strong>Job Agent PH Team</strong></p>
+                <p style="margin: 5px 0; font-size: 14px; color: #6b7280;">
+                  <a href="mailto:contact@jobagentph.com" style="color: #2563eb; text-decoration: none;">contact@jobagentph.com</a><br>
+                  <a href="https://www.jobagentph.com" style="color: #2563eb; text-decoration: none;">www.jobagentph.com</a>
+                </p>
+              </div>
+
+              <p style="font-size: 11px; color: #9ca3af; margin-top: 20px;">
+                Reference: <span class="reference">${data.referenceNumber}</span>
+              </p>
+            </div>
+            <div class="footer">
+              <p><strong>Job Agent PH</strong> - Your Partner in Career Success</p>
+              <p>
+                <a href="https://www.jobagentph.com" style="color: #2563eb; text-decoration: none;">Website</a> |
+                <a href="https://www.jobagentph.com/jobs" style="color: #2563eb; text-decoration: none;">Browse Jobs</a> |
+                <a href="https://www.jobagentph.com/contact" style="color: #2563eb; text-decoration: none;">Contact Us</a>
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `
+Hi ${data.recipientName},
+
+Thank you for contacting Job Agent PH. We're writing in response to your inquiry regarding "${data.originalSubject}".
+
+${data.replyMessage}
+
+If you have any additional questions or need further assistance, please don't hesitate to reply to this email. We're here to help!
+
+Best regards,
+Job Agent PH Team
+contact@jobagentph.com
+www.jobagentph.com
+
+Reference: ${data.referenceNumber}
+    `,
+  }),
 };
 
 // Send email function

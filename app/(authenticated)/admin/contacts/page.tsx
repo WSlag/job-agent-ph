@@ -8,10 +8,11 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { formatDistanceToNow } from 'date-fns';
-import { Mail, MessageSquare, Clock, User, CheckCircle, XCircle, AlertCircle, ExternalLink, Filter, Search } from 'lucide-react';
+import { Mail, MessageSquare, Clock, User, CheckCircle, XCircle, AlertCircle, ExternalLink, Filter, Search, Reply } from 'lucide-react';
 import { COLLECTIONS } from '@/lib/collections';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import ContactReplyModal from '@/components/admin/ContactReplyModal';
 
 // Helper function to safely format timestamps
 const formatTimestamp = (timestamp: Date | any) => {
@@ -21,6 +22,14 @@ const formatTimestamp = (timestamp: Date | any) => {
   if (isNaN(date.getTime())) return '';
   return formatDistanceToNow(date, { addSuffix: true });
 };
+
+interface ContactReply {
+  id: string;
+  message: string;
+  sentBy: string; // Admin user ID
+  sentAt: string;
+  status: 'sent' | 'failed';
+}
 
 interface Contact {
   id: string;
@@ -34,6 +43,7 @@ interface Contact {
   userType: string;
   ipAddress: string;
   conversationId?: string;
+  replies?: ContactReply[];
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +56,8 @@ export default function AdminContactsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [converting, setConverting] = useState(false);
+  const [replyModalOpen, setReplyModalOpen] = useState(false);
+  const [contactToReply, setContactToReply] = useState<Contact | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -294,6 +306,20 @@ export default function AdminContactsPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto md:ml-4">
+                    {/* Reply Button */}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setContactToReply(contact);
+                        setReplyModalOpen(true);
+                      }}
+                      className="w-full sm:w-auto whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      <Reply className="w-4 h-4 mr-1" />
+                      Reply via Email
+                    </Button>
+
                     {contact.conversationId ? (
                       <Link
                         href={
@@ -367,6 +393,30 @@ export default function AdminContactsPage() {
         </div>
       </div>
       </div>
+
+      {/* Reply Modal */}
+      {contactToReply && (
+        <ContactReplyModal
+          isOpen={replyModalOpen}
+          onClose={() => {
+            setReplyModalOpen(false);
+            setContactToReply(null);
+          }}
+          contact={{
+            id: contactToReply.id,
+            name: contactToReply.name,
+            email: contactToReply.email,
+            subject: contactToReply.subject,
+            message: contactToReply.message,
+            referenceNumber: contactToReply.referenceNumber,
+          }}
+          adminUserId={user?.uid}
+          onSuccess={() => {
+            // Refresh will happen automatically through Firestore subscription
+            toast.success('Contact marked as resolved');
+          }}
+        />
+      )}
     </AdminLayout>
   );
 }
