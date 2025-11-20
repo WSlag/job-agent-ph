@@ -116,8 +116,8 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      {/* Statistics */}
-      <Section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+      {/* Statistics - Hidden */}
+      {/* <Section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold mb-12 text-center">Our Impact</h2>
           <div className="grid md:grid-cols-4 gap-8 text-center">
@@ -139,7 +139,7 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </Section>
+      </Section> */}
 
       {/* Team Section */}
       <Section className="py-16">
