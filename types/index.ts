@@ -45,7 +45,10 @@ export interface Agency extends User {
   description?: string; // About Us section - agency description
   bio?: string; // Alias for description (for backward compatibility)
   specializations?: string[]; // Array of specialization areas (e.g., "Healthcare", "IT", "Construction")
-  certifications?: string[]; // Array of certifications/licenses
+  certifications?: string[]; // Array of additional certifications/licenses (optional)
+  // Mandatory certification documents
+  dmwLicenseUrl?: string; // DMW (Department of Migrant Workers) License document URL
+  businessPermitUrl?: string; // Business Permit document URL
 }
 
 export interface Admin extends User {

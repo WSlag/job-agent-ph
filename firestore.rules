@@ -114,6 +114,12 @@ service cloud.firestore {
       allow create: if isAgency() &&
                       // Critical security checks
                       request.resource.data.agencyId == request.auth.uid &&
+                      // Agency profile must be complete with certifications
+                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseUrl != null &&
+                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitUrl != null &&
+                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.logoUrl != null &&
+                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.registrationNumber != null &&
+                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.phone != null &&
                       // Field validations (adjusted for realistic use)
                       validateStringLength(request.resource.data.title, 5, 200) &&
                       validateStringLength(request.resource.data.description, 10, 10000) &&

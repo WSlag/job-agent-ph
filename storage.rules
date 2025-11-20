@@ -126,6 +126,20 @@ service firebase.storage {
       allow delete: if isAuthenticated();
     }
 
+    // Agency certification documents (DMW License, Business Permit, etc.)
+    match /agency-certifications/{userId}/{fileName} {
+      // Agencies can upload their certification documents
+      allow create: if isAuthenticated() &&
+                      isOwner(userId) &&
+                      (isValidImageFile() || isValidPdfFile());
+
+      // Authenticated users can read certifications (for admin verification)
+      allow read: if isAuthenticated();
+
+      // Only owner can update/delete their certifications
+      allow update, delete: if isAuthenticated() && isOwner(userId);
+    }
+
     // Deny all other access
     match /{allPaths=**} {
       allow read, write: if false;

@@ -1,12 +1,12 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, ChevronDown, ChevronUp, Building2, FileText, Phone, Briefcase, CheckCircle2 } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Building2, FileText, Phone, Briefcase, CheckCircle2, Shield } from 'lucide-react'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { useState } from 'react'
 import Link from 'next/link'
 
-type AgencyChecklistKey = 'logoUploaded' | 'registrationAdded' | 'contactInfoComplete' | 'firstJobPosted';
+type AgencyChecklistKey = 'logoUploaded' | 'registrationAdded' | 'contactInfoComplete' | 'dmwLicenseUploaded' | 'businessPermitUploaded' | 'firstJobPosted';
 
 interface ChecklistItem {
   id: AgencyChecklistKey
@@ -41,6 +41,22 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     icon: Phone,
     link: '/agency/profile/edit',
     linkText: 'Add Contact Info',
+  },
+  {
+    id: 'dmwLicenseUploaded',
+    title: 'Upload DMW License',
+    description: 'Required certification - Department of Migrant Workers License',
+    icon: Shield,
+    link: '/agency/profile/edit?reason=certifications',
+    linkText: 'Upload License',
+  },
+  {
+    id: 'businessPermitUploaded',
+    title: 'Upload Business Permit',
+    description: 'Required certification - Valid Business Permit',
+    icon: Shield,
+    link: '/agency/profile/edit?reason=certifications',
+    linkText: 'Upload Permit',
   },
   {
     id: 'firstJobPosted',
@@ -98,7 +114,7 @@ export default function AgencyProfileChecklist() {
               <p className="text-sm text-gray-600">
                 {isComplete
                   ? 'Excellent! Your agency profile is complete.'
-                  : `${4 - Object.values(onboardingData?.profileChecklist || {}).filter(Boolean).length} items remaining`}
+                  : `${6 - Object.values(onboardingData?.profileChecklist || {}).filter(Boolean).length} items remaining`}
               </p>
             </div>
           </div>

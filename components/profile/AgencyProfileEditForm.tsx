@@ -9,6 +9,7 @@ import { Upload, X, Building2, Plus } from 'lucide-react'
 import type { Agency } from '@/types'
 import Image from 'next/image'
 import Chip, { ChipGroup } from '@/components/ui/Chip'
+import CertificationUploadField from '@/components/profile/CertificationUploadField'
 
 interface AgencyProfileEditFormProps {
   agency: Agency
@@ -27,6 +28,9 @@ interface FormData {
   certifications: string[]
   newSpecialization: string
   newCertification: string
+  // Mandatory certification files
+  dmwLicenseFile: File | null
+  businessPermitFile: File | null
 }
 
 export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormProps) {
@@ -35,6 +39,10 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [logoPreview, setLogoPreview] = useState<string | null>(agency.logoUrl || null)
+  const [certificationErrors, setCertificationErrors] = useState<{
+    dmwLicense?: string
+    businessPermit?: string
+  }>({})
 
   const [formData, setFormData] = useState<FormData>({
     companyName: agency.companyName || '',
@@ -49,6 +57,8 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
     certifications: agency.certifications || [],
     newSpecialization: '',
     newCertification: '',
+    dmwLicenseFile: null,
+    businessPermitFile: null,
   })
 
   const handleChange = (
@@ -152,6 +162,7 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
     setError(null)
     setSuccess(false)
     setLoading(true)
+    setCertificationErrors({})
 
     try {
       // Validation
@@ -171,12 +182,50 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         throw new Error('Address is required')
       }
 
+      // Validate mandatory certifications
+      const errors: { dmwLicense?: string; businessPermit?: string } = {}
+
+      if (!agency.dmwLicenseUrl && !formData.dmwLicenseFile) {
+        errors.dmwLicense = 'DMW License is required'
+      }
+
+      if (!agency.businessPermitUrl && !formData.businessPermitFile) {
+        errors.businessPermit = 'Business Permit is required'
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setCertificationErrors(errors)
+        throw new Error('Please upload required certifications (DMW License and Business Permit)')
+      }
+
       // Upload new logo if changed
       let logoUrl = agency.logoUrl
       if (formData.logoFile) {
         logoUrl = await uploadFile(
           formData.logoFile,
           `company-logos/${agency.id}/${formData.logoFile.name}`
+        )
+      }
+
+      // Upload DMW License if new file
+      let dmwLicenseUrl = agency.dmwLicenseUrl
+      if (formData.dmwLicenseFile) {
+        const timestamp = Date.now()
+        const ext = formData.dmwLicenseFile.name.split('.').pop()
+        dmwLicenseUrl = await uploadFile(
+          formData.dmwLicenseFile,
+          `agency-certifications/${agency.id}/dmw-license-${timestamp}.${ext}`
+        )
+      }
+
+      // Upload Business Permit if new file
+      let businessPermitUrl = agency.businessPermitUrl
+      if (formData.businessPermitFile) {
+        const timestamp = Date.now()
+        const ext = formData.businessPermitFile.name.split('.').pop()
+        businessPermitUrl = await uploadFile(
+          formData.businessPermitFile,
+          `agency-certifications/${agency.id}/business-permit-${timestamp}.${ext}`
         )
       }
 
@@ -188,6 +237,8 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         phone: formData.phone,
         address: formData.address,
         logoUrl,
+        dmwLicenseUrl,
+        businessPermitUrl,
       }
 
       // Add optional fields only if they have values
@@ -459,10 +510,44 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         )}
       </div>
 
-      {/* Certifications & Licenses */}
-      <div>
+      {/* Mandatory Certifications */}
+      <div className="border-t pt-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Required Certifications
+        </h3>
+        <p className="text-sm text-gray-600 mb-6">
+          These certifications are mandatory for posting jobs. Please upload clear copies of your documents.
+        </p>
+
+        <div className="space-y-6">
+          {/* DMW License */}
+          <CertificationUploadField
+            label="DMW License"
+            required={true}
+            value={agency.dmwLicenseUrl}
+            file={formData.dmwLicenseFile}
+            onChange={(file) => setFormData({ ...formData, dmwLicenseFile: file })}
+            error={certificationErrors.dmwLicense}
+            helperText="Department of Migrant Workers License - Required for agency verification"
+          />
+
+          {/* Business Permit */}
+          <CertificationUploadField
+            label="Business Permit"
+            required={true}
+            value={agency.businessPermitUrl}
+            file={formData.businessPermitFile}
+            onChange={(file) => setFormData({ ...formData, businessPermitFile: file })}
+            error={certificationErrors.businessPermit}
+            helperText="Valid Business Permit - Required for agency verification"
+          />
+        </div>
+      </div>
+
+      {/* Optional Additional Certifications */}
+      <div className="border-t pt-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Certifications & Licenses (Optional)
+          Additional Certifications & Licenses (Optional)
         </label>
         <div className="space-y-2">
           {formData.certifications.map((cert, idx) => (
@@ -494,7 +579,7 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          Add up to 15 certifications or licenses (e.g., ISO Certified, POEA Licensed)
+          Add up to 15 additional certifications (e.g., ISO Certified, POEA Licensed)
         </p>
       </div>
 

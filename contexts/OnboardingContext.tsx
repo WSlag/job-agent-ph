@@ -58,6 +58,8 @@ interface AgencyChecklist {
   logoUploaded: boolean
   registrationAdded: boolean
   contactInfoComplete: boolean
+  dmwLicenseUploaded: boolean
+  businessPermitUploaded: boolean
   firstJobPosted: boolean
 }
 
@@ -128,6 +130,8 @@ const getDefaultOnboardingData = (userType: string | null): OnboardingData => {
           logoUploaded: false,
           registrationAdded: false,
           contactInfoComplete: false,
+          dmwLicenseUploaded: false,
+          businessPermitUploaded: false,
           firstJobPosted: false,
         }
       : {

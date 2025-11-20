@@ -1,5 +1,6 @@
-import { getStorageInstance } from './firebase'
+import { getStorageInstance, getDbInstance } from './firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { doc, getDoc } from 'firebase/firestore'
 import { createDocument } from './firestore-helpers'
 import type { Job, JobType, JobLocation } from '@/types'
 import { isValidCategory } from './categories'
@@ -49,6 +50,36 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     imageFile,
     expiresAt,
   } = params
+
+  // Validate agency profile is complete before allowing job creation
+  const db = getDbInstance()
+  const agencyRef = doc(db, 'agencies', agencyId)
+  const agencySnap = await getDoc(agencyRef)
+
+  if (!agencySnap.exists()) {
+    throw new Error('Agency profile not found')
+  }
+
+  const agencyData = agencySnap.data()
+
+  // Check for required certifications
+  if (!agencyData.dmwLicenseUrl || !agencyData.businessPermitUrl) {
+    throw new Error(
+      'Agency profile incomplete. Please upload DMW License and Business Permit before posting jobs.'
+    )
+  }
+
+  // Check for other required profile fields
+  if (
+    !agencyData.companyName?.trim() ||
+    !agencyData.registrationNumber?.trim() ||
+    !agencyData.contactPerson?.trim() ||
+    !agencyData.phone?.trim() ||
+    !agencyData.address?.trim() ||
+    !agencyData.logoUrl
+  ) {
+    throw new Error('Agency profile incomplete. Please complete all required fields before posting jobs.')
+  }
 
   // Validate category
   if (!isValidCategory(category)) {

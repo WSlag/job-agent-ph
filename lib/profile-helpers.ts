@@ -66,3 +66,70 @@ export async function updateJobHunterProfile(
     throw new Error('Failed to update job hunter profile')
   }
 }
+
+/**
+ * Checks if an agency profile is complete with all mandatory fields
+ * @param agency The agency profile to check
+ * @returns true if profile is complete, false otherwise
+ */
+export function isAgencyProfileComplete(agency: Agency): boolean {
+  // Check basic required fields
+  const hasBasicInfo = Boolean(
+    agency.companyName?.trim() &&
+    agency.registrationNumber?.trim() &&
+    agency.contactPerson?.trim() &&
+    agency.phone?.trim() &&
+    agency.address?.trim() &&
+    agency.logoUrl
+  )
+
+  // Check mandatory certifications
+  const hasCertifications = Boolean(
+    agency.dmwLicenseUrl &&
+    agency.businessPermitUrl
+  )
+
+  return hasBasicInfo && hasCertifications
+}
+
+/**
+ * Gets a detailed profile completion status for an agency
+ * @param agency The agency profile to check
+ * @returns Object with missing fields and completion status
+ */
+export function getAgencyProfileCompletionStatus(agency: Agency): {
+  isComplete: boolean
+  missingFields: string[]
+  completionPercentage: number
+} {
+  const requiredFields = [
+    { key: 'companyName', label: 'Company Name', value: agency.companyName },
+    { key: 'registrationNumber', label: 'Registration Number', value: agency.registrationNumber },
+    { key: 'contactPerson', label: 'Contact Person', value: agency.contactPerson },
+    { key: 'phone', label: 'Phone', value: agency.phone },
+    { key: 'address', label: 'Address', value: agency.address },
+    { key: 'logoUrl', label: 'Company Logo', value: agency.logoUrl },
+    { key: 'dmwLicenseUrl', label: 'DMW License', value: agency.dmwLicenseUrl },
+    { key: 'businessPermitUrl', label: 'Business Permit', value: agency.businessPermitUrl },
+  ]
+
+  const missingFields: string[] = []
+  let completedCount = 0
+
+  requiredFields.forEach(field => {
+    if (field.value && String(field.value).trim()) {
+      completedCount++
+    } else {
+      missingFields.push(field.label)
+    }
+  })
+
+  const completionPercentage = Math.round((completedCount / requiredFields.length) * 100)
+  const isComplete = completedCount === requiredFields.length
+
+  return {
+    isComplete,
+    missingFields,
+    completionPercentage,
+  }
+}
