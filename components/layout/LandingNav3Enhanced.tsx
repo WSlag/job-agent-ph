@@ -224,30 +224,30 @@ export default function LandingNav3Enhanced() {
               aria-label="Job filter quick links"
             >
               <Link
-                href="/jobs?location=remote"
+                href="/jobs?salary=high"
                 className={getPillClasses(
-                  activeLocation === 'remote',
-                  'bg-gradient-to-r from-blue-500 to-blue-600 text-white border border-blue-300',
-                  'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 text-gray-700 hover:text-blue-700 border border-gray-200 hover:border-blue-300'
+                  activeSalary === 'high',
+                  'bg-gradient-to-r from-green-500 to-green-600 text-white border border-green-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300'
                 )}
-                aria-label="Filter by remote jobs"
-                aria-current={activeLocation === 'remote' ? 'page' : undefined}
+                aria-label="Filter by high salary jobs"
+                aria-current={activeSalary === 'high' ? 'page' : undefined}
               >
-                <span className="text-base leading-none" aria-hidden="true">🌏</span>
-                <span className="leading-none">Remote</span>
+                <span className="text-base leading-none" aria-hidden="true">💰</span>
+                <span className="leading-none">High Salary</span>
               </Link>
               <Link
-                href="/jobs?type=full-time"
+                href="/jobs?featured=true"
                 className={getPillClasses(
-                  activeType === 'full-time',
-                  'bg-gradient-to-r from-purple-500 to-purple-600 text-white border border-purple-300',
-                  'bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300'
+                  activeFeatured === 'true',
+                  'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border border-yellow-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-yellow-300'
                 )}
-                aria-label="Filter by full-time jobs"
-                aria-current={activeType === 'full-time' ? 'page' : undefined}
+                aria-label="Filter by featured jobs"
+                aria-current={activeFeatured === 'true' ? 'page' : undefined}
               >
-                <span className="text-base leading-none" aria-hidden="true">💼</span>
-                <span className="leading-none">Full</span>
+                <span className="text-base leading-none" aria-hidden="true">✨</span>
+                <span className="leading-none">Featured</span>
               </Link>
               <Link
                 href="/jobs?location=dubai"
@@ -276,30 +276,30 @@ export default function LandingNav3Enhanced() {
                 <span className="leading-none">Singapore</span>
               </Link>
               <Link
-                href="/jobs?featured=true"
+                href="/jobs?type=full-time"
                 className={getPillClasses(
-                  activeFeatured === 'true',
-                  'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border border-yellow-300',
-                  'bg-white hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 text-gray-700 hover:text-orange-700 border border-gray-200 hover:border-yellow-300'
+                  activeType === 'full-time',
+                  'bg-gradient-to-r from-purple-500 to-purple-600 text-white border border-purple-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 text-gray-700 hover:text-purple-700 border border-gray-200 hover:border-purple-300'
                 )}
-                aria-label="Filter by featured jobs"
-                aria-current={activeFeatured === 'true' ? 'page' : undefined}
+                aria-label="Filter by full-time jobs"
+                aria-current={activeType === 'full-time' ? 'page' : undefined}
               >
-                <span className="text-base leading-none" aria-hidden="true">✨</span>
-                <span className="leading-none">Featured</span>
+                <span className="text-base leading-none" aria-hidden="true">💼</span>
+                <span className="leading-none">Full</span>
               </Link>
               <Link
-                href="/jobs?salary=high"
+                href="/jobs?location=remote"
                 className={getPillClasses(
-                  activeSalary === 'high',
-                  'bg-gradient-to-r from-green-500 to-green-600 text-white border border-green-300',
-                  'bg-white hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-300'
+                  activeLocation === 'remote',
+                  'bg-gradient-to-r from-blue-500 to-blue-600 text-white border border-blue-300',
+                  'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 text-gray-700 hover:text-blue-700 border border-gray-200 hover:border-blue-300'
                 )}
-                aria-label="Filter by high salary jobs"
-                aria-current={activeSalary === 'high' ? 'page' : undefined}
+                aria-label="Filter by remote jobs"
+                aria-current={activeLocation === 'remote' ? 'page' : undefined}
               >
-                <span className="text-base leading-none" aria-hidden="true">💰</span>
-                <span className="leading-none">High Salary</span>
+                <span className="text-base leading-none" aria-hidden="true">🌏</span>
+                <span className="leading-none">Remote</span>
               </Link>
             </nav>
           )}
