@@ -16,6 +16,7 @@ import {
   ScrollText,
   Mail,
   MessageSquare,
+  Building2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,11 @@ const navigation = [
     name: 'Jobs',
     href: '/admin/jobs',
     icon: Briefcase,
+  },
+  {
+    name: 'Agencies',
+    href: '/admin/agencies',
+    icon: Building2,
   },
   {
     name: 'Users',
