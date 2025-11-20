@@ -8,7 +8,7 @@ interface CertificationUploadFieldProps {
   label: string;
   required?: boolean;
   value?: string; // Existing file URL
-  file?: File; // New file to upload
+  file?: File | null; // New file to upload
   onChange: (file: File | null) => void;
   error?: string;
   accept?: Record<string, string[]>;
