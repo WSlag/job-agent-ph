@@ -9,7 +9,7 @@ export default function AboutPage() {
       {/* Hero Section */}
       <Section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">About Job Agency PH</h1>
+          <h1 className="text-5xl font-bold mb-6">About Job Agent Ph</h1>
           <p className="text-xl text-blue-100">
             Connecting talented Filipino professionals with opportunities worldwide
           </p>
