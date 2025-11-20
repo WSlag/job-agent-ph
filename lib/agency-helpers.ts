@@ -185,6 +185,10 @@ export async function verifyAgency(
     const db = getDbInstance();
     const agencyRef = doc(db, COLLECTIONS.AGENCIES, agencyId);
 
+    // Get admin name for audit log
+    const adminDoc = await getDoc(doc(db, COLLECTIONS.USERS, adminId));
+    const adminName = adminDoc.exists() ? (adminDoc.data()?.name || 'Admin') : 'Admin';
+
     await updateDoc(agencyRef, {
       verified: true,
       verifiedAt: Timestamp.now(),
@@ -194,10 +198,11 @@ export async function verifyAgency(
     // Log to audit trail
     await logAdminAction({
       adminId,
+      adminName,
       action: 'VERIFY_AGENCY',
-      targetType: 'agency',
-      targetId: agencyId,
-      details: notes || 'Agency verified',
+      resourceType: 'agency',
+      resourceId: agencyId,
+      details: notes ? { notes } : { message: 'Agency verified' },
     });
   } catch (error) {
     console.error('Error verifying agency:', error);
@@ -217,6 +222,10 @@ export async function revokeAgencyVerification(
     const db = getDbInstance();
     const agencyRef = doc(db, COLLECTIONS.AGENCIES, agencyId);
 
+    // Get admin name for audit log
+    const adminDoc = await getDoc(doc(db, COLLECTIONS.USERS, adminId));
+    const adminName = adminDoc.exists() ? (adminDoc.data()?.name || 'Admin') : 'Admin';
+
     await updateDoc(agencyRef, {
       verified: false,
       verifiedAt: null,
@@ -226,10 +235,11 @@ export async function revokeAgencyVerification(
     // Log to audit trail
     await logAdminAction({
       adminId,
+      adminName,
       action: 'UNVERIFY_AGENCY',
-      targetType: 'agency',
-      targetId: agencyId,
-      details: reason || 'Agency verification revoked',
+      resourceType: 'agency',
+      resourceId: agencyId,
+      details: reason ? { reason } : { message: 'Agency verification revoked' },
     });
   } catch (error) {
     console.error('Error revoking agency verification:', error);

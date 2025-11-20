@@ -350,6 +350,8 @@ export function formatAuditAction(action: AuditAction): string {
     user_suspended: 'Suspended User',
     user_unsuspended: 'Unsuspended User',
     user_deleted: 'Deleted User',
+    VERIFY_AGENCY: 'Verified Agency',
+    UNVERIFY_AGENCY: 'Revoked Agency Verification',
     featured_request_approved: 'Approved Featured Request',
     featured_request_rejected: 'Rejected Featured Request',
     featured_job_removed: 'Removed Featured Job',
