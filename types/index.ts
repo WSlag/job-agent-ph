@@ -284,6 +284,8 @@ export type AuditAction =
   | 'job_created' | 'job_updated' | 'job_deleted' | 'job_held' | 'job_unheld'
   // User actions
   | 'user_suspended' | 'user_unsuspended' | 'user_deleted'
+  // Agency actions
+  | 'VERIFY_AGENCY' | 'UNVERIFY_AGENCY'
   // Featured job actions
   | 'featured_request_approved' | 'featured_request_rejected' | 'featured_job_removed'
   // Message actions
