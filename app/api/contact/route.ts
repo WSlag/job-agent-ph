@@ -3,6 +3,7 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { validateEmail, validateMessage, sanitizeString, checkRateLimit } from '@/lib/validation';
 import { COLLECTIONS } from '@/lib/collections';
 import { FieldValue } from 'firebase-admin/firestore';
+import { sendContactFormEmails } from '@/lib/email';
 
 // Generate reference number for tracking
 function generateReferenceNumber(): string {
@@ -100,6 +101,21 @@ export async function POST(request: NextRequest) {
 
     // Generate reference number
     const referenceNumber = generateReferenceNumber();
+
+    // Send email notifications (admin notification + user confirmation)
+    try {
+      await sendContactFormEmails({
+        name: sanitizedName,
+        email: email.toLowerCase().trim(),
+        subject: sanitizedSubject,
+        message: sanitizedMessage,
+        referenceNumber,
+      });
+      console.log('Contact form emails sent successfully');
+    } catch (emailError) {
+      // Log email error but don't fail the contact submission
+      console.error('Warning: Failed to send emails, but contact will still be stored:', emailError);
+    }
 
     // Get client IP for logging (optional)
     const forwardedFor = request.headers.get('x-forwarded-for');

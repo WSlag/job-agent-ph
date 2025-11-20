@@ -1,13 +1,10 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 // Email configuration
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Default sender email (should be verified in Resend)
+const DEFAULT_FROM = process.env.EMAIL_FROM || 'contact@jobagentph.com';
 
 // Email templates
 export const emailTemplates = {
@@ -20,8 +17,9 @@ export const emailTemplates = {
     referenceNumber: string;
     timestamp: string;
   }) => ({
-    from: `"Job Agent PH" <${process.env.GMAIL_USER}>`,
-    to: process.env.GMAIL_USER || 'admin@jobagentph.com', // Sends to contact@jobagentph.com, which routes to your Gmail
+    from: DEFAULT_FROM,
+    to: DEFAULT_FROM, // Sends to contact@jobagentph.com, which routes to your Gmail
+    replyTo: data.email, // Reply directly to the user
     subject: `New Contact Form Submission: ${data.subject}`,
     html: `
       <!DOCTYPE html>
@@ -68,6 +66,7 @@ export const emailTemplates = {
               </div>
             </div>
             <div class="footer">
+              <p><strong>💡 Quick Reply:</strong> Just click "Reply" to respond directly to ${data.name}</p>
               <p>View all contact submissions in your <a href="https://www.jobagentph.com/agency/dashboard/contacts">admin dashboard</a></p>
               <p>Job Agent PH - Contact Form System</p>
             </div>
@@ -90,6 +89,8 @@ ${data.message}
 Submitted: ${data.timestamp}
 
 ---
+💡 Quick Reply: Just click "Reply" to respond directly to ${data.name}
+
 View all contact submissions in your admin dashboard:
 https://www.jobagentph.com/agency/dashboard/contacts
     `,
@@ -101,7 +102,7 @@ https://www.jobagentph.com/agency/dashboard/contacts
     email: string;
     referenceNumber: string;
   }) => ({
-    from: `"Job Agent PH" <${process.env.GMAIL_USER}>`,
+    from: DEFAULT_FROM,
     to: data.email,
     subject: 'We received your message - Job Agent PH',
     html: `
@@ -197,7 +198,7 @@ You're receiving this email because you submitted a contact form at jobagentph.c
     email: string;
     contactPerson: string;
   }) => ({
-    from: `"Job Agent PH" <${process.env.GMAIL_USER}>`,
+    from: DEFAULT_FROM,
     to: data.email,
     subject: 'Welcome to Job Agent PH - Start Hiring Today!',
     html: `
@@ -297,6 +298,118 @@ Dashboard: https://www.jobagentph.com/agency/dashboard
 Post a Job: https://www.jobagentph.com/jobs/post
     `,
   }),
+
+  // Job hunter welcome email
+  jobHunterWelcome: (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }) => ({
+    from: DEFAULT_FROM,
+    to: data.email,
+    subject: 'Welcome to Job Agent PH - Find Your Dream Job!',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+            .content { background: #ffffff; padding: 30px 20px; border: 1px solid #e5e7eb; }
+            .icon { font-size: 48px; margin-bottom: 10px; }
+            .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+            .checklist { background: #f0f9ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px; }
+            .checklist li { margin: 8px 0; }
+            .button { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .feature { background: #ecfdf5; border-left: 4px solid #10b981; padding: 10px 15px; margin: 10px 0; border-radius: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="icon">🎉</div>
+              <h2 style="margin: 0;">Welcome to Job Agent PH!</h2>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">Your Journey to Your Dream Job Starts Here</p>
+            </div>
+            <div class="content">
+              <p>Hi ${data.firstName},</p>
+              <p>Welcome to <strong>Job Agent PH</strong> - the Philippines' fastest-growing job placement platform!</p>
+              <p>You've just joined thousands of Filipinos who are finding their dream jobs through our platform.</p>
+
+              <h3 style="color: #1e40af; margin-top: 25px;">What You Can Do:</h3>
+              <div class="feature">✓ Browse <strong>thousands of verified job opportunities</strong></div>
+              <div class="feature">✓ Apply with one click - no need to upload resume multiple times</div>
+              <div class="feature">✓ Get matched with top recruitment agencies</div>
+              <div class="feature">✓ Track all your applications in one place</div>
+
+              <div class="checklist">
+                <h4 style="margin-top: 0; color: #1e40af;">Get Started:</h4>
+                <ol style="margin: 10px 0; padding-left: 20px;">
+                  <li><strong>Complete your profile</strong> to stand out to employers</li>
+                  <li><strong>Upload your resume</strong> for quick applications</li>
+                  <li><strong>Browse featured jobs</strong> and start applying</li>
+                  <li><strong>Save jobs</strong> you're interested in for later</li>
+                </ol>
+              </div>
+
+              <p>Our platform connects you directly with verified recruitment agencies who are actively looking for talented professionals like you.</p>
+
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="https://www.jobagentph.com/profile/edit" class="button">Complete Your Profile</a>
+              </div>
+
+              <p style="margin-top: 30px;"><strong>Your next career move starts here! 💼</strong></p>
+
+              <p>Best regards,<br>
+              <strong>The Job Agent PH Team</strong></p>
+            </div>
+            <div class="footer">
+              <p><strong>Job Agent PH</strong> - Find Your Dream Job</p>
+              <p>
+                <a href="https://www.jobagentph.com/jobs" style="color: #2563eb; text-decoration: none;">Browse Jobs</a> |
+                <a href="https://www.jobagentph.com/profile" style="color: #2563eb; text-decoration: none;">My Profile</a> |
+                <a href="https://www.jobagentph.com/contact" style="color: #2563eb; text-decoration: none;">Contact Us</a>
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+    text: `
+Welcome to Job Agent PH! 🎉
+
+Hi ${data.firstName},
+
+Welcome to Job Agent PH - the Philippines' fastest-growing job placement platform!
+
+You've just joined thousands of Filipinos who are finding their dream jobs through our platform.
+
+WHAT YOU CAN DO:
+✓ Browse thousands of verified job opportunities
+✓ Apply with one click - no need to upload resume multiple times
+✓ Get matched with top recruitment agencies
+✓ Track all your applications in one place
+
+GET STARTED:
+1. Complete your profile to stand out to employers
+2. Upload your resume for quick applications
+3. Browse featured jobs and start applying
+4. Save jobs you're interested in for later
+
+Our platform connects you directly with verified recruitment agencies who are actively looking for talented professionals like you.
+
+Your next career move starts here! 💼
+
+Best regards,
+The Job Agent PH Team
+
+---
+Complete Your Profile: https://www.jobagentph.com/profile/edit
+Browse Jobs: https://www.jobagentph.com/jobs
+My Profile: https://www.jobagentph.com/profile
+    `,
+  }),
 };
 
 // Send email function
@@ -306,11 +419,25 @@ export async function sendEmail(options: {
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
 }) {
   try {
-    const info = await transporter.sendMail(options);
-    console.log('Email sent successfully:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    const { data, error } = await resend.emails.send({
+      from: options.from,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text,
+      reply_to: options.replyTo,
+    });
+
+    if (error) {
+      console.error('Error sending email:', error);
+      throw error;
+    }
+
+    console.log('Email sent successfully:', data?.id);
+    return { success: true, messageId: data?.id };
   } catch (error) {
     console.error('Error sending email:', error);
     throw error;

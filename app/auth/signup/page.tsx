@@ -87,6 +87,13 @@ function SignUpForm() {
             createdAt: new Date(),
             updatedAt: new Date(),
           });
+
+          // Send welcome email and message to new job hunter (non-blocking)
+          fetch('/api/jobhunter/welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jobHunterId: userId }),
+          }).catch(err => console.error('Failed to send welcome message:', err));
         } else if (storedUserType === 'agency') {
           await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
             companyName: displayName,

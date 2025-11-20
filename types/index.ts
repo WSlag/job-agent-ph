@@ -363,7 +363,7 @@ export interface AdminConversation {
   id: string;
   adminId: string;
   userId: string;
-  userType: 'jobhunter' | 'agency';
+  userType: 'jobhunter' | 'agency' | 'guest';
   lastMessage?: {
     id: string;
     content: string;
@@ -380,6 +380,11 @@ export interface AdminConversation {
   // Optional properties added for UI display
   adminName?: string;
   userName?: string;
+  // Guest user properties (for contact form submissions)
+  guestName?: string;
+  guestEmail?: string;
+  contactRef?: string;
+  referenceNumber?: string;
 }
 
 export interface AdminMessageThread {

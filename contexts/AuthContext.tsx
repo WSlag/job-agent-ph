@@ -350,6 +350,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), jobHunterProfile);
         console.log('[AuthContext] Job hunter profile document created successfully');
 
+        // Send welcome email and message to new job hunter (non-blocking)
+        fetch('/api/jobhunter/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobHunterId: userId }),
+        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
+
         // Update display name
         await updateProfile(userCredential.user, {
           displayName: `${typedProfileData.firstName} ${typedProfileData.lastName}`,

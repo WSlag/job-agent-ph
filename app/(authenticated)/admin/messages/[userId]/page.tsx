@@ -69,6 +69,34 @@ export default function AdminConversationPage() {
   useEffect(() => {
     if (!userId) return;
 
+    // Check if this is a guest user ID (format: guest_email_at_domain_com)
+    if (userId.startsWith('guest_')) {
+      console.log('Guest user detected, finding conversation...');
+      // This is a guest user, we need to find their conversation and redirect
+      const findGuestConversation = async () => {
+        const db = getDbInstance();
+        try {
+          const conversationsRef = collection(db, 'adminConversations');
+          const q = query(conversationsRef, where('userId', '==', userId), limit(1));
+          const snapshot = await getDocs(q);
+
+          if (!snapshot.empty) {
+            const conversationId = snapshot.docs[0].id;
+            router.push(`/admin/messages/conversation/${conversationId}`);
+          } else {
+            toast.error('Conversation not found');
+            router.push('/admin/messages');
+          }
+        } catch (error) {
+          console.error('Error finding guest conversation:', error);
+          toast.error('Failed to load conversation');
+          router.push('/admin/messages');
+        }
+      };
+      findGuestConversation();
+      return;
+    }
+
     const loadUserInfo = async () => {
       const db = getDbInstance();
 
