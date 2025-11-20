@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, ChangeEvent, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { updateAgencyProfile } from '@/lib/profile-helpers'
 import { uploadFile } from '@/lib/storage-helpers'
 import Button from '@/components/ui/Button'
@@ -35,6 +36,7 @@ interface FormData {
 
 export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormProps) {
   const router = useRouter()
+  const { refreshProfile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -262,6 +264,10 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
 
       // Update profile
       await updateAgencyProfile(agency.id, updateData)
+
+      // CRITICAL: Refresh the profile in AuthContext to get the latest data
+      // This ensures certification URLs and other updates are immediately available
+      await refreshProfile()
 
       // Show success message
       setSuccess(true)
