@@ -371,6 +371,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), agencyProfile);
         console.log('[AuthContext] Agency profile document created successfully');
 
+        // Send welcome email and message to new agency (non-blocking)
+        fetch('/api/agency/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agencyId: userId }),
+        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
+
         // Update display name
         await updateProfile(userCredential.user, {
           displayName: typedProfileData.companyName,

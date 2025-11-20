@@ -101,6 +101,13 @@ function SignUpForm() {
             createdAt: new Date(),
             updatedAt: new Date(),
           });
+
+          // Send welcome email and message to new agency (non-blocking)
+          fetch('/api/agency/welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agencyId: userId }),
+          }).catch(err => console.error('Failed to send welcome message:', err));
         }
       }
 
