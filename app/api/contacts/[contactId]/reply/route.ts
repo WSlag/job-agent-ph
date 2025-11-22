@@ -10,10 +10,10 @@ import { COLLECTIONS } from '@/lib/collections';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { contactId: string } }
+  { params }: { params: Promise<{ contactId: string }> }
 ) {
   try {
-    const { contactId } = params;
+    const { contactId } = await params;
     const { message, adminUserId } = await request.json();
 
     // Validation
@@ -64,7 +64,7 @@ export async function POST(
       message: message.trim(),
       sentBy: adminUserId || 'admin',
       sentAt: new Date().toISOString(),
-      status: 'sent' as const,
+      status: 'sent' as 'sent' | 'failed',
     };
 
     // Send email using Resend
