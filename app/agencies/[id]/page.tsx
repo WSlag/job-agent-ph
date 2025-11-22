@@ -32,6 +32,8 @@ import { Job } from '@/types';
 import StarRating from '@/components/ui/StarRating';
 import RateAgencyModal from '@/components/modals/RateAgencyModal';
 import { getUserRating } from '@/lib/agency-rating';
+import AgencyComplianceFooter from '@/components/agencies/AgencyComplianceFooter';
+import VerificationBadge from '@/components/agencies/VerificationBadge';
 
 interface Agency {
   id: string;
@@ -302,17 +304,12 @@ export default function AgencyProfilePage() {
                       </button>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {agency.isDMWVerified && (
-                      <Badge variant="verified" size="md" icon={<Shield size={16} />}>
-                        DMW Verified
-                      </Badge>
-                    )}
-                    {agency.isPOEALicensed && (
-                      <Badge variant="success" size="md" icon={<CheckCircle2 size={16} />}>
-                        POEA Licensed
-                      </Badge>
-                    )}
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <VerificationBadge
+                      status={agency.isDMWVerified ? 'verified' : 'unverified'}
+                      showDetails={true}
+                      size="md"
+                    />
                     <Badge variant="info" size="md">
                       {agency.activeJobs} Active Jobs
                     </Badge>
@@ -398,6 +395,9 @@ export default function AgencyProfilePage() {
             <div className="bg-white border border-gray-200 rounded-xl p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">About Us</h2>
               <p className="text-gray-700 leading-relaxed">{agency.description}</p>
+
+              {/* Compliance Footer - Subtle */}
+              <AgencyComplianceFooter verified={agency.isDMWVerified} />
             </div>
 
             {/* Specializations */}

@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
 import ConditionalHeader from "@/components/layout/ConditionalHeader";
+import ClientFooter from "@/components/layout/ClientFooter";
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -56,6 +57,7 @@ export default function RootLayout({
           <AuthProvider>
             <ConditionalHeader />
             {children}
+            <ClientFooter />
             <Suspense fallback={null}>
               <BottomNav />
             </Suspense>

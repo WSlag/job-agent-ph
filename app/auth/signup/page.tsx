@@ -12,11 +12,13 @@ import { getRedirectResult } from 'firebase/auth';
 import { getAuthInstance, getDbInstance } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/collections';
+import { validateDateOfBirth, calculateAge } from '@/lib/legal-helpers';
+import { LEGAL_VERSIONS } from '@/lib/legal-versions';
 
 function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signUp, user, userType: contextUserType, loading: authLoading } = useAuth();
+  const { signUp, user, userType: contextUserType, loading: authLoading, sessionReady } = useAuth();
 
   const [userType, setUserType] = useState<UserType>('jobhunter');
   const [email, setEmail] = useState('');
@@ -31,6 +33,7 @@ function SignUpForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [location, setLocation] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
 
   // Agency fields
   const [companyName, setCompanyName] = useState('');
@@ -38,6 +41,11 @@ function SignUpForm() {
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+
+  // Legal acceptance fields
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [acceptedAgencyTerms, setAcceptedAgencyTerms] = useState(false);
 
   // Helper function to process Google authentication result
   const processGoogleAuthResult = async (user: any) => {
@@ -87,13 +95,6 @@ function SignUpForm() {
             createdAt: new Date(),
             updatedAt: new Date(),
           });
-
-          // Send welcome email and message to new job hunter (non-blocking)
-          fetch('/api/jobhunter/welcome', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ jobHunterId: userId }),
-          }).catch(err => console.error('Failed to send welcome message:', err));
         } else if (storedUserType === 'agency') {
           await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
             companyName: displayName,
@@ -108,13 +109,6 @@ function SignUpForm() {
             createdAt: new Date(),
             updatedAt: new Date(),
           });
-
-          // Send welcome email and message to new agency (non-blocking)
-          fetch('/api/agency/welcome', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ agencyId: userId }),
-          }).catch(err => console.error('Failed to send welcome message:', err));
         }
       }
 
@@ -147,6 +141,22 @@ function SignUpForm() {
       // Wait for session cookie to propagate
       console.log('[Signup] Waiting for session propagation...');
       await new Promise(resolve => setTimeout(resolve, 2500));
+
+      // Send welcome email and message (non-blocking) - AFTER session is ready
+      console.log('[Signup] Triggering welcome message...');
+      if (storedUserType === 'jobhunter') {
+        fetch('/api/jobhunter/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobHunterId: userId }),
+        }).catch(err => console.error('Failed to send welcome message:', err));
+      } else if (storedUserType === 'agency') {
+        fetch('/api/agency/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agencyId: userId }),
+        }).catch(err => console.error('Failed to send welcome message:', err));
+      }
 
       // Determine the appropriate redirect URL
       let finalRedirect = storedReturnUrl || '/';
@@ -233,7 +243,7 @@ function SignUpForm() {
 
   // Handle redirect after authentication - only redirect once
   useEffect(() => {
-    if (user && contextUserType && !authLoading && !hasRedirected.current) {
+    if (user && contextUserType && !authLoading && sessionReady && !hasRedirected.current) {
       const redirectParam = searchParams.get('redirect');
       const jobId = searchParams.get('jobId');
       const agencyId = searchParams.get('agencyId');
@@ -258,7 +268,7 @@ function SignUpForm() {
       // Use replace instead of push to prevent back button issues
       router.replace(finalRedirect);
     }
-  }, [user, contextUserType, authLoading, router, searchParams]);
+  }, [user, contextUserType, authLoading, sessionReady, router, searchParams]);
 
   // Set user type from query parameter
   useEffect(() => {
@@ -272,6 +282,7 @@ function SignUpForm() {
     e.preventDefault();
     setError('');
 
+    // Validate password match
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -282,14 +293,33 @@ function SignUpForm() {
       return;
     }
 
+    // Validate terms acceptance
+    if (!acceptedTerms) {
+      setError('You must accept the Terms of Service to continue');
+      return;
+    }
+
+    if (!acceptedPrivacy) {
+      setError('You must accept the Privacy Policy to continue');
+      return;
+    }
+
     setLoading(true);
 
     try {
       let profileData: any;
 
       if (userType === 'jobhunter') {
-        if (!firstName || !lastName || !location) {
+        if (!firstName || !lastName || !location || !dateOfBirth) {
           setError('Please fill in all required fields');
+          setLoading(false);
+          return;
+        }
+
+        // Validate date of birth
+        const dobValidation = validateDateOfBirth(dateOfBirth);
+        if (!dobValidation.valid) {
+          setError(dobValidation.error || 'Invalid date of birth');
           setLoading(false);
           return;
         }
@@ -300,10 +330,23 @@ function SignUpForm() {
           location,
           skills: [],
           experience: 0,
+          dateOfBirth: new Date(dateOfBirth),
+          ageVerified: true,
+          termsAcceptedAt: new Date(),
+          termsVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
+          privacyAcceptedAt: new Date(),
+          privacyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
         };
       } else {
         if (!companyName || !registrationNumber || !contactPerson || !phone || !address) {
           setError('Please fill in all required fields');
+          setLoading(false);
+          return;
+        }
+
+        // Validate agency terms acceptance
+        if (!acceptedAgencyTerms) {
+          setError('You must accept the Agency Terms of Service to continue');
           setLoading(false);
           return;
         }
@@ -314,6 +357,12 @@ function SignUpForm() {
           contactPerson,
           phone,
           address,
+          termsAcceptedAt: new Date(),
+          termsVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
+          privacyAcceptedAt: new Date(),
+          privacyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
+          agencyTermsAcceptedAt: new Date(),
+          agencyTermsVersion: LEGAL_VERSIONS.AGENCY_TERMS,
         };
       }
 
@@ -562,6 +611,23 @@ function SignUpForm() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+
+                <div>
+                  <label htmlFor="signup-dob" className="block text-sm font-medium text-gray-700 mb-2">
+                    Date of Birth <span className="text-gray-500 text-xs">(You must be 18+ to use this platform)</span>
+                  </label>
+                  <input
+                    id="signup-dob"
+                    name="dateOfBirth"
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                    required
+                    autoComplete="bday"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </>
             )}
 
@@ -649,6 +715,58 @@ function SignUpForm() {
                 </div>
               </>
             )}
+
+            {/* Simplified Legal Acceptance */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-start gap-3">
+                <input
+                  id="accept-all-terms"
+                  type="checkbox"
+                  checked={acceptedTerms && acceptedPrivacy && (userType !== 'agency' || acceptedAgencyTerms)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setAcceptedTerms(checked);
+                    setAcceptedPrivacy(checked);
+                    if (userType === 'agency') {
+                      setAcceptedAgencyTerms(checked);
+                    }
+                  }}
+                  required
+                  className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0"
+                />
+                <label htmlFor="accept-all-terms" className="text-sm text-gray-700 leading-relaxed">
+                  {userType === 'jobhunter' ? (
+                    <>
+                      By creating an account, you agree to our{' '}
+                      <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                        Terms
+                      </Link>
+                      {', '}
+                      <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                        Privacy Policy
+                      </Link>
+                      , and confirm you are 18+ years old.
+                    </>
+                  ) : (
+                    <>
+                      By creating an account, you agree to our{' '}
+                      <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                        Terms
+                      </Link>
+                      {', '}
+                      <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                        Privacy Policy
+                      </Link>
+                      {', '}
+                      <Link href="/agency-terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                        Agency Terms
+                      </Link>
+                      , and certify you hold a valid DMW license.
+                    </>
+                  )}
+                </label>
+              </div>
+            </div>
 
             <button
               type="submit"

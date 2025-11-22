@@ -453,6 +453,8 @@ export default function ProfilePage() {
           <p className="text-gray-600 mt-2">Manage your account information and preferences</p>
         </div>
 
+        {/* TODO: Add Legal Compliance Status section here after refactoring auth context */}
+
         {/* Tabs */}
         <div className="flex gap-4 mb-6 border-b">
           <button

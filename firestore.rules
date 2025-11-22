@@ -54,12 +54,34 @@ service cloud.firestore {
     match /users/{userId} {
       // Only allow users to read their own profile or admins to read any
       allow read: if isOwner(userId) || isAdmin();
+
+      // UPDATED: Require legal acceptance fields on user creation
       allow create: if isOwner(userId) &&
-                      request.resource.data.keys().hasAll(['email', 'userType']) &&
+                      request.resource.data.keys().hasAll([
+                        'email', 'userType',
+                        'termsAcceptedAt', 'termsVersion',
+                        'privacyAcceptedAt', 'privacyVersion'
+                      ]) &&
                       validateEmail(request.resource.data.email) &&
-                      request.resource.data.userType in ['jobhunter', 'agency', 'admin'];
+                      request.resource.data.userType in ['jobhunter', 'agency', 'admin'] &&
+                      request.resource.data.termsAcceptedAt is timestamp &&
+                      request.resource.data.termsVersion is string &&
+                      request.resource.data.privacyAcceptedAt is timestamp &&
+                      request.resource.data.privacyVersion is string &&
+                      // For jobhunters, require age verification
+                      (request.resource.data.userType != 'jobhunter' ||
+                       (request.resource.data.keys().hasAll(['dateOfBirth', 'ageVerified']) &&
+                        request.resource.data.dateOfBirth is timestamp &&
+                        request.resource.data.ageVerified == true));
+
+      // UPDATED: Prevent modification of legal acceptance fields
       allow update: if isOwner(userId) &&
-                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['email', 'userType', 'createdAt']);
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                        'email', 'userType', 'createdAt',
+                        'termsAcceptedAt', 'termsVersion',
+                        'privacyAcceptedAt', 'privacyVersion',
+                        'dateOfBirth', 'ageVerified'
+                      ]);
       allow delete: if isOwner(userId);
     }
 
@@ -85,7 +107,14 @@ service cloud.firestore {
                       request.resource.data.userType == 'jobhunter' &&
                       request.resource.data.skills is list &&
                       request.resource.data.skills.size() <= 50;
-      allow update: if isOwner(userId) || isAdmin();
+      // UPDATED: Prevent modification of legal fields by users
+      allow update: if (isOwner(userId) &&
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                          'termsAcceptedAt', 'termsVersion',
+                          'privacyAcceptedAt', 'privacyVersion',
+                          'dateOfBirth', 'ageVerified'
+                        ])) ||
+                       isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
     }
 
@@ -93,14 +122,37 @@ service cloud.firestore {
     match /agencies/{userId} {
       // Allow public read access so anyone can view agency profiles
       allow read: if true;
+
+      // UPDATED: Require agency terms acceptance on creation
       allow create: if isOwner(userId) &&
-                      request.resource.data.keys().hasAll(['email', 'userType']) &&
+                      request.resource.data.keys().hasAll([
+                        'email', 'userType',
+                        'termsAcceptedAt', 'termsVersion',
+                        'privacyAcceptedAt', 'privacyVersion',
+                        'agencyTermsAcceptedAt', 'agencyTermsVersion'
+                      ]) &&
                       validateEmail(request.resource.data.email) &&
                       request.resource.data.userType == 'agency' &&
-                      (!request.resource.data.keys().hasAny(['verified']) || request.resource.data.verified == false);
+                      request.resource.data.termsAcceptedAt is timestamp &&
+                      request.resource.data.termsVersion is string &&
+                      request.resource.data.privacyAcceptedAt is timestamp &&
+                      request.resource.data.privacyVersion is string &&
+                      request.resource.data.agencyTermsAcceptedAt is timestamp &&
+                      request.resource.data.agencyTermsVersion is string &&
+                      (!request.resource.data.keys().hasAny(['agencyTermsAcceptedIP']) ||
+                       request.resource.data.agencyTermsAcceptedIP is string) &&
+                      (!request.resource.data.keys().hasAny(['verified']) ||
+                       request.resource.data.verified == false);
+
+      // UPDATED: Prevent modification of legal fields (except by admins)
       allow update: if (isOwner(userId) &&
-                        // Prevent agencies from self-verifying
-                        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['verified']))) ||
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                          'verified',
+                          'termsAcceptedAt', 'termsVersion',
+                          'privacyAcceptedAt', 'privacyVersion',
+                          'agencyTermsAcceptedAt', 'agencyTermsVersion',
+                          'agencyTermsAcceptedIP'
+                        ])) ||
                        isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
     }

@@ -325,48 +325,6 @@ export default function HomeClient({
             </div>
           </motion.div>
         </section>
-
-        {/* Footer */}
-        <footer className="bg-white text-gray-700 py-12 border-t border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-4 gap-8 mb-8">
-              <div>
-                <div className="mb-4">
-                  <Logo size="sm" showText={true} />
-                </div>
-                <p className="text-sm text-gray-600">
-                  Your trusted partner in finding international job opportunities.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-gray-900 font-semibold mb-4">For Job Seekers</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/jobs" className="text-gray-600 hover:text-blue-600 transition-colors">Browse Jobs</Link></li>
-                  <li><Link href="/auth/signup" className="text-gray-600 hover:text-blue-600 transition-colors">Create Account</Link></li>
-                  <li><Link href="/profile" className="text-gray-600 hover:text-blue-600 transition-colors">My Profile</Link></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-gray-900 font-semibold mb-4">For Employers</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/jobs/post" className="text-gray-600 hover:text-blue-600 transition-colors">Post a Job</Link></li>
-                  <li><Link href="/agency/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">Employer Dashboard</Link></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-gray-900 font-semibold mb-4">Company</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">About Us</Link></li>
-                  <li><Link href="/contact" className="text-gray-600 hover:text-blue-600 transition-colors">Contact</Link></li>
-                  <li><Link href="/privacy" className="text-gray-600 hover:text-blue-600 transition-colors">Privacy Policy</Link></li>
-                </ul>
-              </div>
-            </div>
-            <div className="border-t border-gray-200 pt-8 text-center text-sm text-gray-600">
-              <p>&copy; 2025 Job Agent PH. All rights reserved. Made with ❤️ for Filipinos.</p>
-            </div>
-          </div>
-        </footer>
       </main>
 
       {/* Feature Modal */}

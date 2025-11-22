@@ -374,32 +374,41 @@ export async function getConversationDetails(conversationId: string) {
 
     const conversationData = conversationSnap.data();
 
-    // Fetch job details
-    const jobRef = doc(db, COLLECTIONS.JOBS, conversationData.jobId);
-    const jobSnap = await getDoc(jobRef);
+    // Fetch job details (only if jobId exists)
+    let jobSnap = null;
+    if (conversationData.jobId) {
+      const jobRef = doc(db, COLLECTIONS.JOBS, conversationData.jobId);
+      jobSnap = await getDoc(jobRef);
+    }
 
-    // Fetch agency details
-    const agencyRef = doc(db, COLLECTIONS.AGENCIES, conversationData.agencyId);
-    const agencySnap = await getDoc(agencyRef);
+    // Fetch agency details (only if agencyId exists)
+    let agencySnap = null;
+    if (conversationData.agencyId) {
+      const agencyRef = doc(db, COLLECTIONS.AGENCIES, conversationData.agencyId);
+      agencySnap = await getDoc(agencyRef);
+    }
 
-    // Fetch job hunter details
-    const jobHunterRef = doc(
-      db,
-      COLLECTIONS.JOB_HUNTERS,
-      conversationData.jobHunterId
-    );
-    const jobHunterSnap = await getDoc(jobHunterRef);
+    // Fetch job hunter details (only if jobHunterId exists)
+    let jobHunterSnap = null;
+    if (conversationData.jobHunterId) {
+      const jobHunterRef = doc(
+        db,
+        COLLECTIONS.JOB_HUNTERS,
+        conversationData.jobHunterId
+      );
+      jobHunterSnap = await getDoc(jobHunterRef);
+    }
 
     return {
       conversation: {
         id: conversationSnap.id,
         ...conversationData,
       },
-      job: jobSnap.exists() ? { id: jobSnap.id, ...jobSnap.data() } : null,
-      agency: agencySnap.exists()
+      job: jobSnap?.exists() ? { id: jobSnap.id, ...jobSnap.data() } : null,
+      agency: agencySnap?.exists()
         ? { id: agencySnap.id, ...agencySnap.data() }
         : null,
-      jobHunter: jobHunterSnap.exists()
+      jobHunter: jobHunterSnap?.exists()
         ? { id: jobHunterSnap.id, ...jobHunterSnap.data() }
         : null,
     };

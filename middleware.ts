@@ -55,6 +55,10 @@ export function middleware(request: NextRequest) {
   // If no session cookie, redirect to login with return URL
   if (!sessionCookie) {
     const loginUrl = new URL('/auth/login', request.url);
+    // Ensure we preserve the original protocol (http in development)
+    if (process.env.NODE_ENV === 'development') {
+      loginUrl.protocol = 'http:';
+    }
     loginUrl.searchParams.set('redirect', pathname);
     const response = NextResponse.redirect(loginUrl);
 

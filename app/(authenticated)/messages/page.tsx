@@ -112,9 +112,9 @@ function MessagesContent() {
     try {
       const db = getDbInstance();
       // Collect unique IDs to batch fetch
-      const uniqueJobIds = [...new Set(convos.map(c => c.jobId))];
-      const uniqueAgencyIds = [...new Set(convos.map(c => c.agencyId))];
-      const uniqueJobHunterIds = [...new Set(convos.map(c => c.jobHunterId))];
+      const uniqueJobIds = [...new Set(convos.map(c => c.jobId).filter(id => id))];
+      const uniqueAgencyIds = [...new Set(convos.map(c => c.agencyId).filter(id => id))];
+      const uniqueJobHunterIds = [...new Set(convos.map(c => c.jobHunterId).filter(id => id))];
 
       // Batch fetch all unique entities
       const [jobDocs, agencyDocs, jobHunterDocs] = await Promise.all([
@@ -391,10 +391,14 @@ function MessagesContent() {
               </div>
             ) : (
               conversationsWithDetails.map((convo) => {
+                // Check if this is a system message (welcome message)
+                const isSystemMessage = convo.isSystemMessage || false;
+
                 const otherParty =
                   userType === 'jobhunter' ? convo.agency : convo.jobHunter;
-                const otherPartyName =
-                  userType === 'jobhunter'
+                const otherPartyName = isSystemMessage
+                  ? 'Job Agent PH'
+                  : userType === 'jobhunter'
                     ? convo.agency?.companyName || 'Deleted Agency'
                     : convo.jobHunter
                       ? `${convo.jobHunter.firstName || ''} ${convo.jobHunter.lastName || ''}`.trim() || 'Deleted User'
@@ -421,7 +425,7 @@ function MessagesContent() {
                                 {otherPartyName}
                               </h3>
                               <p className="text-sm text-gray-600 truncate">
-                                {convo.job?.title || 'Deleted Job'}
+                                {isSystemMessage ? 'System Message' : (convo.job?.title || 'Deleted Job')}
                               </p>
                             </div>
                             {convo.lastMessage && convo.lastMessage.createdAt && formatTimestamp(convo.lastMessage.createdAt) && (

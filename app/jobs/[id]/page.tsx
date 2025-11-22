@@ -29,6 +29,7 @@ import SimilarJobsCarousel from '@/components/jobs/SimilarJobsCarousel';
 import JobMatchBadge from '@/components/jobs/JobMatchBadge';
 import AgencyInfoCard from '@/components/jobs/AgencyInfoCard';
 import ScrollToTop from '@/components/ui/ScrollToTop';
+import JobComplianceFooter from '@/components/jobs/JobComplianceFooter';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -524,6 +525,7 @@ export default function JobDetailsPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -695,6 +697,9 @@ export default function JobDetailsPage() {
                     </button>
                   )}
                 </div>
+
+                {/* Compliance Footer - Subtle */}
+                <JobComplianceFooter />
               </div>
             </motion.div>
 

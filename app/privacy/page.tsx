@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
           <Shield className="w-16 h-16 mx-auto mb-4" />
           <h1 className="text-5xl font-bold mb-6">Privacy Policy</h1>
           <p className="text-xl text-blue-100">
-            Last updated: October 23, 2025
+            Last updated: November 11, 2025
           </p>
         </div>
       </Section>
@@ -126,7 +126,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Data Portability:</strong> Request a copy of your data in a structured format</li>
             </ul>
             <p className="text-gray-700 leading-relaxed mb-4">
-              To exercise these rights, please contact us at privacy@jobagencyph.com.
+              To exercise these rights, please contact us at contact@jobagentph.com.
             </p>
 
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">6. Cookies and Tracking Technologies</h2>
@@ -185,9 +185,180 @@ export default function PrivacyPolicyPage() {
               If you have questions or concerns about this Privacy Policy or our data practices, please contact us:
             </p>
             <div className="bg-gray-100 p-6 rounded-lg">
-              <p className="text-gray-700"><strong>Email:</strong> privacy@jobagencyph.com</p>
-              <p className="text-gray-700 mt-2"><strong>Address:</strong> 123 Business Avenue, Makati City, Metro Manila, Philippines 1200</p>
-              <p className="text-gray-700 mt-2"><strong>Phone:</strong> +63 2 1234 5678</p>
+              <p className="text-gray-700"><strong>Email:</strong> contact@jobagentph.com</p>
+            </div>
+
+            {/* NEW SECTIONS 12-18 FOR DMW COMPLIANCE */}
+
+            <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">12. DMW Compliance and Data Sharing</h2>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Recruitment Agency Data Sharing</h3>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              When you apply for jobs through JobAgentPH.com, we share your application information with the specific DMW-licensed recruitment agency posting the job.
+            </p>
+
+            <div className="bg-blue-50 p-6 rounded-lg mb-4">
+              <p className="text-gray-800 font-semibold mb-2">What We Share:</p>
+              <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                <li>Your name, contact information, and profile details</li>
+                <li>Your resume and cover letter</li>
+                <li>Your application responses</li>
+                <li>Your work history and qualifications</li>
+              </ul>
+            </div>
+
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+              <p className="text-gray-700 font-semibold">Important:</p>
+              <p className="text-gray-700 mt-2">
+                Once we share your data with a recruitment agency, that agency becomes an independent data controller responsible for protecting your information per the Data Privacy Act of 2012. We are not responsible for how agencies use, store, or protect your data after it is shared.
+              </p>
+            </div>
+
+            <p className="text-gray-700 leading-relaxed mb-4">
+              <strong>Agency Obligations:</strong> All agencies on our Platform agree to:
+            </p>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>Protect your personal data</li>
+              <li>Use data only for legitimate recruitment purposes</li>
+              <li>Comply with the Data Privacy Act</li>
+              <li>Not sell or misuse your information</li>
+            </ul>
+
+            <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">13. DMW Verification and Compliance</h2>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">License Verification</h3>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              We may verify recruitment agency credentials with the Department of Migrant Workers (DMW) to ensure platform safety. This may involve sharing agency business information (company name, license number) with DMW for verification purposes.
+            </p>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Regulatory Compliance</h3>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              We cooperate with DMW and law enforcement investigations involving:
+            </p>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>Illegal recruitment activities</li>
+              <li>Worker protection violations</li>
+              <li>Fraud or criminal activity</li>
+            </ul>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              We may disclose user information when legally required or to protect public safety.
+            </p>
+
+            <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">14. Platform Role and Limitations</h2>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Not a Recruitment Agency</h3>
+            <div className="bg-gray-50 border-l-4 border-gray-400 p-4 mb-4">
+              <p className="text-gray-700 mb-2">
+                JobAgentPH.com is a job marketplace platform, not a recruitment agency. We:
+              </p>
+              <ul className="list-disc pl-6 text-gray-700 space-y-1">
+                <li>Do NOT make hiring decisions</li>
+                <li>Do NOT control how agencies use your data after sharing</li>
+                <li>Do NOT guarantee employment outcomes</li>
+                <li>Are NOT responsible for agency data practices</li>
+              </ul>
+            </div>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Your Responsibility</h3>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              You should:
+            </p>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>Research agencies before applying</li>
+              <li>Understand how agencies will use your data</li>
+              <li>Ask agencies about their privacy practices</li>
+              <li>Report any data misuse to contact@jobagentph.com</li>
+            </ul>
+
+            <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">15. Worker Protection Data</h2>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Reporting System</h3>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              If you report illegal recruitment, fee violations, or suspicious activity:
+            </p>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>We collect evidence you provide (screenshots, documents, etc.)</li>
+              <li>We share reports with our compliance team and may share with DMW</li>
+              <li>We protect your identity as the reporter (unless legally required to disclose)</li>
+              <li>We retain reports for legal compliance and platform safety</li>
+            </ul>
+
+            <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">16. Rights Under Philippine Data Privacy Act</h2>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              You have the right to:
+            </p>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+              <li><strong>Access:</strong> Request a copy of all personal data we hold about you</li>
+              <li><strong>Correction:</strong> Update or correct inaccurate information</li>
+              <li><strong>Erasure:</strong> Request deletion of your data (subject to legal retention requirements)</li>
+              <li><strong>Object:</strong> Object to processing for specific purposes</li>
+              <li><strong>Portability:</strong> Receive your data in a portable format</li>
+              <li><strong>Withdraw Consent:</strong> Withdraw consent for data processing (may limit platform use)</li>
+            </ul>
+
+            <div className="bg-blue-50 p-6 rounded-lg mb-4">
+              <p className="text-gray-800 font-semibold mb-2">To exercise your rights, contact:</p>
+              <p className="text-gray-700"><strong>Email:</strong> contact@jobagentph.com</p>
+              <p className="text-gray-700 mt-1"><strong>Subject:</strong> Data Privacy Request</p>
+              <p className="text-gray-700 mt-2 text-sm">We will respond within 15 business days.</p>
+            </div>
+
+            <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">17. How We Protect Your Information</h2>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Technical Measures</h3>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>Encryption of data in transit and at rest</li>
+              <li>Secure Firebase infrastructure</li>
+              <li>Regular security audits</li>
+              <li>Access controls and authentication</li>
+              <li>Firewall protection</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Organizational Measures</h3>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>Employee training on data protection</li>
+              <li>Access limited to authorized personnel only</li>
+              <li>Non-disclosure agreements with staff</li>
+              <li>Incident response procedures</li>
+              <li>Regular policy reviews</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Third-Party Security</h3>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>We use Firebase (Google Cloud) for data storage</li>
+              <li>Firebase is GDPR-compliant and implements industry-standard security</li>
+              <li>Third-party processors must meet our security standards</li>
+            </ul>
+
+            <h2 className="text-2xl font-bold text-gray-900 mt-12 mb-4">18. Data Retention</h2>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">How Long We Keep Data</h3>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-2">
+              <li><strong>Active user accounts:</strong> Retained while account is active</li>
+              <li><strong>Job applications:</strong> 2 years after application</li>
+              <li><strong>Agency verification documents:</strong> Duration of agency account + 5 years</li>
+              <li><strong>Audit logs and compliance records:</strong> 7 years (legal requirement)</li>
+              <li><strong>Payment records:</strong> 10 years (tax/financial regulations)</li>
+              <li><strong>Deleted accounts:</strong> Personal data erased within 90 days (except legal retention)</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-gray-900 mt-6 mb-3">Why We Retain Data</h3>
+            <ul className="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+              <li>Legal and regulatory compliance (DMW, tax, labor laws)</li>
+              <li>Dispute resolution and legal claims</li>
+              <li>Platform security and fraud prevention</li>
+              <li>Audit trails for accountability</li>
+            </ul>
+
+            <div className="mt-12 p-6 bg-green-50 border border-green-200 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-3">Questions or Concerns?</h3>
+              <div className="space-y-2 text-gray-700">
+                <p><strong>General Support:</strong> <a href="mailto:contact@jobagentph.com" className="text-blue-600 hover:underline">contact@jobagentph.com</a></p>
+                <p className="mt-4 pt-4 border-t border-green-200"><strong>National Privacy Commission (Philippines):</strong></p>
+                <p>Website: privacy.gov.ph</p>
+                <p>Email: info@privacy.gov.ph</p>
+                <p>Hotline: (02) 8234-2228</p>
+              </div>
             </div>
 
             <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
@@ -195,6 +366,12 @@ export default function PrivacyPolicyPage() {
               <p className="text-gray-700 text-sm">
                 We are committed to protecting your privacy and handling your data responsibly.
                 If you have any questions or concerns, please don't hesitate to reach out to us.
+              </p>
+              <p className="text-gray-600 text-sm mt-4">
+                <em>Effective Date: November 11, 2025</em>
+              </p>
+              <p className="text-gray-600 text-sm mt-2">
+                By using JobAgentPH.com, you acknowledge you have read and understood this Privacy Policy.
               </p>
             </div>
           </div>

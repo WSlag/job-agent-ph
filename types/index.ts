@@ -17,6 +17,13 @@ export interface User {
   // Deletion fields
   deletedAt?: Date;
   deletedBy?: string; // Admin ID
+  // Legal compliance fields
+  dateOfBirth?: Date; // For age verification (job seekers)
+  ageVerified?: boolean; // Confirmed 18+ years old
+  termsAcceptedAt?: Date; // When user accepted Terms of Service
+  termsVersion?: string; // Version of terms accepted
+  privacyAcceptedAt?: Date; // When user accepted Privacy Policy
+  privacyVersion?: string; // Version of privacy policy accepted
 }
 
 export interface JobHunter extends User {
@@ -49,6 +56,10 @@ export interface Agency extends User {
   // Mandatory certification documents
   dmwLicenseUrl?: string; // DMW (Department of Migrant Workers) License document URL
   businessPermitUrl?: string; // Business Permit document URL
+  // Agency-specific legal compliance fields
+  agencyTermsAcceptedAt?: Date; // When agency accepted Agency Terms
+  agencyTermsVersion?: string; // Version of agency terms accepted
+  agencyTermsAcceptedIP?: string; // IP address when terms were accepted
 }
 
 export interface Admin extends User {

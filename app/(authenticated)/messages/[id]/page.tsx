@@ -286,12 +286,16 @@ function ConversationPageContent() {
     );
   }
 
+  // Check if this is a system message (welcome message)
+  const isSystemMessage = conversationDetails?.conversation?.isSystemMessage || false;
+
   const otherParty =
     userType === 'jobhunter'
       ? conversationDetails?.agency
       : conversationDetails?.jobHunter;
-  const otherPartyName =
-    userType === 'jobhunter'
+  const otherPartyName = isSystemMessage
+    ? 'Job Agent PH'
+    : userType === 'jobhunter'
       ? conversationDetails?.agency?.companyName || 'Deleted Agency'
       : conversationDetails?.jobHunter
         ? `${conversationDetails.jobHunter.firstName || ''} ${conversationDetails.jobHunter.lastName || ''}`.trim() || 'Deleted User'
