@@ -321,7 +321,6 @@ export default function AdminContactsPage() {
                     {/* Reply Button */}
                     <Button
                       size="sm"
-                      variant="secondary"
                       icon={Reply}
                       iconPosition="left"
                       onClick={() => {
