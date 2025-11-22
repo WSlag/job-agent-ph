@@ -306,17 +306,30 @@ export default function AdminContactsPage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto md:ml-4">
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        contact.status === 'new' ? 'bg-blue-100 text-blue-700' :
+                        contact.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
+                        contact.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        Status: {contact.status === 'new' ? 'New' : contact.status === 'in_progress' ? 'In Progress' : contact.status === 'resolved' ? 'Resolved' : 'Spam'}
+                      </span>
+                    </div>
+
                     {/* Reply Button */}
                     <Button
                       size="sm"
                       variant="secondary"
+                      icon={Reply}
+                      iconPosition="left"
                       onClick={() => {
                         setContactToReply(contact);
                         setReplyModalOpen(true);
                       }}
                       className="w-full sm:w-auto whitespace-nowrap bg-blue-600 text-white hover:bg-blue-700"
                     >
-                      <Reply className="w-4 h-4 mr-1" />
                       Reply via Email
                     </Button>
 
@@ -329,62 +342,65 @@ export default function AdminContactsPage() {
                         }
                         className="w-full sm:w-auto"
                       >
-                        <Button size="sm" className="w-full sm:w-auto whitespace-nowrap">
-                          <MessageSquare className="w-4 h-4 mr-1" />
+                        <Button size="sm" icon={MessageSquare} iconPosition="left" className="w-full sm:w-auto whitespace-nowrap">
                           View Chat
                         </Button>
                       </Link>
                     ) : contact.userId ? (
                       <Link href={`/admin/messages/${contact.userId}`} className="w-full sm:w-auto">
-                        <Button size="sm" className="w-full sm:w-auto whitespace-nowrap">
-                          <MessageSquare className="w-4 h-4 mr-1" />
+                        <Button size="sm" icon={MessageSquare} iconPosition="left" className="w-full sm:w-auto whitespace-nowrap">
                           Start Chat
                         </Button>
                       </Link>
                     ) : (
                       <Button
                         size="sm"
+                        icon={MessageSquare}
+                        iconPosition="left"
                         onClick={() => convertToConversation(contact)}
                         disabled={converting}
                         className="w-full sm:w-auto whitespace-nowrap"
                       >
-                        <MessageSquare className="w-4 h-4 mr-1" />
                         {contact.userId ? 'Recover Chat' : 'Convert to Chat'}
                       </Button>
                     )}
 
-                    {contact.status === 'new' && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => updateContactStatus(contact.id, 'in_progress')}
-                        className="w-full sm:w-auto whitespace-nowrap"
-                      >
-                        Mark In Progress
-                      </Button>
-                    )}
+                    {/* Status Buttons - Always Visible */}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={contact.status === 'in_progress' ? CheckCircle : AlertCircle}
+                      iconPosition="left"
+                      onClick={() => {
+                        if (contact.status === 'new') {
+                          updateContactStatus(contact.id, 'in_progress');
+                        } else if (contact.status === 'in_progress') {
+                          updateContactStatus(contact.id, 'resolved');
+                        }
+                      }}
+                      disabled={contact.status === 'resolved' || contact.status === 'spam'}
+                      className={`w-full sm:w-auto whitespace-nowrap ${
+                        contact.status === 'resolved' || contact.status === 'spam' ? 'opacity-50' : ''
+                      }`}
+                    >
+                      {contact.status === 'new' ? 'Mark In Progress' : 'Mark Resolved'}
+                    </Button>
 
-                    {contact.status === 'in_progress' && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => updateContactStatus(contact.id, 'resolved')}
-                        className="w-full sm:w-auto whitespace-nowrap"
-                      >
-                        Mark Resolved
-                      </Button>
-                    )}
-
-                    {contact.status !== 'spam' && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="w-full sm:w-auto text-red-600 hover:bg-red-50 whitespace-nowrap"
-                        onClick={() => updateContactStatus(contact.id, 'spam')}
-                      >
-                        Mark as Spam
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={XCircle}
+                      iconPosition="left"
+                      className="w-full sm:w-auto text-red-600 hover:bg-red-50 whitespace-nowrap"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to mark this contact as spam? This action will hide it from the main view.')) {
+                          updateContactStatus(contact.id, 'spam');
+                        }
+                      }}
+                      disabled={contact.status === 'spam'}
+                    >
+                      {contact.status === 'spam' ? 'Marked as Spam' : 'Mark as Spam'}
+                    </Button>
                   </div>
                 </div>
               </Card>

@@ -309,6 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[AuthContext] Starting signup process for email:', email);
       console.log('[AuthContext] User type:', userType);
       console.log('[AuthContext] Profile data:', JSON.stringify(profileData, null, 2));
+      setSessionReady(false); // Reset session ready state
 
       // Create auth user
       console.log('[AuthContext] Creating Firebase Auth user...');
@@ -350,13 +351,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), jobHunterProfile);
         console.log('[AuthContext] Job hunter profile document created successfully');
 
-        // Send welcome email and message to new job hunter (non-blocking)
-        fetch('/api/jobhunter/welcome', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jobHunterId: userId }),
-        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
-
         // Update display name
         await updateProfile(userCredential.user, {
           displayName: `${typedProfileData.firstName} ${typedProfileData.lastName}`,
@@ -377,13 +371,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('[AuthContext] Agency profile data:', JSON.stringify(agencyProfile, null, 2));
         await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), agencyProfile);
         console.log('[AuthContext] Agency profile document created successfully');
-
-        // Send welcome email and message to new agency (non-blocking)
-        fetch('/api/agency/welcome', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agencyId: userId }),
-        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
 
         // Update display name
         await updateProfile(userCredential.user, {
@@ -437,6 +424,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (sessionError) {
         console.error('[AuthContext] Error creating session cookie:', sessionError);
         // Don't throw - allow signup to complete with client-side auth only
+      }
+
+      // Wait for session cookie to propagate before allowing redirect
+      console.log('[AuthContext] Waiting for session propagation...');
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+      // Mark session as ready - this allows signup page to redirect
+      setSessionReady(true);
+      console.log('[AuthContext] Session ready for redirect');
+
+      // Trigger welcome message (non-blocking) - AFTER session is ready
+      console.log('[AuthContext] Triggering welcome message...');
+      if (userType === 'jobhunter') {
+        fetch('/api/jobhunter/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobHunterId: userId }),
+        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
+      } else if (userType === 'agency') {
+        fetch('/api/agency/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agencyId: userId }),
+        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
       }
 
       // Don't manually call loadUserProfile here - the onAuthStateChanged listener will handle it with retry logic
