@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { createAuditLog } from '@/lib/audit-helpers';
+import { logAdminAction } from '@/lib/audit-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
+
+    const adminData = adminDoc.data();
+    const adminName = adminData?.name || adminData?.email || 'Admin';
 
     // Parse request body
     const body = await request.json();
@@ -66,12 +69,12 @@ export async function POST(request: NextRequest) {
     });
 
     // Create audit log
-    await createAuditLog({
+    await logAdminAction({
       adminId: uid,
+      adminName,
       action: 'subscription_rejected',
       resourceType: 'agency',
       resourceId: agencyId,
-      resourceName: `Payment ${paymentId}`,
       details: {
         paymentId,
         amount: paymentData!.amount,

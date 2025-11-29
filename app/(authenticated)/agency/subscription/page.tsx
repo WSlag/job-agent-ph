@@ -66,10 +66,6 @@ export default function SubscriptionPage() {
     }
   };
 
-  const handleUpgradeSuccess = () => {
-    setShowUpgradeModal(false);
-    fetchSubscriptionData();
-  };
 
   if (loading) {
     return (
@@ -399,7 +395,7 @@ export default function SubscriptionPage() {
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        onSuccess={handleUpgradeSuccess}
+        agencyId={user?.uid || ''}
       />
 
       <PricingExplainerModal
