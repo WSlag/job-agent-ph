@@ -359,6 +359,8 @@ export function formatAuditAction(action: AuditAction): string {
     message_sent_individual: 'Sent Individual Message',
     settings_updated: 'Updated Settings',
     permissions_updated: 'Updated Permissions',
+    subscription_approved: 'Approved Subscription',
+    subscription_rejected: 'Rejected Subscription',
   };
 
   return actionMap[action] || action;

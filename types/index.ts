@@ -313,7 +313,9 @@ export type AuditAction =
   // Settings actions
   | 'settings_updated'
   // Permission actions
-  | 'permissions_updated';
+  | 'permissions_updated'
+  // Subscription actions
+  | 'subscription_approved' | 'subscription_rejected';
 
 export type AuditResourceType = 'job' | 'user' | 'agency' | 'jobhunter' | 'featured_request' | 'message' | 'settings' | 'admin';
 
