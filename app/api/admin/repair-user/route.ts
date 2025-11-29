@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { COLLECTIONS } from '@/lib/collections';
 import { hasPermission } from '@/lib/permission-helpers';
-import { Admin } from '@/types';
+import { Admin, Permission } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const admin = { id: adminDoc.id, ...adminDoc.data() } as Admin;
 
     // Check permission
-    if (!hasPermission(admin, 'MANAGE_USERS')) {
+    if (!hasPermission(admin, Permission.MANAGE_USERS)) {
       return NextResponse.json(
         { error: 'Unauthorized: MANAGE_USERS permission required' },
         { status: 403 }
