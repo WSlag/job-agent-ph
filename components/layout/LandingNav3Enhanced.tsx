@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp, Globe, MessageCircle } from 'lucide-react';
+import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp, Globe, MessageCircle, LayoutDashboard } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useState, useEffect, useRef } from 'react';
 import { useOptionalAuth } from '@/contexts/AuthContext';
@@ -376,7 +376,7 @@ export default function LandingNav3Enhanced() {
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <TrendingUp className="w-5 h-5 text-gray-400" />
+                      <LayoutDashboard className="w-5 h-5 text-gray-400" />
                       <span>Dashboard</span>
                     </Link>
                     <Link
@@ -423,6 +423,16 @@ export default function LandingNav3Enhanced() {
                       <Search className="w-5 h-5 text-gray-400" />
                       <span>Browse Jobs</span>
                     </Link>
+                    {user && (
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <LayoutDashboard className="w-5 h-5 text-gray-400" />
+                        <span>Dashboard</span>
+                      </Link>
+                    )}
                     <Link
                       href="/companies"
                       className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium"

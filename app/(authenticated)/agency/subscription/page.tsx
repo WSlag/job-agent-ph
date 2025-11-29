@@ -31,8 +31,20 @@ export default function SubscriptionPage() {
     try {
       setLoading(true);
 
+      // Get auth token
+      const token = await user?.getIdToken();
+      if (!token) {
+        console.error('No auth token available');
+        setLoading(false);
+        return;
+      }
+
       // Fetch subscription status
-      const statusResponse = await fetch('/api/subscription/status');
+      const statusResponse = await fetch('/api/subscription/status', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (statusResponse.ok) {
         const data = await statusResponse.json();
 

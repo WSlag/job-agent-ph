@@ -4,13 +4,13 @@ import { useState, FormEvent, ChangeEvent, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { updateAgencyProfile } from '@/lib/profile-helpers'
-import { uploadFile } from '@/lib/storage-helpers'
+import { uploadFile, uploadMultipleCertifications, deleteCertificationFile } from '@/lib/storage-helpers'
 import Button from '@/components/ui/Button'
 import { Upload, X, Building2, Plus } from 'lucide-react'
-import type { Agency } from '@/types'
+import type { Agency, CertificationFile } from '@/types'
 import Image from 'next/image'
 import Chip, { ChipGroup } from '@/components/ui/Chip'
-import CertificationUploadField from '@/components/profile/CertificationUploadField'
+import MultiCertificationUploadField from '@/components/profile/MultiCertificationUploadField'
 
 interface AgencyProfileEditFormProps {
   agency: Agency
@@ -29,9 +29,9 @@ interface FormData {
   certifications: string[]
   newSpecialization: string
   newCertification: string
-  // Mandatory certification files
-  dmwLicenseFile: File | null
-  businessPermitFile: File | null
+  // Mandatory certification files (multi-file support)
+  dmwLicenseFiles: File[] // New files to upload
+  businessPermitFiles: File[] // New files to upload
 }
 
 export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormProps) {
@@ -59,8 +59,8 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
     certifications: agency.certifications || [],
     newSpecialization: '',
     newCertification: '',
-    dmwLicenseFile: null,
-    businessPermitFile: null,
+    dmwLicenseFiles: [],
+    businessPermitFiles: [],
   })
 
   const handleChange = (
@@ -159,6 +159,42 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
     }))
   }
 
+  // Handler for removing existing DMW License files
+  const handleRemoveDmwLicense = async (file: CertificationFile) => {
+    try {
+      // Delete from Firebase Storage
+      await deleteCertificationFile(file.storagePath)
+
+      // Update agency state by removing the file from the array
+      const updatedFiles = (agency.dmwLicenseFiles || []).filter(f => f.storagePath !== file.storagePath)
+      await updateAgencyProfile(agency.id, { dmwLicenseFiles: updatedFiles })
+
+      // Refresh profile to sync latest data
+      await refreshProfile()
+    } catch (error) {
+      console.error('Error removing DMW License file:', error)
+      setError('Failed to remove file. Please try again.')
+    }
+  }
+
+  // Handler for removing existing Business Permit files
+  const handleRemoveBusinessPermit = async (file: CertificationFile) => {
+    try {
+      // Delete from Firebase Storage
+      await deleteCertificationFile(file.storagePath)
+
+      // Update agency state by removing the file from the array
+      const updatedFiles = (agency.businessPermitFiles || []).filter(f => f.storagePath !== file.storagePath)
+      await updateAgencyProfile(agency.id, { businessPermitFiles: updatedFiles })
+
+      // Refresh profile to sync latest data
+      await refreshProfile()
+    } catch (error) {
+      console.error('Error removing Business Permit file:', error)
+      setError('Failed to remove file. Please try again.')
+    }
+  }
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
@@ -184,15 +220,25 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         throw new Error('Address is required')
       }
 
-      // Validate mandatory certifications
+      // Validate mandatory certifications (check both new multi-file and legacy fields)
       const errors: { dmwLicense?: string; businessPermit?: string } = {}
 
-      if (!agency.dmwLicenseUrl && !formData.dmwLicenseFile) {
-        errors.dmwLicense = 'DMW License is required'
+      const hasDmwLicense =
+        (agency.dmwLicenseFiles && agency.dmwLicenseFiles.length > 0) ||
+        agency.dmwLicenseUrl ||
+        formData.dmwLicenseFiles.length > 0
+
+      const hasBusinessPermit =
+        (agency.businessPermitFiles && agency.businessPermitFiles.length > 0) ||
+        agency.businessPermitUrl ||
+        formData.businessPermitFiles.length > 0
+
+      if (!hasDmwLicense) {
+        errors.dmwLicense = 'At least one DMW License file is required'
       }
 
-      if (!agency.businessPermitUrl && !formData.businessPermitFile) {
-        errors.businessPermit = 'Business Permit is required'
+      if (!hasBusinessPermit) {
+        errors.businessPermit = 'At least one Business Permit file is required'
       }
 
       if (Object.keys(errors).length > 0) {
@@ -209,26 +255,26 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         )
       }
 
-      // Upload DMW License if new file
-      let dmwLicenseUrl = agency.dmwLicenseUrl
-      if (formData.dmwLicenseFile) {
-        const timestamp = Date.now()
-        const ext = formData.dmwLicenseFile.name.split('.').pop()
-        dmwLicenseUrl = await uploadFile(
-          formData.dmwLicenseFile,
-          `agency-certifications/${agency.id}/dmw-license-${timestamp}.${ext}`
+      // Upload multiple DMW License files if new files exist
+      let dmwLicenseFiles = agency.dmwLicenseFiles || []
+      if (formData.dmwLicenseFiles.length > 0) {
+        const uploadedFiles = await uploadMultipleCertifications(
+          formData.dmwLicenseFiles,
+          agency.id,
+          'dmw-license'
         )
+        dmwLicenseFiles = [...dmwLicenseFiles, ...uploadedFiles]
       }
 
-      // Upload Business Permit if new file
-      let businessPermitUrl = agency.businessPermitUrl
-      if (formData.businessPermitFile) {
-        const timestamp = Date.now()
-        const ext = formData.businessPermitFile.name.split('.').pop()
-        businessPermitUrl = await uploadFile(
-          formData.businessPermitFile,
-          `agency-certifications/${agency.id}/business-permit-${timestamp}.${ext}`
+      // Upload multiple Business Permit files if new files exist
+      let businessPermitFiles = agency.businessPermitFiles || []
+      if (formData.businessPermitFiles.length > 0) {
+        const uploadedFiles = await uploadMultipleCertifications(
+          formData.businessPermitFiles,
+          agency.id,
+          'business-permit'
         )
+        businessPermitFiles = [...businessPermitFiles, ...uploadedFiles]
       }
 
       // Prepare update data - only include defined values
@@ -238,9 +284,14 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         contactPerson: formData.contactPerson,
         phone: formData.phone,
         address: formData.address,
-        logoUrl,
-        dmwLicenseUrl,
-        businessPermitUrl,
+        // Update multi-file certification fields
+        dmwLicenseFiles,
+        businessPermitFiles,
+      }
+
+      // Add logoUrl only if it has a value (Firestore rejects undefined)
+      if (logoUrl) {
+        updateData.logoUrl = logoUrl
       }
 
       // Add optional fields only if they have values
@@ -526,26 +577,30 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
         </p>
 
         <div className="space-y-6">
-          {/* DMW License */}
-          <CertificationUploadField
+          {/* DMW License - Multi-file Upload */}
+          <MultiCertificationUploadField
             label="DMW License"
             required={true}
-            value={agency.dmwLicenseUrl}
-            file={formData.dmwLicenseFile}
-            onChange={(file) => setFormData({ ...formData, dmwLicenseFile: file })}
+            existingFiles={agency.dmwLicenseFiles || []}
+            newFiles={formData.dmwLicenseFiles}
+            onChange={(files) => setFormData({ ...formData, dmwLicenseFiles: files })}
+            onRemoveExisting={handleRemoveDmwLicense}
             error={certificationErrors.dmwLicense}
-            helperText="Department of Migrant Workers License - Required for agency verification"
+            helperText="Department of Migrant Workers License - Required for agency verification. You can upload multiple files (e.g., license, renewals, amendments)."
+            maxFiles={5}
           />
 
-          {/* Business Permit */}
-          <CertificationUploadField
+          {/* Business Permit - Multi-file Upload */}
+          <MultiCertificationUploadField
             label="Business Permit"
             required={true}
-            value={agency.businessPermitUrl}
-            file={formData.businessPermitFile}
-            onChange={(file) => setFormData({ ...formData, businessPermitFile: file })}
+            existingFiles={agency.businessPermitFiles || []}
+            newFiles={formData.businessPermitFiles}
+            onChange={(files) => setFormData({ ...formData, businessPermitFiles: files })}
+            onRemoveExisting={handleRemoveBusinessPermit}
             error={certificationErrors.businessPermit}
-            helperText="Valid Business Permit - Required for agency verification"
+            helperText="Valid Business Permit - Required for agency verification. You can upload multiple files (e.g., permit, renewals, supplementary docs)."
+            maxFiles={5}
           />
         </div>
       </div>

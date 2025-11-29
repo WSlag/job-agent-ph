@@ -207,17 +207,8 @@ export async function sendIndividualMessage(
       updatedAt: serverTimestamp(),
     });
 
-    // Create notification for recipient
-    const notificationRef = doc(collection(db, 'notifications'));
-    batch.set(notificationRef, {
-      userId,
-      type: 'message',
-      title: `New message from ${adminName}`,
-      message: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
-      read: false,
-      createdAt: serverTimestamp(),
-      actionUrl: `/messages/admin/${conversationId}`,
-    });
+    // Note: Notification is created by Cloud Function (onAdminMessageSent)
+    // to avoid duplicates and enable email notifications
 
     // Commit the batch
     await batch.commit();

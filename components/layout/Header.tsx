@@ -93,14 +93,19 @@ export default function Header() {
               </div>
             ) : user ? (
               <>
+                {/* Dashboard - shown for all users */}
+                <Link
+                  href={userType === 'agency' ? '/agency/dashboard' : '/dashboard'}
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105"
+                >
+                  Dashboard
+                </Link>
+
                 {userType === 'agency' && (
                   <>
                     <Link href="/jobs/post" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2">
                       <Briefcase size={18} />
                       Post Job
-                    </Link>
-                    <Link href="/agency/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105">
-                      Dashboard
                     </Link>
                     <Link href="/agency/subscription" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2">
                       <CreditCard size={18} />
@@ -193,6 +198,15 @@ export default function Header() {
 
               {user ? (
                 <>
+                  {/* Dashboard - shown for all users */}
+                  <Link
+                    href={userType === 'agency' ? '/agency/dashboard' : '/dashboard'}
+                    className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+
                   {userType === 'agency' && (
                     <>
                       <Link
@@ -202,13 +216,6 @@ export default function Header() {
                       >
                         <Briefcase size={18} />
                         Post Job
-                      </Link>
-                      <Link
-                        href="/agency/dashboard"
-                        className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Dashboard
                       </Link>
                       <Link
                         href="/agency/subscription"

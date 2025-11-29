@@ -69,6 +69,7 @@ export async function updateJobHunterProfile(
 
 /**
  * Checks if an agency profile is complete with all mandatory fields
+ * Supports both legacy single-file (dmwLicenseUrl) and new multi-file (dmwLicenseFiles) formats
  * @param agency The agency profile to check
  * @returns true if profile is complete, false otherwise
  */
@@ -83,17 +84,23 @@ export function isAgencyProfileComplete(agency: Agency): boolean {
     agency.logoUrl
   )
 
-  // Check mandatory certifications
-  const hasCertifications = Boolean(
-    agency.dmwLicenseUrl &&
-    agency.businessPermitUrl
-  )
+  // Check mandatory certifications (support both new multi-file and legacy single URL)
+  const hasDmwLicense =
+    (agency.dmwLicenseFiles && agency.dmwLicenseFiles.length > 0) ||
+    Boolean(agency.dmwLicenseUrl)
+
+  const hasBusinessPermit =
+    (agency.businessPermitFiles && agency.businessPermitFiles.length > 0) ||
+    Boolean(agency.businessPermitUrl)
+
+  const hasCertifications = hasDmwLicense && hasBusinessPermit
 
   return hasBasicInfo && hasCertifications
 }
 
 /**
  * Gets a detailed profile completion status for an agency
+ * Supports both legacy single-file and new multi-file certification formats
  * @param agency The agency profile to check
  * @returns Object with missing fields and completion status
  */
@@ -102,6 +109,16 @@ export function getAgencyProfileCompletionStatus(agency: Agency): {
   missingFields: string[]
   completionPercentage: number
 } {
+  // Check DMW License (either new multi-file or legacy single URL)
+  const hasDmwLicense =
+    (agency.dmwLicenseFiles && agency.dmwLicenseFiles.length > 0) ||
+    Boolean(agency.dmwLicenseUrl)
+
+  // Check Business Permit (either new multi-file or legacy single URL)
+  const hasBusinessPermit =
+    (agency.businessPermitFiles && agency.businessPermitFiles.length > 0) ||
+    Boolean(agency.businessPermitUrl)
+
   const requiredFields = [
     { key: 'companyName', label: 'Company Name', value: agency.companyName },
     { key: 'registrationNumber', label: 'Registration Number', value: agency.registrationNumber },
@@ -109,18 +126,28 @@ export function getAgencyProfileCompletionStatus(agency: Agency): {
     { key: 'phone', label: 'Phone', value: agency.phone },
     { key: 'address', label: 'Address', value: agency.address },
     { key: 'logoUrl', label: 'Company Logo', value: agency.logoUrl },
-    { key: 'dmwLicenseUrl', label: 'DMW License', value: agency.dmwLicenseUrl },
-    { key: 'businessPermitUrl', label: 'Business Permit', value: agency.businessPermitUrl },
+    { key: 'dmwLicense', label: 'DMW License', value: hasDmwLicense },
+    { key: 'businessPermit', label: 'Business Permit', value: hasBusinessPermit },
   ]
 
   const missingFields: string[] = []
   let completedCount = 0
 
   requiredFields.forEach(field => {
-    if (field.value && String(field.value).trim()) {
-      completedCount++
+    if (field.key === 'dmwLicense' || field.key === 'businessPermit') {
+      // Boolean value for certification fields
+      if (field.value) {
+        completedCount++
+      } else {
+        missingFields.push(field.label)
+      }
     } else {
-      missingFields.push(field.label)
+      // String value for other fields
+      if (field.value && String(field.value).trim()) {
+        completedCount++
+      } else {
+        missingFields.push(field.label)
+      }
     }
   })
 

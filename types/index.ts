@@ -52,6 +52,16 @@ export interface JobHunter extends User {
   jobMatchNotifications?: boolean; // Enable/disable job match notifications (default: true)
 }
 
+// Certification File Type (for multi-file uploads)
+export interface CertificationFile {
+  url: string; // Download URL from Firebase Storage
+  fileName: string; // Original filename for display
+  uploadedAt: Date; // Upload timestamp
+  fileType: string; // MIME type (application/pdf, image/jpeg, etc.)
+  fileSize: number; // Size in bytes
+  storagePath: string; // Full path for deletion (agency-certifications/{id}/...)
+}
+
 export interface Agency extends User {
   companyName: string;
   registrationNumber: string;
@@ -65,9 +75,14 @@ export interface Agency extends User {
   bio?: string; // Alias for description (for backward compatibility)
   specializations?: string[]; // Array of specialization areas (e.g., "Healthcare", "IT", "Construction")
   certifications?: string[]; // Array of additional certifications/licenses (optional)
-  // Mandatory certification documents
+  // Mandatory certification documents (LEGACY - kept for backward compatibility)
+  /** @deprecated Use dmwLicenseFiles instead. Will be removed in future release. */
   dmwLicenseUrl?: string; // DMW (Department of Migrant Workers) License document URL
+  /** @deprecated Use businessPermitFiles instead. Will be removed in future release. */
   businessPermitUrl?: string; // Business Permit document URL
+  // New multi-file certification fields
+  dmwLicenseFiles?: CertificationFile[]; // Array of DMW License documents (supports multiple files)
+  businessPermitFiles?: CertificationFile[]; // Array of Business Permit documents (supports multiple files)
   // Agency-specific legal compliance fields
   agencyTermsAcceptedAt?: Date; // When agency accepted Agency Terms
   agencyTermsVersion?: string; // Version of agency terms accepted

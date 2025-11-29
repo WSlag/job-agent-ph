@@ -169,28 +169,7 @@ export default function UpgradeModal({ isOpen, onClose, agencyId }: UpgradeModal
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm">
               <p className="font-medium text-gray-900 mb-2">Payment Instructions:</p>
               <div className="space-y-1 text-gray-600">
-                {paymentMethod === 'gcash' && (
-                  <>
-                    <p>• GCash Number: <span className="font-semibold">0917-123-4567</span></p>
-                    <p>• Account Name: Job Agent PH</p>
-                  </>
-                )}
-                {paymentMethod === 'paymaya' && (
-                  <>
-                    <p>• PayMaya Number: <span className="font-semibold">0917-123-4567</span></p>
-                    <p>• Account Name: Job Agent PH</p>
-                  </>
-                )}
-                {paymentMethod === 'bank_transfer' && (
-                  <>
-                    <p>• Bank: BDO</p>
-                    <p>• Account Number: <span className="font-semibold">1234-5678-9012</span></p>
-                    <p>• Account Name: Job Agent PH Inc.</p>
-                  </>
-                )}
-                {paymentMethod === 'paypal' && (
-                  <p>• PayPal Email: <span className="font-semibold">payments@jobagent.ph</span></p>
-                )}
+                <p>Message Admin for payment details</p>
               </div>
             </div>
 

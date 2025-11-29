@@ -168,6 +168,7 @@ service cloud.firestore {
                        request.resource.data.verified == false);
 
       // UPDATED: Prevent modification of legal fields (except by admins)
+      // Also validate certification file arrays (max 5 files per type)
       allow update: if (isOwner(userId) &&
                         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
                           'verified',
@@ -175,7 +176,14 @@ service cloud.firestore {
                           'privacyAcceptedAt', 'privacyVersion',
                           'agencyTermsAcceptedAt', 'agencyTermsVersion',
                           'agencyTermsAcceptedIP'
-                        ])) ||
+                        ]) &&
+                        // Validate max 5 files per certification type
+                        (!request.resource.data.keys().hasAny(['dmwLicenseFiles']) ||
+                         (request.resource.data.dmwLicenseFiles is list &&
+                          request.resource.data.dmwLicenseFiles.size() <= 5)) &&
+                        (!request.resource.data.keys().hasAny(['businessPermitFiles']) ||
+                         (request.resource.data.businessPermitFiles is list &&
+                          request.resource.data.businessPermitFiles.size() <= 5))) ||
                        isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
     }
@@ -192,8 +200,23 @@ service cloud.firestore {
                       // Subscription check - enforce job posting limits
                       canPostJob(request.auth.uid) &&
                       // Agency profile must be complete with certifications
-                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseUrl != null &&
-                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitUrl != null &&
+                      // Support both new multi-file fields (dmwLicenseFiles) and legacy single URL (dmwLicenseUrl)
+                      (
+                        // Check new multi-file fields (array with at least 1 file)
+                        (get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.keys().hasAny(['dmwLicenseFiles']) &&
+                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseFiles is list &&
+                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseFiles.size() > 0) ||
+                        // Fallback to legacy single URL field
+                        get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseUrl != null
+                      ) &&
+                      (
+                        // Check new multi-file fields
+                        (get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.keys().hasAny(['businessPermitFiles']) &&
+                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitFiles is list &&
+                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitFiles.size() > 0) ||
+                        // Fallback to legacy single URL field
+                        get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitUrl != null
+                      ) &&
                       get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.logoUrl != null &&
                       get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.registrationNumber != null &&
                       get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.phone != null &&

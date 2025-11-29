@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Repair Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0051cc;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .success {
+            background: #10b981;
+        }
+        .success:hover {
+            background: #059669;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.error {
+            background: #fee;
+            color: #c00;
+        }
+        .status.success {
+            background: #efe;
+            color: #060;
+        }
+        .status.info {
+            background: #eef;
+            color: #006;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 User Repair Tool</h1>
+        <p>Diagnose and repair orphaned users in Firebase</p>
+
+        <label for="email">Email Address:</label>
+        <input
+            type="email"
+            id="email"
+            placeholder="user@example.com"
+            value="exultantcreationsinc2018@gmail.com"
+        />
+
+        <div>
+            <button onclick="diagnoseUser()">1. Diagnose User</button>
+            <button onclick="repairUser()" class="success" id="repairBtn" disabled>2. Repair User</button>
+        </div>
+
+        <div id="status"></div>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        let diagnosticData = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        async function diagnoseUser() {
+            const email = document.getElementById('email').value;
+            const output = document.getElementById('output');
+            const repairBtn = document.getElementById('repairBtn');
+
+            output.textContent = '';
+            diagnosticData = null;
+            repairBtn.disabled = true;
+
+            if (!email) {
+                showStatus('Please enter an email address', 'error');
+                return;
+            }
+
+            showStatus('Running diagnostic...', 'info');
+            log('Starting diagnostic for: ' + email);
+
+            try {
+                const response = await fetch(`/api/admin/diagnose-user?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Diagnostic failed');
+                }
+
+                diagnosticData = data;
+
+                log('=== DIAGNOSTIC RESULT ===');
+                log(JSON.stringify(data, null, 2));
+
+                if (data.summary?.canRepair) {
+                    showStatus('✓ User can be repaired! Click "Repair User" to fix.', 'success');
+                    repairBtn.disabled = false;
+                    log('\n✓ User is orphaned and can be repaired');
+                    log('User ID: ' + data.auth.data.uid);
+                } else if (data.summary?.isOrphaned === false) {
+                    showStatus('User exists and has proper Firestore documents', 'success');
+                    log('\n✓ User is properly configured');
+                } else {
+                    showStatus('User cannot be repaired. See details below.', 'error');
+                    log('\n✗ Issues found:');
+                    data.issues.forEach(issue => log('  - ' + issue));
+                }
+
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+                log('ERROR: ' + error.message);
+            }
+        }
+
+        async function repairUser() {
+            if (!diagnosticData?.auth?.data?.uid) {
+                showStatus('Please run diagnostic first', 'error');
+                return;
+            }
+
+            const repairBtn = document.getElementById('repairBtn');
+            repairBtn.disabled = true;
+
+            showStatus('Repairing user...', 'info');
+            log('\n=== STARTING REPAIR ===');
+
+            try {
+                const userType = diagnosticData.detectedUserType || 'agency';
+                const email = document.getElementById('email').value;
+
+                log('User ID: ' + diagnosticData.auth.data.uid);
+                log('User Type: ' + userType);
+
+                const response = await fetch('/api/admin/repair-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: diagnosticData.auth.data.uid,
+                        userType: userType,
+                        profileData: {
+                            companyName: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ').trim()
+                        }
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Repair failed');
+                }
+
+                log('\n=== REPAIR RESULT ===');
+                log(JSON.stringify(result, null, 2));
+
+                if (result.success) {
+                    showStatus('✓ SUCCESS! User has been repaired', 'success');
+                    log('\n✓ User successfully repaired!');
+                    log('Created documents: ' + result.createdDocuments.join(', '));
+                    if (result.skippedDocuments.length > 0) {
+                        log('Skipped documents: ' + result.skippedDocuments.join(', '));
+                    }
+                    log('\nUser should now appear in /admin/agencies');
+
+                    setTimeout(() => {
+                        if (confirm('User repaired successfully! Go to admin agencies page?')) {
+                            window.location.href = '/admin/agencies';
+                        }
+                    }, 1000);
+                }
+
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+                log('ERROR: ' + error.message);
+                repairBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

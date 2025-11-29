@@ -17,6 +17,7 @@ import {
   Mail,
   MessageSquare,
   Building2,
+  Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,11 @@ const navigation = [
     name: 'Users',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    name: 'User Repair',
+    href: '/admin/user-repair',
+    icon: Wrench,
   },
   {
     name: 'Messages',
