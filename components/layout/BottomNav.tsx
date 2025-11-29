@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Briefcase, MessageCircle, BookOpen, User, Grid, Search, Bell } from 'lucide-react'
+import { Home, Briefcase, MessageCircle, BookOpen, User, Grid, Search, Bell, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOptionalAuth } from '@/contexts/AuthContext'
@@ -54,7 +54,7 @@ export default function BottomNav() {
     { href: '/', icon: Home, label: 'Home' },
     { href: '/jobs', icon: Briefcase, label: 'Jobs', badge: allCounts?.jobs },
     { href: '/messages', icon: MessageCircle, label: 'Messages', badge: allCounts?.messages },
-    { href: '/saved-jobs', icon: BookOpen, label: 'Saved Jobs' },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
 

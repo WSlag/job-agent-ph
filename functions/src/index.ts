@@ -34,3 +34,8 @@ export {
 export {
   onAgencyReviewWritten,
 } from './ratings/aggregate-ratings';
+
+// Export cleanup functions
+export {
+  cleanupOldNotifications,
+} from './cleanup/notification-cleanup';

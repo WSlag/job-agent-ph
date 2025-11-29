@@ -1,7 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { createNotification } from './helpers';
+import { createNotification, sendPushNotification } from './helpers';
 import { sendEmail } from '../email/send-email';
+import { findMatchingJobHunters, JobData } from './job-matching';
 
 /**
  * Cloud Function that triggers when a new job is created
@@ -150,6 +151,7 @@ export const onJobFeatured = functions.firestore
 /**
  * Cloud Function that triggers when a job matches a job hunter's saved search
  * This is a more targeted notification based on user preferences
+ * Uses intelligent matching algorithm with weighted scoring
  */
 export const onJobMatchingSavedSearch = functions.firestore
   .document('jobs/{jobId}')
@@ -160,76 +162,69 @@ export const onJobMatchingSavedSearch = functions.firestore
     if (!jobData) return;
 
     try {
-      // Query for job hunters with saved searches that match this job
-      // This assumes you have a 'savedSearches' collection or field
-      const jobHuntersSnapshot = await admin.firestore()
-        .collection('jobHunters')
-        .where('isActive', '==', true)
+      // Use intelligent matching algorithm to find job hunters
+      const matches = await findMatchingJobHunters(jobData as JobData, 60, 50);
+
+      if (matches.length === 0) {
+        console.log(`No matching job hunters found for job ${jobId}`);
+        return;
+      }
+
+      console.log(`Found ${matches.length} matching job hunters for job ${jobId}`);
+
+      // Get agency data once
+      const agencyDoc = await admin.firestore()
+        .collection('agencies')
+        .doc(jobData.agencyId)
         .get();
+      const agencyData = agencyDoc.data();
+      const agencyName = agencyData?.companyName || 'An agency';
 
       const notificationPromises: Promise<void>[] = [];
 
-      for (const docSnap of jobHuntersSnapshot.docs) {
-        const jobHunter = docSnap.data();
+      for (const match of matches) {
+        const matchPercent = Math.round(match.matchScore.totalScore);
+        const title = 'Perfect Job Match!';
+        const message = `"${jobData.title}" at ${agencyName} matches your preferences (${matchPercent}% match)`;
 
-        // Check if this job matches the job hunter's preferences
-        // This is a simplified check - you can make it more sophisticated
-        const matchesPreferences = checkJobMatchesPreferences(jobData, jobHunter);
+        // Create in-app notification
+        const notificationPromise = createNotification({
+          userId: match.hunterId,
+          type: 'job_match',
+          title,
+          message,
+          actionUrl: `/jobs/${jobId}`,
+        });
+        notificationPromises.push(notificationPromise);
 
-        if (matchesPreferences) {
-          const agencyDoc = await admin.firestore()
-            .collection('agencies')
-            .doc(jobData.agencyId)
-            .get();
-          const agencyData = agencyDoc.data();
-          const agencyName = agencyData?.companyName || 'An agency';
+        // Send push notification
+        const pushPromise = sendPushNotification(
+          match.hunterId,
+          title,
+          message,
+          `/jobs/${jobId}`
+        );
+        notificationPromises.push(pushPromise);
 
-          // Create targeted notification
-          const notificationPromise = createNotification({
-            userId: docSnap.id,
+        // Send email if enabled (email helper checks granular preferences)
+        if (match.hunterData.email) {
+          const emailPromise = sendEmail({
+            recipientEmail: match.hunterData.email,
+            recipientName: `${match.hunterData.firstName || ''} ${match.hunterData.lastName || ''}`.trim() || 'Job Hunter',
+            userId: match.hunterId,
             type: 'job_match',
-            title: 'Job Matches Your Preferences!',
-            message: `"${jobData.title}" at ${agencyName} matches your saved search criteria`,
+            title,
+            message,
             actionUrl: `/jobs/${jobId}`,
           });
-
-          notificationPromises.push(notificationPromise);
+          notificationPromises.push(emailPromise);
         }
       }
 
       await Promise.all(notificationPromises);
+      console.log(`Sent ${matches.length} job match notifications for job ${jobId}`);
 
     } catch (error) {
       console.error('Error processing saved search matches:', error);
     }
   });
-
-/**
- * Helper function to check if a job matches a job hunter's preferences
- */
-function checkJobMatchesPreferences(jobData: any, jobHunterData: any): boolean {
-  // Implement your matching logic here
-  // For example:
-  // - Check if job type matches preferred types
-  // - Check if location is in preferred areas
-  // - Check if salary range matches expectations
-  // - Check if skills/requirements match job hunter's skills
-
-  // For now, return false to prevent spamming (you should implement real logic)
-  return false;
-
-  // Example implementation:
-  /*
-  if (jobHunterData.preferredJobTypes?.includes(jobData.type)) {
-    return true;
-  }
-  if (jobHunterData.preferredLocations?.includes(jobData.location)) {
-    return true;
-  }
-  if (jobHunterData.skills?.some((skill: string) =>
-    jobData.requiredSkills?.includes(skill))) {
-    return true;
-  }
-  return false;
-  */
-}

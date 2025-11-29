@@ -100,9 +100,15 @@ export async function getAdminUserIds(): Promise<string[]> {
 }
 
 /**
- * Checks if user has email notifications enabled
+ * Checks if user has email notifications enabled for a specific notification type
+ * @param userId - The user ID to check preferences for
+ * @param notificationType - Optional specific notification type to check
+ * @returns true if emails should be sent, false otherwise
  */
-export async function hasEmailNotificationsEnabled(userId: string): Promise<boolean> {
+export async function hasEmailNotificationsEnabled(
+  userId: string,
+  notificationType?: 'applicationUpdates' | 'newMessages' | 'jobMatches' | 'interviewReminders' | 'systemAlerts'
+): Promise<boolean> {
   try {
     const db = admin.firestore();
     const prefsDoc = await db.collection('notificationPreferences').doc(userId).get();
@@ -113,10 +119,69 @@ export async function hasEmailNotificationsEnabled(userId: string): Promise<bool
     }
 
     const prefs = prefsDoc.data();
-    return prefs?.emailNotifications !== false;
+
+    // Check master toggle first
+    if (prefs?.emailNotifications === false) {
+      return false;
+    }
+
+    // If notification type specified, check granular preference
+    if (notificationType && prefs?.[notificationType] === false) {
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error checking email preferences:', error);
     // Default to true on error
     return true;
+  }
+}
+
+/**
+ * Sends push notification via Firebase Cloud Messaging (FCM)
+ * @param userId - The user ID to send notification to
+ * @param title - Notification title
+ * @param body - Notification body text
+ * @param actionUrl - Optional URL to navigate to when notification is clicked
+ */
+export async function sendPushNotification(
+  userId: string,
+  title: string,
+  body: string,
+  actionUrl?: string
+): Promise<void> {
+  try {
+    const db = admin.firestore();
+    const prefsDoc = await db.collection('notificationPreferences').doc(userId).get();
+
+    if (!prefsDoc.exists) {
+      console.log(`No preferences document for user ${userId}, skipping push notification`);
+      return;
+    }
+
+    const fcmToken = prefsDoc.data()?.fcmToken;
+    if (!fcmToken) {
+      console.log(`No FCM token for user ${userId}, skipping push notification`);
+      return;
+    }
+
+    // Send push notification via FCM
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      data: {
+        actionUrl: actionUrl || '/notifications',
+      },
+      token: fcmToken,
+    };
+
+    await admin.messaging().send(message);
+    console.log(`Push notification sent to user ${userId}`);
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+    // Don't throw - push notification failures shouldn't break the notification flow
   }
 }

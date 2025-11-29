@@ -17,15 +17,39 @@ function getResendClient(): Resend | null {
 }
 
 /**
+ * Maps notification types to preference keys
+ */
+function getPreferenceType(notificationType: string): 'applicationUpdates' | 'newMessages' | 'jobMatches' | 'interviewReminders' | 'systemAlerts' | undefined {
+  switch (notificationType) {
+    case 'application_update':
+      return 'applicationUpdates';
+    case 'message':
+      return 'newMessages';
+    case 'job_match':
+      return 'jobMatches';
+    case 'interview':
+      return 'interviewReminders';
+    case 'system':
+    case 'document':
+      return 'systemAlerts';
+    default:
+      return undefined;
+  }
+}
+
+/**
  * Sends an email notification using Resend
  */
 export async function sendEmail(data: EmailNotificationData): Promise<void> {
   try {
-    // Check if user has email notifications enabled
-    const emailEnabled = await hasEmailNotificationsEnabled(data.userId);
+    // Map notification type to preference type
+    const preferenceType = getPreferenceType(data.type);
+
+    // Check if user has email notifications enabled for this specific type
+    const emailEnabled = await hasEmailNotificationsEnabled(data.userId, preferenceType);
 
     if (!emailEnabled) {
-      console.log(`Email notifications disabled for user ${data.userId}`);
+      console.log(`Email notifications disabled for user ${data.userId} (type: ${data.type})`);
       return;
     }
 

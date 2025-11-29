@@ -273,11 +273,15 @@ service cloud.firestore {
     match /conversations/{conversationId} {
       // Participants can read their own conversations
       // Also allow read if conversation doesn't exist (for checking before creation)
-      allow read: if isAuthenticated() && (
+      allow get: if isAuthenticated() && (
                     !exists(/databases/$(database)/documents/conversations/$(conversationId)) ||
                     resource.data.jobHunterId == request.auth.uid ||
                     resource.data.agencyId == request.auth.uid
                   );
+
+      // Allow list queries for authenticated users
+      // Firestore will only return documents matching the where() clause
+      allow list: if isAuthenticated();
 
       // Both parties can create conversations
       // Permissive to allow dynamic field names like unreadCount_${userId}
@@ -457,6 +461,24 @@ service cloud.firestore {
       // Users can delete their own notifications
       allow delete: if isAuthenticated() &&
                       resource.data.userId == request.auth.uid;
+    }
+
+    // Notification Preferences collection
+    match /notificationPreferences/{userId} {
+      // Users can read their own preferences
+      allow read: if isAuthenticated() && userId == request.auth.uid;
+
+      // Users can create their own preferences
+      allow create: if isAuthenticated() &&
+                      userId == request.auth.uid &&
+                      request.resource.data.keys().hasAll(['emailNotifications']) &&
+                      request.resource.data.emailNotifications is bool;
+
+      // Users can update their own preferences
+      allow update: if isAuthenticated() && userId == request.auth.uid;
+
+      // Users can delete their own preferences
+      allow delete: if isAuthenticated() && userId == request.auth.uid;
     }
 
     // Audit Logs collection

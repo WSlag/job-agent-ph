@@ -15,6 +15,7 @@ import { getAuthInstance, getDbInstance } from '@/lib/firebase';
 import { User, UserType, JobHunter, Agency, Admin, Subscription } from '@/types';
 import { COLLECTIONS } from '@/lib/collections';
 import { getAgencySubscription } from '@/lib/subscription-helpers';
+import { requestNotificationPermission, saveFCMToken, setupFCMListener } from '@/lib/fcm-client';
 
 // Type-safe profile data for signup
 type JobHunterProfileData = Omit<JobHunter, 'id' | 'email' | 'userType' | 'createdAt' | 'updatedAt'>;
@@ -103,12 +104,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(firebaseUser);
 
           if (firebaseUser) {
+            // Wait for token to propagate to Firestore before making any queries
+            console.log('[AuthContext] Waiting 3 seconds for token propagation...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
             await loadUserProfile(firebaseUser.uid);
 
             // Check if session cookie exists when user is authenticated
             const sessionCookie = document.cookie.includes('session=');
             console.log('[AuthContext] Session cookie present:', sessionCookie);
-            setSessionReady(sessionCookie);
+
+            // If no session cookie exists, create one
+            if (!sessionCookie) {
+              try {
+                console.log('[AuthContext] No session cookie found, creating one...');
+                const idToken = await firebaseUser.getIdToken();
+
+                const response = await fetch('/api/auth/session', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ idToken }),
+                });
+
+                if (response.ok) {
+                  console.log('[AuthContext] Session cookie created successfully');
+                  // Wait for token to propagate
+                  await new Promise(resolve => setTimeout(resolve, 4000));
+                  setSessionReady(true);
+                } else {
+                  console.error('[AuthContext] Failed to create session cookie');
+                  setSessionReady(false);
+                }
+              } catch (error) {
+                console.error('[AuthContext] Error creating session cookie:', error);
+                setSessionReady(false);
+              }
+            } else {
+              console.log('[AuthContext] Session cookie exists, waiting for token propagation...');
+              // Even when session exists, wait for token to propagate
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              setSessionReady(true);
+            }
           } else {
             setUserProfile(null);
             setUserType(null);
@@ -129,6 +167,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
   }, []);
+
+  // Initialize FCM push notifications when user is authenticated
+  useEffect(() => {
+    if (user && sessionReady) {
+      console.log('[AuthContext] Initializing FCM for user:', user.uid);
+
+      // Request notification permission and save FCM token
+      requestNotificationPermission().then((token) => {
+        if (token) {
+          saveFCMToken(user.uid, token);
+          console.log('[AuthContext] FCM token saved');
+        }
+      }).catch((error) => {
+        console.error('[AuthContext] Error initializing FCM:', error);
+      });
+
+      // Setup foreground message listener
+      setupFCMListener((payload) => {
+        console.log('[AuthContext] FCM message received:', payload);
+        // You can add custom handling here (e.g., show toast notification)
+      });
+    }
+  }, [user, sessionReady]);
 
   const loadUserProfile = async (userId: string, retryCount: number = 0) => {
     try {
@@ -273,8 +334,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // For regular permission-denied, retry with token refresh
-        if (retryCount < 2) {
-          console.log('[AuthContext] Retrying with fresh token (attempt', retryCount + 1, ')...');
+        if (retryCount < 4) {
+          console.log('[AuthContext] Retrying with fresh token (attempt', retryCount + 1, 'of 4)...');
 
           try {
             const auth = getAuthInstance();
@@ -284,8 +345,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await currentUser.getIdToken(true); // Force refresh
               console.log('[AuthContext] Token refreshed, waiting for propagation...');
 
-              // Exponential backoff: 2s, 4s
-              const waitTime = Math.pow(2, retryCount + 1) * 1000;
+              // Exponential backoff: 2s, 3s, 4s, 5s
+              const waitTime = (retryCount + 2) * 1000;
               await new Promise(r => setTimeout(r, waitTime));
 
               // Retry loading profile
@@ -556,7 +617,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Wait longer to ensure token is fully propagated before Firestore queries
       console.log('[AuthContext] Waiting for token propagation to Firestore...');
-      await new Promise(resolve => setTimeout(resolve, 2500)); // Increased from 1000ms to 2500ms
+      await new Promise(resolve => setTimeout(resolve, 4000)); // Increased from 2500ms to 4000ms for production Firestore
 
       // Mark session as ready - this allows login page to redirect
       setSessionReady(true);

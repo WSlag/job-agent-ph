@@ -38,6 +38,18 @@ export interface JobHunter extends User {
   profileCompleteness?: number;
   certificates?: string[];
   idDocumentUrl?: string;
+
+  // Job Preferences for intelligent matching
+  preferredCountries?: string[]; // Array of country codes/names
+  preferredCategories?: string[]; // Array of job categories
+  preferredJobTypes?: JobType[]; // 'full-time' | 'part-time' | 'contract'
+  preferredLocationType?: JobLocation[]; // 'remote' | 'hybrid' | 'on-site'
+  salaryExpectation?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  jobMatchNotifications?: boolean; // Enable/disable job match notifications (default: true)
 }
 
 export interface Agency extends User {
