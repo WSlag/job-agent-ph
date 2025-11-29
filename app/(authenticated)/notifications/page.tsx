@@ -81,57 +81,19 @@ export default function NotificationsPage() {
     return () => unsubscribe();
   }, [user, router]);
 
-  // Load unread conversations for message notifications fallback
+  // Disabled: Load unread conversations for message notifications fallback
+  // This was causing duplicate notifications because admin messages already create
+  // proper notifications via Cloud Functions. Keeping this code would show both:
+  // 1. The real notification from Cloud Function
+  // 2. A pseudo-notification generated from the conversation
   useEffect(() => {
     if (!user || !userType) return;
 
-    const db = getDbInstance();
-    const conversationsRef = collection(db, 'conversations');
+    // Set empty array to prevent duplicates - all messages now use proper notifications
+    setUnreadConversations([]);
 
-    // Query conversations based on user type
-    const conversationsQuery = userType === 'agency'
-      ? query(conversationsRef, where('agencyId', '==', user.uid))
-      : query(conversationsRef, where('jobHunterId', '==', user.uid));
-
-    const unsubscribe = onSnapshot(conversationsQuery, async (snapshot) => {
-      const unreadConvs: UnreadConversation[] = [];
-
-      for (const docSnap of snapshot.docs) {
-        const data = docSnap.data();
-        const userUnreadKey = `unreadCount_${user.uid}`;
-        const userUnreadCount = data[userUnreadKey] || 0;
-
-        if (userUnreadCount > 0) {
-          // Get the other user's info
-          const otherUserId = userType === 'agency' ? data.jobHunterId : data.agencyId;
-          const otherUserType = userType === 'agency' ? 'jobHunters' : 'agencies';
-
-          try {
-            // Fetch other user's data
-            const userDocRef = doc(db, otherUserType, otherUserId);
-            const userSnapshot = await getDoc(userDocRef);
-            const userData = userSnapshot.data();
-
-            unreadConvs.push({
-              id: docSnap.id,
-              otherUserName: userData?.name || userData?.companyName || 'Unknown User',
-              otherUserAvatar: userData?.profilePicture || userData?.logo,
-              lastMessage: data.lastMessage?.content || '',
-              unreadCount: userUnreadCount,
-              updatedAt: data.updatedAt?.toDate() || new Date(),
-            });
-          } catch (error) {
-            console.error('Error fetching user data:', error);
-          }
-        }
-      }
-
-      // Sort by most recent first
-      unreadConvs.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-      setUnreadConversations(unreadConvs);
-    });
-
-    return () => unsubscribe();
+    // No-op cleanup
+    return () => {};
   }, [user, userType]);
 
   const handleMarkAllRead = async () => {

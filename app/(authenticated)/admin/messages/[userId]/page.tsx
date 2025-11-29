@@ -204,7 +204,7 @@ export default function AdminConversationPage() {
   };
 
   const handleSend = async () => {
-    if (!user || !userId || !userInfo || !message.trim()) return;
+    if (!user || !userId || !userInfo || !message.trim() || sending) return;
 
     const messageContent = message.trim();
     setMessage('');

@@ -126,7 +126,7 @@ export default function ComposeMessagePage() {
   };
 
   const handleSend = async () => {
-    if (!user || userType !== 'admin') return;
+    if (!user || userType !== 'admin' || sending) return;
 
     // Validation
     if (selectedRecipients.length === 0) {
