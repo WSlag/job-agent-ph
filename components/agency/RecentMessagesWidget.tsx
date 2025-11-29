@@ -46,9 +46,12 @@ export default function RecentMessagesWidget() {
       const conversationPromises = snapshot.docs.map(async (conversationDoc) => {
         const data = conversationDoc.data();
 
-        // Fetch job hunter details
-        const jobHunterDoc = await getDoc(doc(db, 'jobHunters', data.jobHunterId));
-        const jobHunterData = jobHunterDoc.data();
+        // Fetch job hunter details (only if jobHunterId exists)
+        let jobHunterData = null;
+        if (data.jobHunterId) {
+          const jobHunterDoc = await getDoc(doc(db, 'jobHunters', data.jobHunterId));
+          jobHunterData = jobHunterDoc.data();
+        }
 
         // Fetch job details (only if jobId exists)
         let jobData = null;
