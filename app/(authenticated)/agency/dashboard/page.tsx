@@ -6,13 +6,15 @@ import dynamic from 'next/dynamic'
 import { useAuth } from '@/contexts/AuthContext'
 import { getAgencyJobs } from '@/lib/job-helpers'
 import { getAgencyApplications } from '@/lib/application-helpers'
-import { Job, JobApplication } from '@/types'
+import { getAgencySubscription } from '@/lib/subscription-helpers'
+import { Job, JobApplication, Subscription } from '@/types'
 import JobCard from '@/components/jobs/JobCard'
 import { Loader2, Briefcase, Users, Clock, CheckCircle, UserCircle, Edit, Star, Home as HomeIcon, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { Agency } from '@/types'
 import FeaturedRequestModal from '@/components/modals/FeaturedRequestModal'
 import AgencyDashboardHeader from '@/components/layout/AgencyDashboardHeader'
+import SubscriptionStatusCard from '@/components/subscription/SubscriptionStatusCard'
 
 // Lazy load RecentMessagesWidget to improve initial load performance
 const RecentMessagesWidget = dynamic(
@@ -44,6 +46,7 @@ export default function AgencyDashboardPage() {
   const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [showFeaturedModal, setShowFeaturedModal] = useState(false)
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
 
   useEffect(() => {
     // Check authentication
@@ -62,10 +65,11 @@ export default function AgencyDashboardPage() {
     if (!user) return
 
     try {
-      // Load jobs and applications in parallel
-      const [jobsData, applicationsData] = await Promise.all([
+      // Load jobs, applications, and subscription in parallel
+      const [jobsData, applicationsData, subscriptionData] = await Promise.all([
         getAgencyJobs(user.uid),
         getAgencyApplications(user.uid),
+        getAgencySubscription(user.uid),
       ])
 
       // Pre-calculate applicant counts for all jobs (batch operation)
@@ -78,6 +82,7 @@ export default function AgencyDashboardPage() {
       setJobs(jobsData)
       setApplications(applicationsData)
       setApplicantCounts(counts)
+      setSubscription(subscriptionData)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -184,6 +189,11 @@ export default function AgencyDashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Subscription Status Card */}
+        <div className="mb-8">
+          <SubscriptionStatusCard subscription={subscription} loading={loading} />
+        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

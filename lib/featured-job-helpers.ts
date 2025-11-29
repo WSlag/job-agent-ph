@@ -20,6 +20,7 @@ import {
   Agency,
   PaymentMethod,
 } from '@/types'
+import { hasPremiumSubscription } from './subscription-helpers'
 
 interface CreateFeaturedRequestParams {
   jobId: string
@@ -51,6 +52,15 @@ export async function createFeaturedRequest(
 
   try {
     const db = getDbInstance();
+
+    // PREMIUM CHECK: Verify agency has active premium subscription
+    const isPremium = await hasPremiumSubscription(agencyId);
+    if (!isPremium) {
+      throw new Error(
+        'Featured job placement requires an active Premium subscription. Please upgrade to Premium first.'
+      );
+    }
+
     // Check if job exists and belongs to agency
     const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId))
     if (!jobDoc.exists()) {

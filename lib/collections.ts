@@ -33,6 +33,9 @@ export const COLLECTIONS = {
   CONTACTS: 'contacts', // Contact form submissions
   ADMIN_CONVERSATIONS: 'adminConversations', // Admin-user conversations
   ADMIN_MESSAGES: 'adminMessages', // Bulk admin messages
+  SUBSCRIPTIONS: 'subscriptions', // Agency subscriptions
+  SUBSCRIPTION_PAYMENTS: 'subscriptionPayments', // Subscription payment records
+  JOB_POSTING_LIMITS: 'jobPostingLimits', // System configuration for limits and pricing
 } as const;
 
 // Helper to get collection paths
@@ -58,6 +61,9 @@ export const getCollectionPath = {
   contacts: () => COLLECTIONS.CONTACTS,
   adminConversations: () => COLLECTIONS.ADMIN_CONVERSATIONS,
   adminMessages: () => COLLECTIONS.ADMIN_MESSAGES,
+  subscriptions: () => COLLECTIONS.SUBSCRIPTIONS,
+  subscriptionPayments: () => COLLECTIONS.SUBSCRIPTION_PAYMENTS,
+  jobPostingLimits: () => COLLECTIONS.JOB_POSTING_LIMITS,
 };
 
 // Firestore indexes needed (create in Firebase Console)
@@ -137,6 +143,50 @@ export const REQUIRED_INDEXES = [
     fields: [
       { field: 'action', order: 'ASCENDING' },
       { field: 'timestamp', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'subscriptions',
+    fields: [
+      { field: 'agencyId', order: 'ASCENDING' },
+      { field: 'status', order: 'ASCENDING' },
+      { field: 'endDate', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'subscriptions',
+    fields: [
+      { field: 'status', order: 'ASCENDING' },
+      { field: 'endDate', order: 'ASCENDING' },
+    ],
+  },
+  {
+    collection: 'subscriptionPayments',
+    fields: [
+      { field: 'agencyId', order: 'ASCENDING' },
+      { field: 'status', order: 'ASCENDING' },
+      { field: 'createdAt', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'subscriptionPayments',
+    fields: [
+      { field: 'subscriptionId', order: 'ASCENDING' },
+      { field: 'createdAt', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'subscriptionPayments',
+    fields: [
+      { field: 'status', order: 'ASCENDING' },
+      { field: 'createdAt', order: 'DESCENDING' },
+    ],
+  },
+  {
+    collection: 'jobs',
+    fields: [
+      { field: 'agencyId', order: 'ASCENDING' },
+      { field: 'createdAt', order: 'DESCENDING' },
     ],
   },
 ];

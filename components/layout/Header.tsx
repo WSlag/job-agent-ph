@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useOptionalAuth } from '@/contexts/AuthContext';
-import { User, LogOut, Menu, X, MessageCircle, Briefcase, FileText } from 'lucide-react';
+import { User, LogOut, Menu, X, MessageCircle, Briefcase, FileText, CreditCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Logo from '@/components/ui/Logo';
 import { subscribeToConversations } from '@/lib/messaging-helpers';
@@ -101,6 +101,10 @@ export default function Header() {
                     </Link>
                     <Link href="/agency/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105">
                       Dashboard
+                    </Link>
+                    <Link href="/agency/subscription" className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2">
+                      <CreditCard size={18} />
+                      Billing
                     </Link>
                   </>
                 )}
@@ -205,6 +209,14 @@ export default function Header() {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         Dashboard
+                      </Link>
+                      <Link
+                        href="/agency/subscription"
+                        className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1 flex items-center gap-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <CreditCard size={18} />
+                        Billing
                       </Link>
                     </>
                   )}

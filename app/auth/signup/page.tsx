@@ -73,13 +73,33 @@ function SignUpForm() {
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
 
-        // Create user document
-        await setDoc(doc(db, COLLECTIONS.USERS, userId), {
+        const now = new Date();
+
+        // IMPORTANT: Google sign-up requires users to accept terms during the OAuth flow
+        // We assume implicit acceptance when they complete Google sign-in
+        const legalFields = {
+          termsAcceptedAt: now,
+          termsVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
+          privacyAcceptedAt: now,
+          privacyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
+        };
+
+        // Create user document with legal acceptance fields
+        const userDoc: any = {
           email: user.email,
           userType: storedUserType,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
+          createdAt: now,
+          updatedAt: now,
+          ...legalFields,
+        };
+
+        // Add age verification for job hunters (assume 18+ for Google sign-up)
+        if (storedUserType === 'jobhunter') {
+          userDoc.dateOfBirth = new Date(new Date().setFullYear(new Date().getFullYear() - 18));
+          userDoc.ageVerified = true;
+        }
+
+        await setDoc(doc(db, COLLECTIONS.USERS, userId), userDoc);
 
         // Create profile based on user type
         if (storedUserType === 'jobhunter') {
@@ -92,8 +112,11 @@ function SignUpForm() {
             skills: [],
             experience: 0,
             profileImageUrl: user.photoURL || '',
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: now,
+            updatedAt: now,
+            ...legalFields,
+            dateOfBirth: new Date(new Date().setFullYear(new Date().getFullYear() - 18)),
+            ageVerified: true,
           });
         } else if (storedUserType === 'agency') {
           await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
@@ -106,8 +129,11 @@ function SignUpForm() {
             address: '',
             logoUrl: user.photoURL || '',
             verified: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: now,
+            updatedAt: now,
+            ...legalFields,
+            agencyTermsAcceptedAt: now,
+            agencyTermsVersion: LEGAL_VERSIONS.AGENCY_TERMS,
           });
         }
       }

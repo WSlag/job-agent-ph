@@ -60,6 +60,15 @@ export interface Agency extends User {
   agencyTermsAcceptedAt?: Date; // When agency accepted Agency Terms
   agencyTermsVersion?: string; // Version of agency terms accepted
   agencyTermsAcceptedIP?: string; // IP address when terms were accepted
+  // Subscription fields
+  subscriptionId?: string;
+  subscriptionPlan?: 'free' | 'premium';
+  subscriptionStatus?: 'active' | 'expired' | 'cancelled' | 'suspended';
+  subscriptionExpiry?: Date;
+  lifetimeJobsPosted?: number;
+  // Pricing explainer tracking
+  pricingExplainerSeen?: boolean;
+  pricingExplainerSeenAt?: Date;
 }
 
 export interface Admin extends User {
@@ -407,4 +416,66 @@ export interface AdminMessageThread {
   timestamp: Date;
   read: boolean;
   readAt?: Date;
+}
+
+// Subscription Types
+export type SubscriptionPlan = 'free' | 'premium';
+export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'suspended';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
+export interface Subscription {
+  id: string;
+  agencyId: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  startDate: Date;
+  endDate: Date;
+  autoRenew: boolean;
+  lifetimeJobsPosted: number;
+  currentPeriodJobsPosted: number;
+  lastPaymentDate?: Date;
+  lastPaymentAmount?: number;
+  lastPaymentReference?: string;
+  lastPaymentMethod?: PaymentMethod;
+  currency: string;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: string;
+  notes?: string;
+}
+
+export interface SubscriptionPayment {
+  id: string;
+  subscriptionId: string;
+  agencyId: string;
+  amount: number;
+  currency: string;
+  paymentMethod: PaymentMethod;
+  paymentReference: string;
+  status: PaymentStatus;
+  periodStart: Date;
+  periodEnd: Date;
+  proofImageUrl?: string;
+  processedAt?: Date;
+  processedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  notes?: string;
+  rejectionReason?: string;
+}
+
+export interface SubscriptionPaymentWithDetails extends SubscriptionPayment {
+  agency?: Agency;
+  subscription?: Subscription;
+}
+
+export interface JobPostingLimits {
+  id: string;
+  freeTierLimit: number;
+  premiumTierLimit: number;
+  premiumMonthlyPrice: number;
+  premiumCurrency: string;
+  featuredJobBasePrice: number;
+  updatedAt: Date;
+  updatedBy?: string;
 }

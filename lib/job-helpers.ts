@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { createDocument } from './firestore-helpers'
 import type { Job, JobType, JobLocation } from '@/types'
 import { isValidCategory } from './categories'
+import { canPostJob, incrementJobCount, createFreeSubscription } from './subscription-helpers'
 
 interface CreateJobParams {
   agencyId: string
@@ -50,6 +51,13 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     imageFile,
     expiresAt,
   } = params
+
+  // Check subscription limits before allowing job creation
+  const subscriptionCheck = await canPostJob(agencyId)
+
+  if (!subscriptionCheck.allowed) {
+    throw new Error(subscriptionCheck.reason || 'Unable to post job. Please check your subscription.')
+  }
 
   // Validate agency profile is complete before allowing job creation
   const db = getDbInstance()
@@ -135,6 +143,16 @@ export async function createJob(params: CreateJobParams): Promise<string> {
   try {
     // Create job document in Firestore
     const jobId = await createDocument('jobs', undefined, jobData)
+
+    // Increment job count in subscription after successful creation
+    try {
+      await incrementJobCount(agencyId)
+    } catch (subscriptionError) {
+      console.error('Error updating subscription job count:', subscriptionError)
+      // Don't fail job creation if subscription update fails
+      // The subscription count might be slightly off but job is still created
+    }
+
     return jobId
   } catch (error) {
     console.error('Error creating job:', error)

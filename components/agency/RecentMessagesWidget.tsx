@@ -50,9 +50,12 @@ export default function RecentMessagesWidget() {
         const jobHunterDoc = await getDoc(doc(db, 'jobHunters', data.jobHunterId));
         const jobHunterData = jobHunterDoc.data();
 
-        // Fetch job details
-        const jobDoc = await getDoc(doc(db, 'jobs', data.jobId));
-        const jobData = jobDoc.data();
+        // Fetch job details (only if jobId exists)
+        let jobData = null;
+        if (data.jobId) {
+          const jobDoc = await getDoc(doc(db, 'jobs', data.jobId));
+          jobData = jobDoc.data();
+        }
 
         return {
           id: conversationDoc.id,

@@ -41,6 +41,29 @@ service cloud.firestore {
               permission in getAdmin().permissions);
     }
 
+    // Subscription helper functions
+    function getAgencySubscription(agencyId) {
+      return get(/databases/$(database)/documents/subscriptions/$(agencyId)).data;
+    }
+
+    function hasActiveSubscription(agencyId) {
+      return exists(/databases/$(database)/documents/subscriptions/$(agencyId)) &&
+             getAgencySubscription(agencyId).status == 'active' &&
+             getAgencySubscription(agencyId).endDate.toMillis() > request.time.toMillis();
+    }
+
+    function isPremiumAgency(agencyId) {
+      return hasActiveSubscription(agencyId) &&
+             getAgencySubscription(agencyId).plan == 'premium';
+    }
+
+    function canPostJob(agencyId) {
+      return !exists(/databases/$(database)/documents/subscriptions/$(agencyId)) ||
+             (getAgencySubscription(agencyId).plan == 'free' &&
+              getAgencySubscription(agencyId).lifetimeJobsPosted < 2) ||
+             isPremiumAgency(agencyId);
+    }
+
     // Validate data size limits
     function validateStringLength(field, minLen, maxLen) {
       return field is string && field.size() >= minLen && field.size() <= maxLen;
@@ -166,6 +189,8 @@ service cloud.firestore {
       allow create: if isAgency() &&
                       // Critical security checks
                       request.resource.data.agencyId == request.auth.uid &&
+                      // Subscription check - enforce job posting limits
+                      canPostJob(request.auth.uid) &&
                       // Agency profile must be complete with certifications
                       get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseUrl != null &&
                       get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitUrl != null &&
@@ -337,8 +362,10 @@ service cloud.firestore {
       // Agencies can read their own requests
       allow read: if isAuthenticated();
 
-      // Only verified agencies can create featured requests
+      // Only verified agencies with premium subscription can create featured requests
       allow create: if isVerifiedAgency() &&
+                      // Must have active premium subscription for featured jobs
+                      isPremiumAgency(request.auth.uid) &&
                       request.resource.data.keys().hasAll([
                         'jobId', 'agencyId', 'status',
                         'paymentMethod', 'paymentReference',
@@ -541,6 +568,55 @@ service cloud.firestore {
         // Messages cannot be deleted
         allow delete: if false;
       }
+    }
+
+    // Subscriptions collection
+    match /subscriptions/{subscriptionId} {
+      // Agencies can read their own subscription, admins can read all
+      allow read: if isAuthenticated() &&
+                     (subscriptionId == request.auth.uid || isAdmin());
+
+      // Only admins can create/update subscriptions
+      allow create, update: if isAdmin() &&
+                              request.resource.data.keys().hasAll([
+                                'agencyId', 'plan', 'status'
+                              ]) &&
+                              request.resource.data.plan in ['free', 'premium'] &&
+                              request.resource.data.status in ['active', 'expired', 'cancelled', 'suspended'];
+
+      // Only admins can delete subscriptions
+      allow delete: if isAdmin();
+    }
+
+    // Subscription Payments collection
+    match /subscriptionPayments/{paymentId} {
+      // Agencies can read their own payments, admins can read all
+      allow read: if isAuthenticated() &&
+                     (resource.data.agencyId == request.auth.uid || isAdmin());
+
+      // Agencies can create payment submissions, admins can update/process them
+      allow create: if isAgency() &&
+                       request.resource.data.agencyId == request.auth.uid &&
+                       request.resource.data.status == 'pending' &&
+                       request.resource.data.keys().hasAll([
+                         'subscriptionId', 'agencyId', 'amount', 'currency',
+                         'paymentMethod', 'paymentReference', 'status',
+                         'periodStart', 'periodEnd', 'createdAt', 'updatedAt'
+                       ]);
+
+      allow update: if isAdmin();
+
+      // Never delete payment records
+      allow delete: if false;
+    }
+
+    // Job Posting Limits configuration
+    match /jobPostingLimits/{configId} {
+      // Anyone can read the limits
+      allow read: if true;
+
+      // Only super admins can update limits
+      allow write: if isAdmin() && getAdmin().role == 'super_admin';
     }
 
     // Deny all other access

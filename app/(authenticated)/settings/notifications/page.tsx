@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDbInstance } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Mail, MessageCircle, Briefcase, Calendar, Shield } from 'lucide-react';
 
@@ -36,6 +36,7 @@ export default function NotificationSettingsPage() {
 
     const loadPreferences = async () => {
       try {
+        const db = getDbInstance();
         const prefsDoc = await getDoc(doc(db, 'notificationPreferences', user.uid));
 
         if (prefsDoc.exists()) {
@@ -58,6 +59,7 @@ export default function NotificationSettingsPage() {
     setSaveMessage('');
 
     try {
+      const db = getDbInstance();
       await setDoc(doc(db, 'notificationPreferences', user.uid), preferences);
       setSaveMessage('Preferences saved successfully!');
       setTimeout(() => setSaveMessage(''), 3000);

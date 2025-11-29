@@ -12,8 +12,9 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getAuthInstance, getDbInstance } from '@/lib/firebase';
-import { User, UserType, JobHunter, Agency, Admin } from '@/types';
+import { User, UserType, JobHunter, Agency, Admin, Subscription } from '@/types';
 import { COLLECTIONS } from '@/lib/collections';
+import { getAgencySubscription } from '@/lib/subscription-helpers';
 
 // Type-safe profile data for signup
 type JobHunterProfileData = Omit<JobHunter, 'id' | 'email' | 'userType' | 'createdAt' | 'updatedAt'>;
@@ -26,6 +27,7 @@ interface AuthContextType {
   user: FirebaseUser | null;
   userProfile: JobHunter | Agency | Admin | null;
   userType: UserType | null;
+  subscription: Subscription | null;
   loading: boolean;
   sessionReady: boolean;
   signUp: (
@@ -45,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<JobHunter | Agency | Admin | null>(null);
   const [userType, setUserType] = useState<UserType | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionReady, setSessionReady] = useState(false);
 
@@ -109,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else {
             setUserProfile(null);
             setUserType(null);
+            setSubscription(null);
             setSessionReady(false);
           }
 
@@ -184,6 +188,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           setUserProfile(agencyData);
           setUserType('agency');
+
+          // Load subscription data for agencies
+          try {
+            const subscriptionData = await getAgencySubscription(userId);
+            setSubscription(subscriptionData);
+            console.log('[AuthContext] Subscription loaded for agency');
+          } catch (error: any) {
+            console.warn('[AuthContext] Error loading subscription:', error);
+            setSubscription(null);
+          }
+
           return;
         }
       } catch (error: any) {
@@ -323,13 +338,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userId = userCredential.user.uid;
       console.log('[AuthContext] Firebase Auth user created successfully. User ID:', userId);
 
-      // Create user profile in Firestore
-      const userDoc = {
+      // Create user profile in Firestore with legal acceptance fields
+      const userDoc: any = {
         email,
         userType,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+
+      // Add legal acceptance fields from profileData
+      if (profileData && 'termsAcceptedAt' in profileData) {
+        userDoc.termsAcceptedAt = profileData.termsAcceptedAt;
+        userDoc.termsVersion = profileData.termsVersion;
+        userDoc.privacyAcceptedAt = profileData.privacyAcceptedAt;
+        userDoc.privacyVersion = profileData.privacyVersion;
+      }
+
+      // Add age verification for job hunters
+      if (userType === 'jobhunter' && profileData && 'dateOfBirth' in profileData) {
+        userDoc.dateOfBirth = profileData.dateOfBirth;
+        userDoc.ageVerified = profileData.ageVerified;
+      }
 
       console.log('[AuthContext] Creating base user document in users collection...');
       await setDoc(doc(db, COLLECTIONS.USERS, userId), userDoc);
@@ -604,6 +633,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     userProfile,
     userType,
+    subscription,
     loading,
     sessionReady,
     signUp,
@@ -630,10 +660,12 @@ export function useOptionalAuth() {
     user: null,
     userProfile: null,
     userType: null,
+    subscription: null,
     loading: false,
+    sessionReady: false,
     signUp: async () => {},
     signIn: async () => {},
     signOut: async () => {},
-    updateUserProfile: async () => {},
+    refreshProfile: async () => {},
   };
 }
