@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function UserRepairPage() {
-  const { admin, user, loading: authLoading } = useAuth();
+  const { user, userProfile, userType, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('exultantcreationsinc2018@gmail.com');
   const [diagnosticResult, setDiagnosticResult] = useState<any>(null);
   const [repairResult, setRepairResult] = useState<any>(null);
@@ -97,12 +97,12 @@ export default function UserRepairPage() {
   }
 
   // Check if user is an admin
-  if (!admin && user.userType !== 'admin') {
+  if (userType !== 'admin') {
     return (
       <div className="p-8">
         <div className="max-w-4xl mx-auto">
           <p className="text-red-600">You must be logged in as an admin to access this page.</p>
-          <p className="text-sm text-gray-600 mt-2">Current user type: {user.userType}</p>
+          <p className="text-sm text-gray-600 mt-2">Current user type: {userType || 'unknown'}</p>
         </div>
       </div>
     );
