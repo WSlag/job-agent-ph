@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types';
-import { Loader2, Briefcase, Building2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirect';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
 import { getRedirectResult } from 'firebase/auth';
@@ -440,50 +440,41 @@ function SignUpForm() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Join Job Agent PH
+            Job Agent PH
           </h1>
           <p className="text-gray-600">
-            Start your journey to finding jobs abroad
+            {userType === 'jobhunter'
+              ? 'Start your journey to finding jobs abroad now!'
+              : 'Start your journey to finding applicants now!'}
           </p>
         </div>
 
-        {/* User Type Selection */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <button
-            type="button"
-            onClick={() => setUserType('jobhunter')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              userType === 'jobhunter'
-                ? 'border-blue-600 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <Briefcase
-              className={`mx-auto mb-2 ${
-                userType === 'jobhunter' ? 'text-blue-600' : 'text-gray-400'
+        {/* Role Toggle */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex bg-gray-100 rounded-full p-1.5">
+            <button
+              type="button"
+              onClick={() => setUserType('jobhunter')}
+              className={`px-8 py-3 rounded-full text-base font-medium transition-all ${
+                userType === 'jobhunter'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
-              size={32}
-            />
-            <p className="font-semibold text-sm">Job Hunter</p>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setUserType('agency')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              userType === 'agency'
-                ? 'border-blue-600 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <Building2
-              className={`mx-auto mb-2 ${
-                userType === 'agency' ? 'text-blue-600' : 'text-gray-400'
+            >
+              Job Hunter
+            </button>
+            <button
+              type="button"
+              onClick={() => setUserType('agency')}
+              className={`px-8 py-3 rounded-full text-base font-medium transition-all ${
+                userType === 'agency'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
-              size={32}
-            />
-            <p className="font-semibold text-sm">Agency</p>
-          </button>
+            >
+              Agency
+            </button>
+          </div>
         </div>
 
         {/* Sign Up Form */}

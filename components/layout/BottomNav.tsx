@@ -131,7 +131,7 @@ export default function BottomNav() {
 
   return (
     <nav className={navClassName} aria-label="Primary navigation">
-      <div className="flex items-center justify-around h-14 md:h-16 max-w-screen-xl mx-auto px-2 md:px-4 md:justify-between md:gap-4">
+      <div className="flex items-center justify-around h-[50px] md:h-16 max-w-screen-xl mx-auto px-2 md:px-4 md:justify-between md:gap-4">
         {/* Logo - Only show on desktop for agency users */}
         {userType === 'agency' && (
           <div className="hidden md:block flex-shrink-0">
