@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronRight, ChevronLeft, Check, Briefcase, Search, FileText, MessageCircle, Sparkles, Target } from 'lucide-react'
+import { X, ChevronRight, ChevronLeft, Check, BriefcaseBusiness, Search, FileText, Mail, Sparkles, Target } from 'lucide-react'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { useState, useEffect } from 'react'
 
@@ -36,7 +36,7 @@ const STEPS = [
           </div>
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
-              <MessageCircle className="w-4 h-4 text-purple-600" />
+              <Mail className="w-4 h-4 text-purple-600" />
             </div>
             <div>
               <h4 className="font-semibold text-gray-900">Connect Directly</h4>
@@ -50,7 +50,7 @@ const STEPS = [
   {
     id: 'profile-setup',
     title: 'Complete Your Profile',
-    icon: Briefcase,
+    icon: BriefcaseBusiness,
     content: (
       <>
         <p className="text-gray-600 mb-4">
@@ -173,7 +173,7 @@ const STEPS = [
   {
     id: 'messaging-tracking',
     title: 'Connect & Track',
-    icon: MessageCircle,
+    icon: Mail,
     content: (
       <>
         <p className="text-gray-600 mb-4">
@@ -182,7 +182,7 @@ const STEPS = [
         <div className="space-y-4">
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
             <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-              <MessageCircle className="w-5 h-5" />
+              <Mail className="w-5 h-5" />
               Direct Messaging
             </h4>
             <ul className="space-y-2 text-sm text-gray-700">

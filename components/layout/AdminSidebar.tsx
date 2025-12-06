@@ -12,7 +12,7 @@ import {
   LogOut,
   Menu,
   X,
-  Briefcase,
+  BriefcaseBusiness,
   ScrollText,
   Mail,
   MessageSquare,
@@ -31,7 +31,7 @@ const navigation = [
   {
     name: 'Jobs',
     href: '/admin/jobs',
-    icon: Briefcase,
+    icon: BriefcaseBusiness,
   },
   {
     name: 'Agencies',

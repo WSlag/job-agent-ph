@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, ChevronDown, ChevronUp, Building2, FileText, Phone, Briefcase, CheckCircle2, Shield } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, Building2, FileText, Phone, BriefcaseBusiness, CheckCircle2, Shield } from 'lucide-react'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -62,7 +62,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
     id: 'firstJobPosted',
     title: 'Post Your First Job',
     description: 'Start attracting talented professionals today',
-    icon: Briefcase,
+    icon: BriefcaseBusiness,
     link: '/jobs/post',
     linkText: 'Post Job',
   },

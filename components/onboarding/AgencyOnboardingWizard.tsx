@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronRight, ChevronLeft, Check, Building2, Briefcase, Users, MessageCircle, Sparkles, Star, FileText, TrendingUp } from 'lucide-react'
+import { X, ChevronRight, ChevronLeft, Check, Building2, BriefcaseBusiness, Users, Mail, Sparkles, Star, FileText, TrendingUp } from 'lucide-react'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { useState, useEffect } from 'react'
 import type { AgencyOnboardingStep } from '@/contexts/OnboardingContext'
@@ -19,7 +19,7 @@ const STEPS = [
         <div className="space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-1">
-              <Briefcase className="w-4 h-4 text-blue-600" />
+              <BriefcaseBusiness className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <h4 className="font-semibold text-gray-900">Post Job Opportunities</h4>
@@ -37,7 +37,7 @@ const STEPS = [
           </div>
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-1">
-              <MessageCircle className="w-4 h-4 text-purple-600" />
+              <Mail className="w-4 h-4 text-purple-600" />
             </div>
             <div>
               <h4 className="font-semibold text-gray-900">Connect with Talent</h4>
@@ -89,7 +89,7 @@ const STEPS = [
   {
     id: 'post-job' as AgencyOnboardingStep,
     title: 'Post Your First Job',
-    icon: Briefcase,
+    icon: BriefcaseBusiness,
     content: (
       <>
         <p className="text-gray-600 mb-4">
@@ -186,7 +186,7 @@ const STEPS = [
   {
     id: 'messaging-engagement' as AgencyOnboardingStep,
     title: 'Engage with Candidates',
-    icon: MessageCircle,
+    icon: Mail,
     content: (
       <>
         <p className="text-gray-600 mb-4">
@@ -195,7 +195,7 @@ const STEPS = [
         <div className="space-y-4">
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
             <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-              <MessageCircle className="w-5 h-5" />
+              <Mail className="w-5 h-5" />
               Direct Messaging Features
             </h4>
             <ul className="space-y-2 text-sm text-gray-700">

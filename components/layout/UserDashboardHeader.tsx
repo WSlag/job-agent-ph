@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, ChevronDown, User, Briefcase, BookOpen, MessageCircle, LayoutDashboard } from 'lucide-react';
+import { Bell, ChevronDown, User, BriefcaseBusiness, BookOpen, Mail, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
@@ -33,9 +33,9 @@ export default function UserDashboardHeader({
   const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/profile', icon: User, label: 'Profile' },
-    { href: '/profile/applications', icon: Briefcase, label: 'Applications', badge: allCounts.applications },
+    { href: '/profile/applications', icon: BriefcaseBusiness, label: 'Applications', badge: allCounts.applications },
     { href: '/saved-jobs', icon: BookOpen, label: 'Saved Jobs', badge: allCounts.jobs },
-    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: allCounts.messages },
+    { href: '/messages', icon: Mail, label: 'Messages', badge: allCounts.messages },
   ];
 
   const isActive = (href: string) => {

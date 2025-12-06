@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Briefcase, MessageCircle, BookOpen, User, Grid, Search, Bell, LayoutDashboard } from 'lucide-react'
+import { Home, BriefcaseBusiness, Mail, BookOpen, User, Grid, Search, Bell, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useOptionalAuth } from '@/contexts/AuthContext'
@@ -52,8 +52,8 @@ export default function BottomNav() {
   // Different nav items based on user type
   const jobHunterNavItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/jobs', icon: Briefcase, label: 'Jobs', badge: allCounts?.jobs },
-    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: allCounts?.messages },
+    { href: '/jobs', icon: BriefcaseBusiness, label: 'Jobs', badge: allCounts?.jobs },
+    { href: '/messages', icon: Mail, label: 'Messages', badge: allCounts?.messages },
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
@@ -61,15 +61,15 @@ export default function BottomNav() {
   const agencyNavItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/agency/dashboard', icon: Grid, label: 'Dashboard', badge: allCounts?.applications },
-    { href: '/jobs/post', icon: Briefcase, label: 'Post Job' },
-    { href: '/messages', icon: MessageCircle, label: 'Messages', badge: allCounts?.messages },
+    { href: '/jobs/post', icon: BriefcaseBusiness, label: 'Post Job' },
+    { href: '/messages', icon: Mail, label: 'Messages', badge: allCounts?.messages },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
 
   const guestNavItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/jobs', icon: Briefcase, label: 'Jobs' },
-    { href: '/messages', icon: MessageCircle, label: 'Messages' },
+    { href: '/jobs', icon: BriefcaseBusiness, label: 'Jobs' },
+    { href: '/messages', icon: Mail, label: 'Messages' },
     { href: '/saved-jobs', icon: BookOpen, label: 'Saved' },
     { href: '/profile', icon: User, label: 'Profile' },
   ]
