@@ -6,5 +6,6 @@
 # - Fixed Permission enum usage in diagnose-user API route
 # - Fixed Permission enum usage in repair-user API route
 # - Updated Next.js to 15.5.7 for CVE-2025-55182 security fix
+# - Fixed Next.js version mismatch (15.5.6 -> 15.5.7) in node_modules
 
-Build should succeed with all TypeScript errors resolved.
+Build should succeed with all TypeScript errors resolved and correct Next.js version.
