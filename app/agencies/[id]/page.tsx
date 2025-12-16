@@ -349,8 +349,8 @@ export default function AgencyProfilePage() {
                   {agency.phone}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Mail size={16} className="text-primary-600" />
-                  {agency.email}
+                  <Mail size={16} className="text-primary-600 flex-shrink-0" />
+                  <span className="inline-flex items-center">{agency.email}</span>
                 </div>
                 {agency.website && (
                   <div className="flex items-center gap-2">

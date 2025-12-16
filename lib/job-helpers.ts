@@ -70,8 +70,16 @@ export async function createJob(params: CreateJobParams): Promise<string> {
 
   const agencyData = agencySnap.data()
 
-  // Check for required certifications
-  if (!agencyData.dmwLicenseUrl || !agencyData.businessPermitUrl) {
+  // Check for required certifications (support both new multi-file and legacy single URL)
+  const hasDmwLicense =
+    (agencyData.dmwLicenseFiles && agencyData.dmwLicenseFiles.length > 0) ||
+    Boolean(agencyData.dmwLicenseUrl)
+
+  const hasBusinessPermit =
+    (agencyData.businessPermitFiles && agencyData.businessPermitFiles.length > 0) ||
+    Boolean(agencyData.businessPermitUrl)
+
+  if (!hasDmwLicense || !hasBusinessPermit) {
     throw new Error(
       'Agency profile incomplete. Please upload DMW License and Business Permit before posting jobs.'
     )

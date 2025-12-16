@@ -58,9 +58,13 @@ service cloud.firestore {
     }
 
     function canPostJob(agencyId) {
+      // If no subscription exists, allow posting (free tier will be created on first post)
       return !exists(/databases/$(database)/documents/subscriptions/$(agencyId)) ||
-             (getAgencySubscription(agencyId).plan == 'free' &&
+             // If subscription exists and is free tier, check if under limit
+             (exists(/databases/$(database)/documents/subscriptions/$(agencyId)) &&
+              getAgencySubscription(agencyId).plan == 'free' &&
               getAgencySubscription(agencyId).lifetimeJobsPosted < 2) ||
+             // If subscription exists and is premium, allow posting
              isPremiumAgency(agencyId);
     }
 

@@ -94,8 +94,12 @@ export default function PostJobPage() {
   if (profileIncomplete) {
     const agency = userProfile as Agency
     const missingCertifications = []
-    if (!agency.dmwLicenseUrl) missingCertifications.push('DMW License')
-    if (!agency.businessPermitUrl) missingCertifications.push('Business Permit')
+    // Check both new multi-file format and legacy single-file format
+    const hasDmwLicense = (agency.dmwLicenseFiles && agency.dmwLicenseFiles.length > 0) || Boolean(agency.dmwLicenseUrl)
+    const hasBusinessPermit = (agency.businessPermitFiles && agency.businessPermitFiles.length > 0) || Boolean(agency.businessPermitUrl)
+
+    if (!hasDmwLicense) missingCertifications.push('DMW License')
+    if (!hasBusinessPermit) missingCertifications.push('Business Permit')
 
     return (
       <>
