@@ -110,7 +110,7 @@ export default function AgencyProfilePage() {
           description: agencyData.description || agencyData.bio || 'No description available',
           rating: agencyData.rating || 0,
           reviewCount: agencyData.reviewCount || 0,
-          isDMWVerified: agencyData.isDMWVerified ?? false,
+          isDMWVerified: agencyData.verified ?? false,
           isPOEALicensed: agencyData.isPOEALicensed ?? false,
           responseTime: agencyData.responseTime || 'Not available',
           placementsCount: agencyData.placementsCount || 0,
