@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
+import AgencyFooter from './AgencyFooter';
 
 const Footer = dynamic(() => import('./Footer'), {
   ssr: false
@@ -38,8 +39,15 @@ export default function ClientFooter() {
     pathname?.startsWith('/admin/messages/compose') ||
     pathname?.startsWith('/admin/messages/bulk/');
 
+  // Check if current page is agency detail page
+  const isAgencyDetailPage = pathname?.match(/^\/agencies\/[^\/]+$/);
+
   if (hideFooter) {
     return null;
+  }
+
+  if (isAgencyDetailPage) {
+    return <AgencyFooter />;
   }
 
   return <Footer />;
