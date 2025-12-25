@@ -112,14 +112,6 @@ export default function AgencyInfoCard({ agencyId, jobId }: AgencyInfoCardProps)
             </div>
             <p className="text-xs text-gray-600">Response time</p>
           </div>
-
-          <div className="col-span-2 text-center p-3 bg-purple-50 rounded-lg">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <Users className="text-purple-600" size={18} />
-              <span className="font-bold text-gray-900">{stats?.totalPlacements ?? 'N/A'}</span>
-            </div>
-            <p className="text-xs text-gray-600">Successful placements</p>
-          </div>
         </div>
 
         {/* Action Buttons */}
