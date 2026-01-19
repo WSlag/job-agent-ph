@@ -62,10 +62,14 @@ export default function RecentMessagesWidget() {
 
         return {
           id: conversationDoc.id,
-          jobHunterName: jobHunterData
-            ? `${jobHunterData.firstName} ${jobHunterData.lastName}`
-            : 'Deleted User',
-          jobTitle: jobData?.title || 'Deleted Job',
+          jobHunterName: data.isSystemMessage
+            ? 'Job Agent PH'
+            : jobHunterData
+              ? `${jobHunterData.firstName} ${jobHunterData.lastName}`
+              : 'Deleted User',
+          jobTitle: data.isSystemMessage
+            ? 'System Message'
+            : (jobData?.title || 'Deleted Job'),
           lastMessage: data.lastMessage
             ? {
                 content: data.lastMessage.content,

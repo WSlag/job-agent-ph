@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { getFeaturedJobs, updateFeaturedPriority, removeFeaturedJob } from '@/lib/featured-job-helpers';
+import AddFeaturedJobModal from '@/components/admin/AddFeaturedJobModal';
 import { Job } from '@/types';
 import {
   Star,
@@ -14,6 +15,7 @@ import {
   DollarSign,
   Calendar,
   AlertCircle,
+  Plus,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -158,6 +160,7 @@ export default function FeaturedJobsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -270,34 +273,47 @@ export default function FeaturedJobsPage() {
               )}
             </div>
 
-            {hasChanges && (
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
-                <span className="text-xs md:text-sm text-orange-600 font-medium text-center sm:text-left">Unsaved changes</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleReset}
-                    disabled={saving}
-                    className="flex-1 sm:flex-none px-3 md:px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    onClick={handleSaveOrder}
-                    disabled={saving}
-                    className="flex-1 sm:flex-none bg-blue-600 text-white px-4 md:px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="animate-spin" size={16} />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Order'
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
+              {/* Add Job Button */}
+              {jobs.length < 5 && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus size={16} />
+                  Add Job
+                </button>
+              )}
+
+              {hasChanges && (
+                <>
+                  <span className="text-xs md:text-sm text-orange-600 font-medium text-center sm:text-left">Unsaved changes</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleReset}
+                      disabled={saving}
+                      className="flex-1 sm:flex-none px-3 md:px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={handleSaveOrder}
+                      disabled={saving}
+                      className="flex-1 sm:flex-none bg-blue-600 text-white px-4 md:px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="animate-spin" size={16} />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Order'
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -311,7 +327,7 @@ export default function FeaturedJobsPage() {
                   {5 - jobs.length} Featured Slot{5 - jobs.length !== 1 ? 's' : ''} Available
                 </p>
                 <p className="text-xs text-blue-700">
-                  Review pending requests from the Featured Requests page to fill these slots.
+                  Click "Add Job" to directly feature a job, or review pending requests from agencies.
                 </p>
               </div>
             </div>
@@ -329,14 +345,23 @@ export default function FeaturedJobsPage() {
             <Star className="text-gray-300 mx-auto mb-4" size={48} />
             <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">No Featured Jobs</h3>
             <p className="text-sm md:text-base text-gray-600 mb-6">
-              There are currently no jobs in the featured carousel. Approve requests from agencies to add featured jobs.
+              There are currently no jobs in the featured carousel.
             </p>
-            <a
-              href="/admin/featured-requests"
-              className="inline-block bg-blue-600 text-white px-5 md:px-6 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-semibold hover:bg-blue-700 transition-colors"
-            >
-              View Pending Requests
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2 bg-green-600 text-white px-5 md:px-6 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-semibold hover:bg-green-700 transition-colors"
+              >
+                <Plus size={18} />
+                Add Featured Job
+              </button>
+              <a
+                href="/admin/featured-requests"
+                className="inline-block bg-blue-600 text-white px-5 md:px-6 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-semibold hover:bg-blue-700 transition-colors"
+              >
+                View Pending Requests
+              </a>
+            </div>
           </div>
         ) : (
           <div className="space-y-3 md:space-y-4">
@@ -394,6 +419,14 @@ export default function FeaturedJobsPage() {
             </ul>
           </div>
         )}
+
+        {/* Add Featured Job Modal */}
+        <AddFeaturedJobModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onJobAdded={loadFeaturedJobs}
+          currentFeaturedCount={jobs.length}
+        />
       </div>
     </AdminLayout>
   );

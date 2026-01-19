@@ -364,3 +364,116 @@ export async function canRequestFeaturedJob(): Promise<{ canRequest: boolean; me
     }
   }
 }
+
+/**
+ * Get jobs available for featuring (active, not already featured)
+ * @param searchQuery Optional search query for filtering
+ * @returns Promise with array of available jobs
+ */
+export async function getAvailableJobsForFeaturing(
+  searchQuery?: string
+): Promise<Job[]> {
+  try {
+    const db = getDbInstance()
+    const jobsRef = collection(db, COLLECTIONS.JOBS)
+
+    // Query active jobs that are not featured
+    const q = query(
+      jobsRef,
+      where('isActive', '==', true),
+      where('isFeatured', '==', false),
+      orderBy('postedAt', 'desc'),
+      limit(50)
+    )
+
+    const querySnapshot = await getDocs(q)
+    let jobs = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      postedAt: doc.data().postedAt?.toDate?.() || doc.data().postedAt,
+      featuredAt: doc.data().featuredAt?.toDate?.() || doc.data().featuredAt,
+    })) as Job[]
+
+    // Filter by status (for jobs that have the new status field)
+    jobs = jobs.filter((job) => !job.status || job.status === 'active')
+
+    // Apply search filter client-side
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase()
+      jobs = jobs.filter(
+        (job) =>
+          job.title.toLowerCase().includes(searchLower) ||
+          job.companyName.toLowerCase().includes(searchLower)
+      )
+    }
+
+    return jobs
+  } catch (error) {
+    console.error('Error fetching available jobs for featuring:', error)
+    return []
+  }
+}
+
+/**
+ * Directly add a job to featured carousel (admin action)
+ * @param jobId The job ID to feature
+ * @param priority The carousel priority (1-5)
+ * @param adminId The admin ID performing the action
+ */
+export async function addFeaturedJob(
+  jobId: string,
+  priority: number,
+  adminId: string
+): Promise<void> {
+  if (priority < 1 || priority > 5) {
+    throw new Error('Priority must be between 1 and 5')
+  }
+
+  try {
+    const db = getDbInstance()
+
+    // Get the job and validate
+    const jobDoc = await getDoc(doc(db, COLLECTIONS.JOBS, jobId))
+    if (!jobDoc.exists()) {
+      throw new Error('Job not found')
+    }
+
+    const jobData = jobDoc.data() as Job
+
+    // Check if job is active
+    const isActive = jobData.status === 'active' || (jobData.isActive && !jobData.status)
+    if (!isActive) {
+      throw new Error('Only active jobs can be featured')
+    }
+
+    // Check if already featured
+    if (jobData.isFeatured) {
+      throw new Error('This job is already featured')
+    }
+
+    // Check current featured count
+    const featuredJobs = await getFeaturedJobs()
+    if (featuredJobs.length >= 5) {
+      throw new Error('Maximum 5 featured jobs allowed. Remove one first.')
+    }
+
+    // Check if priority slot is taken
+    const priorityTaken = featuredJobs.some((job) => job.featuredPriority === priority)
+    if (priorityTaken) {
+      throw new Error(
+        `Priority ${priority} is already taken. Choose a different priority or reorder existing jobs.`
+      )
+    }
+
+    // Update the job to mark as featured
+    await updateDoc(doc(db, COLLECTIONS.JOBS, jobId), {
+      isFeatured: true,
+      featuredPriority: priority,
+      featuredAt: new Date(),
+      featuredRequestId: null,
+    })
+  } catch (error) {
+    console.error('Error adding featured job:', error)
+    throw error
+  }
+}

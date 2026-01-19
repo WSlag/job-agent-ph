@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Agency } from '@/types'
 import { verifyAgency, revokeAgencyVerification } from '@/lib/agency-helpers'
 import { useAuth } from '@/contexts/AuthContext'
-import { X, CheckCircle, XCircle, Download, FileText, Shield, Building2, User, Phone, MapPin, Calendar } from 'lucide-react'
+import { X, CheckCircle, XCircle, Download, FileText, Shield, Building2, User, Phone, MapPin, Calendar, AlertTriangle } from 'lucide-react'
 import Image from 'next/image'
 
 interface AgencyVerificationModalProps {
@@ -24,6 +24,8 @@ export default function AgencyVerificationModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
+  const [overrideDocumentRequirement, setOverrideDocumentRequirement] = useState(false)
+  const [overrideReason, setOverrideReason] = useState('')
 
   if (!isOpen) return null
 
@@ -34,7 +36,21 @@ export default function AgencyVerificationModal({
     setError(null)
 
     try {
-      await verifyAgency(agency.id, user.uid, notes.trim() || undefined)
+      // Determine if this is an override verification
+      const isOverride = !hasAllCertifications && overrideDocumentRequirement
+      const missingDocs: string[] = []
+      if (!hasDmwLicense) missingDocs.push('DMW License')
+      if (!hasBusinessPermit) missingDocs.push('Business Permit')
+
+      await verifyAgency(
+        agency.id,
+        user.uid,
+        notes.trim() || undefined,
+        isOverride ? {
+          overrideReason: overrideReason.trim(),
+          missingDocuments: missingDocs,
+        } : undefined
+      )
       onVerificationChange()
       onClose()
     } catch (err) {
@@ -43,6 +59,10 @@ export default function AgencyVerificationModal({
       setLoading(false)
     }
   }
+
+  const hasDmwLicense = !!agency.dmwLicenseUrl
+  const hasBusinessPermit = !!agency.businessPermitUrl
+  const hasAllCertifications = hasDmwLicense && hasBusinessPermit
 
   const handleUnverify = async () => {
     if (!user?.uid) return
@@ -60,10 +80,6 @@ export default function AgencyVerificationModal({
       setLoading(false)
     }
   }
-
-  const hasDmwLicense = !!agency.dmwLicenseUrl
-  const hasBusinessPermit = !!agency.businessPermitUrl
-  const hasAllCertifications = hasDmwLicense && hasBusinessPermit
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
@@ -231,11 +247,62 @@ export default function AgencyVerificationModal({
             </div>
 
             {!hasAllCertifications && (
-              <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
-                  <strong>Warning:</strong> This agency is missing required certification documents.
-                  Verification should only be granted when all documents are uploaded and validated.
-                </p>
+              <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-4">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-yellow-800 font-medium">
+                      Missing Required Documents
+                    </p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      This agency is missing: {!hasDmwLicense && 'DMW License'}{!hasDmwLicense && !hasBusinessPermit && ' and '}{!hasBusinessPermit && 'Business Permit'}.
+                      Verification should only be granted when all documents are uploaded and validated.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Override Checkbox */}
+                <div className="border-t border-yellow-300 pt-4">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={overrideDocumentRequirement}
+                      onChange={(e) => {
+                        setOverrideDocumentRequirement(e.target.checked)
+                        if (!e.target.checked) setOverrideReason('')
+                      }}
+                      className="mt-1 w-4 h-4 text-yellow-600 border-yellow-400 rounded focus:ring-yellow-500"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-yellow-800">
+                        I acknowledge the missing documents and want to verify this agency anyway
+                      </span>
+                      <p className="text-xs text-yellow-700 mt-1">
+                        This override will be recorded in the audit log with your admin account.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Override Reason (required when checkbox is checked) */}
+                {overrideDocumentRequirement && (
+                  <div className="pt-2">
+                    <label className="block text-sm font-medium text-yellow-800 mb-2">
+                      Reason for Override <span className="text-red-600">*</span>
+                    </label>
+                    <textarea
+                      value={overrideReason}
+                      onChange={(e) => setOverrideReason(e.target.value)}
+                      className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
+                      rows={2}
+                      placeholder="Explain why verification is being granted without complete documents..."
+                      required
+                    />
+                    <p className="text-xs text-yellow-600 mt-1">
+                      This reason will be recorded in the audit log and agency record.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -275,9 +342,9 @@ export default function AgencyVerificationModal({
             ) : (
               <button
                 onClick={handleVerify}
-                disabled={loading || !hasAllCertifications}
+                disabled={loading || (!hasAllCertifications && (!overrideDocumentRequirement || !overrideReason.trim()))}
                 className="px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                title={!hasAllCertifications ? 'All certifications must be uploaded before verification' : ''}
+                title={!hasAllCertifications && !overrideDocumentRequirement ? 'Check the override checkbox and provide a reason to verify without complete documents' : ''}
               >
                 <CheckCircle className="w-4 h-4" />
                 {loading ? 'Verifying...' : 'Verify Agency'}

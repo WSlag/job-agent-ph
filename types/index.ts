@@ -96,6 +96,14 @@ export interface Agency extends User {
   // Pricing explainer tracking
   pricingExplainerSeen?: boolean;
   pricingExplainerSeenAt?: Date;
+  // Verification override tracking (when verified with missing documents)
+  verificationOverride?: {
+    wasOverride: boolean;
+    overrideReason: string;
+    missingDocuments: string[];
+    overrideAt: Date;
+    overrideBy: string;
+  };
 }
 
 export interface Admin extends User {

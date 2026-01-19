@@ -179,7 +179,8 @@ export async function getAllAgencies(options: GetAllAgenciesOptions = {}): Promi
 export async function verifyAgency(
   agencyId: string,
   adminId: string,
-  notes?: string
+  notes?: string,
+  overrideInfo?: { overrideReason: string; missingDocuments: string[] }
 ): Promise<void> {
   try {
     const db = getDbInstance();
@@ -189,11 +190,39 @@ export async function verifyAgency(
     const adminDoc = await getDoc(doc(db, COLLECTIONS.USERS, adminId));
     const adminName = adminDoc.exists() ? (adminDoc.data()?.name || 'Admin') : 'Admin';
 
-    await updateDoc(agencyRef, {
+    // Build update object
+    const updateData: Record<string, unknown> = {
       verified: true,
       verifiedAt: Timestamp.now(),
       verifiedBy: adminId,
-    });
+    };
+
+    // Add override information if this is an override verification
+    if (overrideInfo) {
+      updateData.verificationOverride = {
+        wasOverride: true,
+        overrideReason: overrideInfo.overrideReason,
+        missingDocuments: overrideInfo.missingDocuments,
+        overrideAt: Timestamp.now(),
+        overrideBy: adminId,
+      };
+    } else {
+      // Clear any previous override info if verifying with complete docs
+      updateData.verificationOverride = null;
+    }
+
+    await updateDoc(agencyRef, updateData);
+
+    // Build audit log details
+    const auditDetails: Record<string, unknown> = notes
+      ? { notes }
+      : { message: 'Agency verified' };
+
+    if (overrideInfo) {
+      auditDetails.documentOverride = true;
+      auditDetails.overrideReason = overrideInfo.overrideReason;
+      auditDetails.missingDocuments = overrideInfo.missingDocuments;
+    }
 
     // Log to audit trail
     await logAdminAction({
@@ -202,7 +231,7 @@ export async function verifyAgency(
       action: 'VERIFY_AGENCY',
       resourceType: 'agency',
       resourceId: agencyId,
-      details: notes ? { notes } : { message: 'Agency verified' },
+      details: auditDetails,
     });
   } catch (error) {
     console.error('Error verifying agency:', error);
