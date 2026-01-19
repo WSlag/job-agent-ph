@@ -47,7 +47,7 @@ async function initializeConfiguration() {
     }
 
     const config = {
-      freeTierLimit: 2,
+      freeTierLimit: 5,
       premiumTierLimit: -1, // -1 means unlimited
       premiumMonthlyPrice: 5000,
       premiumCurrency: 'PHP',

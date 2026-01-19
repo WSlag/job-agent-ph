@@ -85,10 +85,10 @@ export default function JobLimitBanner({ currentCount, limit, plan }: JobLimitBa
             <CreditCard className="h-5 w-5 text-blue-500" />
           </div>
           <div className="ml-3 flex-1">
-            <h3 className="text-sm font-medium text-blue-800">Free Tier: 2 Job Posts</h3>
+            <h3 className="text-sm font-medium text-blue-800">Free Tier: {limit} Job Posts</h3>
             <div className="mt-2 text-sm text-blue-700">
               <p>
-                You can post <strong>2 free jobs</strong> to get started. Upgrade to Premium
+                You can post <strong>{limit} free jobs</strong> to get started. Upgrade to Premium
                 anytime for unlimited job postings.
               </p>
             </div>

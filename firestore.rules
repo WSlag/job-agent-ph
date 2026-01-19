@@ -63,7 +63,7 @@ service cloud.firestore {
              // If subscription exists and is free tier, check if under limit
              (exists(/databases/$(database)/documents/subscriptions/$(agencyId)) &&
               getAgencySubscription(agencyId).plan == 'free' &&
-              getAgencySubscription(agencyId).lifetimeJobsPosted < 2) ||
+              getAgencySubscription(agencyId).lifetimeJobsPosted < 5) ||
              // If subscription exists and is premium, allow posting
              isPremiumAgency(agencyId);
     }

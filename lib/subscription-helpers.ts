@@ -83,27 +83,27 @@ export async function canPostJob(agencyId: string): Promise<{
         allowed: true,
         plan: 'none',
         currentCount: 0,
-        limit: 2,
+        limit: 5,
         reason: 'No subscription found - will create free tier on first post',
       };
     }
 
     // Free tier check
     if (subscription.plan === 'free') {
-      if (subscription.lifetimeJobsPosted >= 2) {
+      if (subscription.lifetimeJobsPosted >= 5) {
         return {
           allowed: false,
-          reason: 'Free tier limit reached (2/2 lifetime posts). Upgrade to premium to post more jobs.',
+          reason: 'Free tier limit reached (5/5 lifetime posts). Upgrade to premium to post more jobs.',
           plan: 'free',
           currentCount: subscription.lifetimeJobsPosted,
-          limit: 2,
+          limit: 5,
         };
       }
       return {
         allowed: true,
         plan: 'free',
         currentCount: subscription.lifetimeJobsPosted,
-        limit: 2,
+        limit: 5,
       };
     }
 
