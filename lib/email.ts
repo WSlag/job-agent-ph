@@ -497,6 +497,230 @@ www.jobagentph.com
 Reference: ${data.referenceNumber}
     `,
   }),
+
+  // Agency outreach email template
+  agencyOutreach: (data: {
+    agencyName: string;
+    recipientEmail: string;
+    messageType: 'short' | 'standard' | 'formal';
+  }) => {
+    const messages = {
+      short: {
+        subject: 'Post Jobs FREE on JobAgentPH - Reach Thousands of Filipino Workers',
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+                .content { background: #ffffff; padding: 30px 20px; border: 1px solid #e5e7eb; }
+                .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+                .button { display: inline-block; background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h2 style="margin: 0;">JobAgentPH</h2>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9;">Connecting Agencies with Filipino Talent</p>
+                </div>
+                <div class="content">
+                  <p>Hi${data.agencyName ? ` ${data.agencyName}` : ''},</p>
+                  <p>Post your jobs <strong>FREE</strong> on JobAgentPH — reach thousands of verified Filipino workers.</p>
+                  <p><strong>5 free job posts, no commitment.</strong></p>
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://www.jobagentph.com/agency/register" class="button">Start Posting Jobs</a>
+                  </div>
+                  <p>Questions? Just reply to this email.</p>
+                  <p>Best regards,<br><strong>JobAgentPH Team</strong></p>
+                </div>
+                <div class="footer">
+                  <p><a href="https://www.jobagentph.com" style="color: #2563eb;">www.jobagentph.com</a></p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
+        text: `Hi${data.agencyName ? ` ${data.agencyName}` : ''},
+
+Post your jobs FREE on JobAgentPH — reach thousands of verified Filipino workers.
+
+5 free job posts, no commitment.
+
+Start now: https://www.jobagentph.com/agency/register
+
+Questions? Just reply to this email.
+
+Best regards,
+JobAgentPH Team
+www.jobagentph.com`,
+      },
+      standard: {
+        subject: 'Partner with JobAgentPH — Reach Thousands of Filipino Job Seekers',
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+                .content { background: #ffffff; padding: 30px 20px; border: 1px solid #e5e7eb; }
+                .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+                .button { display: inline-block; background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+                .feature { background: #ecfdf5; border-left: 4px solid #10b981; padding: 10px 15px; margin: 10px 0; border-radius: 4px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h2 style="margin: 0;">JobAgentPH</h2>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9;">Philippines' Fastest-Growing Job Platform</p>
+                </div>
+                <div class="content">
+                  <p>Hi${data.agencyName ? ` ${data.agencyName}` : ''},</p>
+                  <p><strong>Looking to hire quality Filipino workers faster?</strong></p>
+                  <p>JobAgentPH connects you directly with thousands of verified job seekers — OFWs, healthcare workers, domestic helpers, and skilled professionals ready to work.</p>
+
+                  <div class="feature">✓ <strong>5 FREE job posts</strong> (no credit card needed)</div>
+                  <div class="feature">✓ <strong>Direct messaging</strong> with candidates</div>
+                  <div class="feature">✓ <strong>DMW-verified platform</strong> for credibility</div>
+
+                  <p style="margin-top: 20px;">Agencies using JobAgentPH fill positions <strong>2x faster</strong>.</p>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://www.jobagentph.com/agency/register" class="button">Post Your First Job Now</a>
+                  </div>
+
+                  <p>Questions? Just reply to this email.</p>
+                  <p>Best regards,<br><strong>JobAgentPH Team</strong></p>
+                </div>
+                <div class="footer">
+                  <p><strong>JobAgentPH</strong> - Connecting Talent with Opportunity</p>
+                  <p><a href="https://www.jobagentph.com" style="color: #2563eb;">www.jobagentph.com</a></p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
+        text: `Hi${data.agencyName ? ` ${data.agencyName}` : ''},
+
+Looking to hire quality Filipino workers faster?
+
+JobAgentPH connects you directly with thousands of verified job seekers — OFWs, healthcare workers, domestic helpers, and skilled professionals ready to work.
+
+✓ 5 FREE job posts (no credit card needed)
+✓ Direct messaging with candidates
+✓ DMW-verified platform for credibility
+
+Agencies using JobAgentPH fill positions 2x faster.
+
+Post your first job now: https://www.jobagentph.com/agency/register
+
+Questions? Just reply to this email.
+
+Best regards,
+JobAgentPH Team
+www.jobagentph.com`,
+      },
+      formal: {
+        subject: 'Partnership Invitation — JobAgentPH Recruitment Platform',
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.8; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+                .content { background: #ffffff; padding: 30px 20px; border: 1px solid #e5e7eb; }
+                .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+                .button { display: inline-block; background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+                .benefits { background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                .benefits ul { margin: 10px 0; padding-left: 20px; }
+                .benefits li { margin: 8px 0; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h2 style="margin: 0;">JobAgentPH</h2>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9;">Partnership Invitation</p>
+                </div>
+                <div class="content">
+                  <p>Dear${data.agencyName ? ` ${data.agencyName}` : ' Hiring Manager'},</p>
+
+                  <p>I would like to introduce <strong>JobAgentPH</strong>, a platform connecting licensed recruitment agencies with verified Filipino professionals seeking local and overseas employment.</p>
+
+                  <div class="benefits">
+                    <strong>What we offer:</strong>
+                    <ul>
+                      <li><strong>5 FREE job posts</strong> to start (no strings attached)</li>
+                      <li>Access to <strong>thousands of active, verified job seekers</strong></li>
+                      <li><strong>Direct candidate messaging</strong> and applicant tracking</li>
+                      <li><strong>DMW-compliant platform</strong> that builds trust with workers</li>
+                    </ul>
+                  </div>
+
+                  <p>Many agencies report filling positions faster after joining our platform.</p>
+
+                  <p><strong>Ready to grow your candidate pipeline?</strong></p>
+
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://www.jobagentph.com/agency/register" class="button">Create Your Free Agency Account</a>
+                  </div>
+
+                  <p>I am happy to answer any questions you may have.</p>
+
+                  <p>Best regards,<br>
+                  <strong>JobAgentPH Team</strong><br>
+                  <a href="mailto:contact@jobagentph.com" style="color: #2563eb;">contact@jobagentph.com</a><br>
+                  <a href="https://www.jobagentph.com" style="color: #2563eb;">www.jobagentph.com</a></p>
+                </div>
+                <div class="footer">
+                  <p><strong>JobAgentPH</strong> - Your Partner in Recruitment Success</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
+        text: `Dear${data.agencyName ? ` ${data.agencyName}` : ' Hiring Manager'},
+
+I would like to introduce JobAgentPH, a platform connecting licensed recruitment agencies with verified Filipino professionals seeking local and overseas employment.
+
+What we offer:
+• 5 FREE job posts to start (no strings attached)
+• Access to thousands of active, verified job seekers
+• Direct candidate messaging and applicant tracking
+• DMW-compliant platform that builds trust with workers
+
+Many agencies report filling positions faster after joining our platform.
+
+Ready to grow your candidate pipeline?
+
+Create your free agency account: https://www.jobagentph.com/agency/register
+
+I am happy to answer any questions you may have.
+
+Best regards,
+JobAgentPH Team
+contact@jobagentph.com
+www.jobagentph.com`,
+      },
+    };
+
+    const selected = messages[data.messageType];
+    return {
+      from: DEFAULT_FROM,
+      to: data.recipientEmail,
+      replyTo: DEFAULT_FROM,
+      subject: selected.subject,
+      html: selected.html,
+      text: selected.text,
+    };
+  },
 };
 
 // Send email function

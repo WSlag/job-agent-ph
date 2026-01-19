@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Building2,
   Wrench,
+  Send,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +58,11 @@ const navigation = [
     name: 'Contacts',
     href: '/admin/contacts',
     icon: Mail,
+  },
+  {
+    name: 'Outreach',
+    href: '/admin/outreach',
+    icon: Send,
   },
   {
     name: 'Featured Requests',
