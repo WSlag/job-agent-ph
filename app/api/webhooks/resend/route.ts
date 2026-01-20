@@ -101,20 +101,34 @@ export async function POST(request: NextRequest) {
 
 /**
  * Handle inbound email (reply from agency)
+ *
+ * Resend email.received webhook payload structure:
+ * - from: string (e.g., "Name <email@example.com>")
+ * - to: string[] (array of recipient emails)
+ * - subject: string
+ * - text?: string (plain text body - may not be present)
+ * - html?: string (HTML body - may not be present)
  */
-async function handleInboundEmail(data: {
-  from: string;
-  to: string;
-  subject: string;
-  text?: string;
-  html?: string;
-  headers?: Record<string, string>;
-}) {
+async function handleInboundEmail(data: Record<string, unknown>) {
   try {
-    const { from, to, subject, text, html } = data;
+    // Log the full payload for debugging
+    console.log('Inbound email data:', JSON.stringify(data, null, 2));
+
+    // Extract fields with proper type handling
+    const from = typeof data.from === 'string' ? data.from : '';
+    const to = Array.isArray(data.to) ? data.to[0] : (typeof data.to === 'string' ? data.to : '');
+    const subject = typeof data.subject === 'string' ? data.subject : '';
+    const text = typeof data.text === 'string' ? data.text : null;
+    const html = typeof data.html === 'string' ? data.html : null;
 
     // Extract email address from "Name <email@example.com>" format
     const fromEmail = from.match(/<(.+)>/)?.[1] || from;
+
+    // Validate we have at least the from email
+    if (!fromEmail) {
+      console.log('No sender email found in inbound email, skipping');
+      return;
+    }
 
     let outreachId: string | null = null;
     let agencyName: string | null = null;
