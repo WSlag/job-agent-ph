@@ -60,7 +60,7 @@ Post your jobs FREE on JobAgentPH — reach thousands of verified Filipino worke
 
 5 free job posts, no commitment.
 
-Start now: jobagentph.com/agency/register`,
+Start now: jobagentph.com/auth/signup`,
   standard: `Hi [Agency Name],
 
 Looking to hire quality Filipino workers faster?
@@ -73,7 +73,7 @@ JobAgentPH connects you directly with thousands of verified job seekers — OFWs
 
 Agencies using JobAgentPH fill positions 2x faster.
 
-Post your first job now: jobagentph.com/agency/register`,
+Post your first job now: jobagentph.com/auth/signup`,
   formal: `Dear [Agency Name],
 
 I would like to introduce JobAgentPH, a platform connecting licensed recruitment agencies with verified Filipino professionals seeking local and overseas employment.
@@ -86,7 +86,7 @@ What we offer:
 
 Many agencies report filling positions faster after joining our platform.
 
-Create your free agency account: jobagentph.com/agency/register`,
+Create your free agency account: jobagentph.com/auth/signup`,
 };
 
 export default function AdminOutreachPage() {

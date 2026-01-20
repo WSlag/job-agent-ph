@@ -531,7 +531,7 @@ Reference: ${data.referenceNumber}
                   <p>Post your jobs <strong>FREE</strong> on JobAgentPH — reach thousands of verified Filipino workers.</p>
                   <p><strong>5 free job posts, no commitment.</strong></p>
                   <div style="text-align: center; margin: 30px 0;">
-                    <a href="https://www.jobagentph.com/agency/register" class="button">Start Posting Jobs</a>
+                    <a href="https://www.jobagentph.com/auth/signup" class="button">Start Posting Jobs</a>
                   </div>
                   <p>Questions? Just reply to this email.</p>
                   <p>Best regards,<br><strong>JobAgentPH Team</strong></p>
@@ -549,7 +549,7 @@ Post your jobs FREE on JobAgentPH — reach thousands of verified Filipino worke
 
 5 free job posts, no commitment.
 
-Start now: https://www.jobagentph.com/agency/register
+Start now: https://www.jobagentph.com/auth/signup
 
 Questions? Just reply to this email.
 
@@ -591,7 +591,7 @@ www.jobagentph.com`,
                   <p style="margin-top: 20px;">Agencies using JobAgentPH fill positions <strong>2x faster</strong>.</p>
 
                   <div style="text-align: center; margin: 30px 0;">
-                    <a href="https://www.jobagentph.com/agency/register" class="button">Post Your First Job Now</a>
+                    <a href="https://www.jobagentph.com/auth/signup" class="button">Post Your First Job Now</a>
                   </div>
 
                   <p>Questions? Just reply to this email.</p>
@@ -617,7 +617,7 @@ JobAgentPH connects you directly with thousands of verified job seekers — OFWs
 
 Agencies using JobAgentPH fill positions 2x faster.
 
-Post your first job now: https://www.jobagentph.com/agency/register
+Post your first job now: https://www.jobagentph.com/auth/signup
 
 Questions? Just reply to this email.
 
@@ -669,7 +669,7 @@ www.jobagentph.com`,
                   <p><strong>Ready to grow your candidate pipeline?</strong></p>
 
                   <div style="text-align: center; margin: 30px 0;">
-                    <a href="https://www.jobagentph.com/agency/register" class="button">Create Your Free Agency Account</a>
+                    <a href="https://www.jobagentph.com/auth/signup" class="button">Create Your Free Agency Account</a>
                   </div>
 
                   <p>I am happy to answer any questions you may have.</p>
@@ -700,7 +700,7 @@ Many agencies report filling positions faster after joining our platform.
 
 Ready to grow your candidate pipeline?
 
-Create your free agency account: https://www.jobagentph.com/agency/register
+Create your free agency account: https://www.jobagentph.com/auth/signup
 
 I am happy to answer any questions you may have.
 
