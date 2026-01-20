@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,6 +38,7 @@ function LoginForm() {
   const [showOTPInput, setShowOTPInput] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [sendingCode, setSendingCode] = useState(false);
+  const verifyingRef = useRef(false);
 
   // Helper function to process Google authentication result
   const processGoogleAuthResult = async (user: any) => {
@@ -315,12 +316,19 @@ function LoginForm() {
     }
   };
 
-  const handleVerifyPhoneCode = async (code: string) => {
+  const handleVerifyPhoneCode = useCallback(async (code: string) => {
+    // Prevent duplicate verification calls
+    if (verifyingRef.current) {
+      console.log('[LoginPage] Verification already in progress, skipping duplicate call');
+      return;
+    }
+
     if (!confirmationResult) {
       setError('Please request a new verification code');
       return;
     }
 
+    verifyingRef.current = true;
     setError('');
     setLoading(true);
 
@@ -330,13 +338,15 @@ function LoginForm() {
     } catch (err: any) {
       setError(err.message || 'Failed to verify code');
       setLoading(false);
+      verifyingRef.current = false; // Reset on error to allow retry
     }
-  };
+  }, [confirmationResult, signInWithPhoneCode]);
 
   const handleResendCode = async () => {
     setError('');
     setShowOTPInput(false);
     setConfirmationResult(null);
+    verifyingRef.current = false; // Reset verification guard
     cleanupRecaptchaVerifier();
 
     // Small delay to allow cleanup
@@ -385,6 +395,19 @@ function LoginForm() {
         </div>
 
         <div className="bg-white p-8 rounded-xl shadow-md">
+          {/* Phone Sign-In Button */}
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => setAuthMethod('phone')}
+              disabled={loading || sendingCode}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <Phone size={20} />
+              Continue with Phone
+            </button>
+          </div>
+
           {/* Google Sign-In Button */}
           <div className="mb-6">
             <GoogleAuthButton
@@ -403,36 +426,6 @@ function LoginForm() {
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white text-gray-500">Or continue with</span>
             </div>
-          </div>
-
-          {/* Auth Method Tabs */}
-          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-            <button
-              type="button"
-              onClick={() => setAuthMethod('email')}
-              disabled={loading || sendingCode}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                authMethod === 'email'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              } disabled:opacity-50`}
-            >
-              <Mail size={18} />
-              Email
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthMethod('phone')}
-              disabled={loading || sendingCode}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                authMethod === 'phone'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              } disabled:opacity-50`}
-            >
-              <Phone size={18} />
-              Phone
-            </button>
           </div>
 
           {/* Error Display */}
@@ -563,12 +556,19 @@ function LoginForm() {
                     </div>
                   )}
 
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => {
                       setShowOTPInput(false);
                       setConfirmationResult(null);
                       setError('');
+                      verifyingRef.current = false; // Reset verification guard
                       cleanupRecaptchaVerifier();
                     }}
                     className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"

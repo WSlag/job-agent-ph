@@ -25,6 +25,7 @@ export default function OTPInput({
   const [cooldown, setCooldown] = useState(resendCooldown);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const lastSubmittedCode = useRef<string>('');
 
   // Start cooldown timer on mount
   useEffect(() => {
@@ -51,10 +52,11 @@ export default function OTPInput({
     }
   }, [autoFocus]);
 
-  // Check if OTP is complete
+  // Check if OTP is complete - only submit once per unique code
   useEffect(() => {
     const code = otp.join('');
-    if (code.length === length && !otp.includes('')) {
+    if (code.length === length && !otp.includes('') && code !== lastSubmittedCode.current) {
+      lastSubmittedCode.current = code;
       onComplete(code);
     }
   }, [otp, length, onComplete]);
@@ -126,6 +128,7 @@ export default function OTPInput({
       setOtp(Array(length).fill(''));
       setCooldown(resendCooldown);
       setCanResend(false);
+      lastSubmittedCode.current = ''; // Reset to allow re-submission
       onResend();
       // Focus first input after resend
       inputRefs.current[0]?.focus();

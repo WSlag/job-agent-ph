@@ -19,10 +19,8 @@ const withPWA = withPWAInit({
     // by simplifying the runtime caching configuration
     runtimeCaching: [
       {
-        urlPattern: ({ url }) => {
-          // Only cache same-origin resources
-          return url.origin === self.location.origin;
-        },
+        // Use regex pattern instead of function to avoid 'self' reference issues
+        urlPattern: /^\/.*/,
         handler: 'NetworkFirst',
         options: {
           cacheName: 'same-origin-cache',
@@ -30,8 +28,6 @@ const withPWA = withPWAInit({
             maxEntries: 100,
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
           },
-          // Remove the cacheWillUpdate plugin that causes the async issue
-          // The NetworkFirst handler will work fine without it
         },
       },
     ],
@@ -91,7 +87,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://www.google.com",
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://www.google.com https://www.gstatic.com",
               "frame-src 'self' https://accounts.google.com https://www.google.com https://*.firebaseapp.com",
               "media-src 'self'",
               "object-src 'none'",

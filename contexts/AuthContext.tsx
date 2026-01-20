@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import {
   User as FirebaseUser,
   signInWithEmailAndPassword,
@@ -68,6 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userType, setUserType] = useState<UserType | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  // Ref to skip profile loading during phone verification (to avoid race condition)
+  // Using ref instead of state so it's accessible in the onAuthStateChanged closure
+  const skipProfileLoadingRef = useRef(false);
   const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
@@ -122,6 +125,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(firebaseUser);
 
           if (firebaseUser) {
+            // Check if we should skip profile loading (during phone verification)
+            if (skipProfileLoadingRef.current) {
+              console.log('[AuthContext] Skipping profile loading (phone verification in progress)');
+              setLoading(false);
+              return;
+            }
+
             // Wait for token to propagate to Firestore before making any queries
             console.log('[AuthContext] Waiting 3 seconds for token propagation...');
             await new Promise(resolve => setTimeout(resolve, 3000));
@@ -740,6 +750,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[AuthContext] Verifying phone code for sign in...');
       setSessionReady(false);
 
+      // Set flag to skip profile loading in onAuthStateChanged (prevents race condition)
+      skipProfileLoadingRef.current = true;
+
       // Verify OTP
       const userCredential = await verifyPhoneOTP(confirmationResult, code);
       const userId = userCredential.user.uid;
@@ -761,6 +774,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('[AuthContext] No profile found for phone user, signing out...');
         const auth = getAuthInstance();
         await firebaseSignOut(auth);
+        skipProfileLoadingRef.current = false;
         throw new Error('No account found with this phone number. Please sign up first.');
       }
 
@@ -788,11 +802,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Wait for token propagation
       await new Promise(resolve => setTimeout(resolve, 4000));
 
+      // Reset flag and load profile now that everything is set up
+      skipProfileLoadingRef.current = false;
+      await loadUserProfile(userId);
+
       setSessionReady(true);
       console.log('[AuthContext] Phone sign in completed successfully');
     } catch (error: any) {
       console.error('[AuthContext] Error signing in with phone code:', error);
       cleanupRecaptchaVerifier();
+      skipProfileLoadingRef.current = false;
 
       if (error.message) {
         throw error;
@@ -814,6 +833,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[AuthContext] User type:', userType);
       setSessionReady(false);
 
+      // Set flag to skip profile loading in onAuthStateChanged (prevents race condition)
+      skipProfileLoadingRef.current = true;
+
       // Verify OTP
       const userCredential = await verifyPhoneOTP(confirmationResult, code);
       const userId = userCredential.user.uid;
@@ -832,23 +854,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (existingJobHunter.exists() || existingAgency.exists()) {
-        console.log('[AuthContext] User already has a profile, proceeding with sign in...');
-        // User already has a profile - just sign them in
-        const idToken = await userCredential.user.getIdToken(true);
+        // User already has a profile - don't silently sign in, inform them
+        const existingType = existingJobHunter.exists() ? 'Job Hunter' : 'Agency';
+        console.log('[AuthContext] Phone number already registered as:', existingType);
 
-        const response = await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken }),
-        });
+        const auth = getAuthInstance();
+        await firebaseSignOut(auth);
+        skipProfileLoadingRef.current = false;
 
-        if (!response.ok) {
-          throw new Error('Failed to create session. Please try again.');
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        setSessionReady(true);
-        return;
+        throw new Error(`This phone number is already registered as a ${existingType} account. Please sign in instead.`);
       }
 
       // Create user profile in Firestore with legal acceptance fields
@@ -873,52 +887,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userDoc.ageVerified = profileData.ageVerified;
       }
 
-      console.log('[AuthContext] Creating base user document...');
-      await setDoc(doc(db, COLLECTIONS.USERS, userId), userDoc);
-
-      // Create profile based on user type
-      if (userType === 'jobhunter') {
-        const typedProfileData = profileData as JobHunterProfileData;
-        const jobHunterProfile = {
-          ...profileData,
-          phone: phoneNumber,
-          userType,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        console.log('[AuthContext] Creating job hunter profile...');
-        await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), jobHunterProfile);
-
-        // Update display name
-        await updateProfile(userCredential.user, {
-          displayName: `${typedProfileData.firstName} ${typedProfileData.lastName}`,
-        });
-      } else if (userType === 'agency') {
-        const typedProfileData = profileData as AgencyProfileData;
-        const agencyProfile = {
-          ...profileData,
-          phone: phoneNumber || typedProfileData.phone,
-          userType,
-          verified: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        console.log('[AuthContext] Creating agency profile...');
-        await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), agencyProfile);
-
-        // Update display name
-        await updateProfile(userCredential.user, {
-          displayName: typedProfileData.companyName,
-        });
-      }
-
-      console.log('[AuthContext] Profile documents created successfully');
-
-      // Create session cookie
+      // Get fresh ID token for API call
+      console.log('[AuthContext] Getting fresh ID token for profile creation...');
       const idToken = await userCredential.user.getIdToken(true);
 
+      // Use server-side API to create profile (bypasses Firestore security rules)
+      console.log('[AuthContext] Creating profile via server API...');
+      const createProfileResponse = await fetch('/api/auth/create-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idToken,
+          userType,
+          profileData: {
+            ...profileData,
+            // Convert Date objects to ISO strings for JSON serialization
+            dateOfBirth: profileData && 'dateOfBirth' in profileData && profileData.dateOfBirth
+              ? (profileData.dateOfBirth instanceof Date ? profileData.dateOfBirth.toISOString() : profileData.dateOfBirth)
+              : undefined,
+            termsAcceptedAt: profileData && 'termsAcceptedAt' in profileData && profileData.termsAcceptedAt
+              ? (profileData.termsAcceptedAt instanceof Date ? profileData.termsAcceptedAt.toISOString() : profileData.termsAcceptedAt)
+              : undefined,
+            privacyAcceptedAt: profileData && 'privacyAcceptedAt' in profileData && profileData.privacyAcceptedAt
+              ? (profileData.privacyAcceptedAt instanceof Date ? profileData.privacyAcceptedAt.toISOString() : profileData.privacyAcceptedAt)
+              : undefined,
+            agencyTermsAcceptedAt: profileData && 'agencyTermsAcceptedAt' in profileData && profileData.agencyTermsAcceptedAt
+              ? (profileData.agencyTermsAcceptedAt instanceof Date ? profileData.agencyTermsAcceptedAt.toISOString() : profileData.agencyTermsAcceptedAt)
+              : undefined,
+          },
+        }),
+      });
+
+      if (!createProfileResponse.ok) {
+        const errorData = await createProfileResponse.json().catch(() => ({}));
+        console.error('[AuthContext] Failed to create profile via API:', errorData);
+        throw new Error(errorData.error || 'Failed to create user profile');
+      }
+
+      console.log('[AuthContext] Profile created successfully via server API');
+
+      // Create session cookie (reuse idToken from above)
       const sessionResponse = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -933,6 +941,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Wait for session propagation
       await new Promise(resolve => setTimeout(resolve, 2500));
+
+      // Reset flag and load profile now that everything is set up
+      skipProfileLoadingRef.current = false;
+      await loadUserProfile(userId);
+
       setSessionReady(true);
 
       // Trigger welcome message (non-blocking)
@@ -954,6 +967,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error('[AuthContext] Phone signup error:', error);
       cleanupRecaptchaVerifier();
+      skipProfileLoadingRef.current = false;
 
       if (error.message) {
         throw error;

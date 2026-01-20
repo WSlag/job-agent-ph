@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -359,13 +359,21 @@ function SignUpForm() {
 
   // Store the OTP code for later use when submitting the form
   const [otpCode, setOtpCode] = useState('');
+  const verifyingRef = useRef(false);
 
-  const handleVerifyPhoneCode = async (code: string) => {
+  const handleVerifyPhoneCode = useCallback(async (code: string) => {
+    // Prevent duplicate calls (from React StrictMode or OTPInput re-renders)
+    if (verifyingRef.current || phoneVerified) {
+      console.log('[SignupPage] Verification already processed, skipping duplicate call');
+      return;
+    }
+
     if (!confirmationResult) {
       setError('Please request a new verification code');
       return;
     }
 
+    verifyingRef.current = true;
     setError('');
 
     // Store the code for later submission
@@ -373,12 +381,13 @@ function SignUpForm() {
     // Mark phone as verified - user will complete profile form
     setPhoneVerified(true);
     setShowOTPInput(false);
-  };
+  }, [confirmationResult, phoneVerified]);
 
   const handleResendCode = async () => {
     setError('');
     setShowOTPInput(false);
     setConfirmationResult(null);
+    verifyingRef.current = false; // Reset verification guard
     cleanupRecaptchaVerifier();
 
     // Small delay to allow cleanup
@@ -656,17 +665,6 @@ function SignUpForm() {
           {/* Method Selection - show only if method not selected yet */}
           {!signupMethod && !phoneVerified && (
             <>
-              {/* Google Sign-Up Button */}
-              <div className="mb-4">
-                <GoogleAuthButton
-                  userType={userType}
-                  returnUrl={searchParams.get('redirect') || undefined}
-                  onError={(errorMsg) => setError(errorMsg)}
-                  disabled={loading || sendingCode}
-                  buttonText="Sign up with Google"
-                />
-              </div>
-
               {/* Phone Sign-Up Button */}
               <div className="mb-4">
                 <button
@@ -678,6 +676,17 @@ function SignUpForm() {
                   <Phone size={20} />
                   Sign up with Phone
                 </button>
+              </div>
+
+              {/* Google Sign-Up Button */}
+              <div className="mb-4">
+                <GoogleAuthButton
+                  userType={userType}
+                  returnUrl={searchParams.get('redirect') || undefined}
+                  onError={(errorMsg) => setError(errorMsg)}
+                  disabled={loading || sendingCode}
+                  buttonText="Sign up with Google"
+                />
               </div>
 
               {/* Divider */}
@@ -712,6 +721,7 @@ function SignUpForm() {
                   setShowOTPInput(false);
                   setConfirmationResult(null);
                   setPhoneNumber('');
+                  verifyingRef.current = false; // Reset verification guard
                   cleanupRecaptchaVerifier();
                 }}
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium mb-4"
@@ -777,12 +787,19 @@ function SignUpForm() {
                     </div>
                   )}
 
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => {
                       setShowOTPInput(false);
                       setConfirmationResult(null);
                       setError('');
+                      verifyingRef.current = false; // Reset verification guard
                       cleanupRecaptchaVerifier();
                     }}
                     className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
@@ -1008,6 +1025,7 @@ function SignUpForm() {
                   setShowOTPInput(false);
                   setConfirmationResult(null);
                   setPhoneNumber('');
+                  verifyingRef.current = false; // Reset verification guard
                   cleanupRecaptchaVerifier();
                 }}
                 className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
