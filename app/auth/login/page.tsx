@@ -4,25 +4,40 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Phone, Mail } from 'lucide-react';
 import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirect';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
-import { getRedirectResult } from 'firebase/auth';
-import { getAuthInstance, getDbInstance } from '@/lib/firebase';
+import PhoneInput from '@/components/auth/PhoneInput';
+import OTPInput from '@/components/auth/OTPInput';
+import { getRedirectResult, ConfirmationResult } from 'firebase/auth';
+import { getAuthInstance, getDbInstance, cleanupRecaptchaVerifier } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/collections';
+
+type AuthMethod = 'email' | 'phone';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signIn, user, userType, loading: authLoading, sessionReady } = useAuth();
+  const { signIn, signInWithPhoneCode, sendPhoneVerificationCode, user, userType, loading: authLoading, sessionReady } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Common state
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
   const hasRedirected = useRef(false);
+
+  // Email auth state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Phone auth state
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const [showOTPInput, setShowOTPInput] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [sendingCode, setSendingCode] = useState(false);
 
   // Helper function to process Google authentication result
   const processGoogleAuthResult = async (user: any) => {
@@ -263,6 +278,72 @@ function LoginForm() {
     }
   }, [user, userType, authLoading, sessionReady, router, searchParams]);
 
+  // Clean up reCAPTCHA when switching auth methods or unmounting
+  useEffect(() => {
+    return () => {
+      cleanupRecaptchaVerifier();
+    };
+  }, []);
+
+  // Reset phone state when switching to email
+  useEffect(() => {
+    if (authMethod === 'email') {
+      setShowOTPInput(false);
+      setConfirmationResult(null);
+      setPhoneNumber('');
+      cleanupRecaptchaVerifier();
+    }
+  }, [authMethod]);
+
+  const handleSendPhoneCode = async () => {
+    if (!isPhoneValid) {
+      setError('Please enter a valid Philippine mobile number');
+      return;
+    }
+
+    setError('');
+    setSendingCode(true);
+
+    try {
+      const result = await sendPhoneVerificationCode(phoneNumber);
+      setConfirmationResult(result);
+      setShowOTPInput(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send verification code');
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyPhoneCode = async (code: string) => {
+    if (!confirmationResult) {
+      setError('Please request a new verification code');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      await signInWithPhoneCode(confirmationResult, code);
+      // Redirect is handled by useEffect after userType is loaded
+    } catch (err: any) {
+      setError(err.message || 'Failed to verify code');
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+    setShowOTPInput(false);
+    setConfirmationResult(null);
+    cleanupRecaptchaVerifier();
+
+    // Small delay to allow cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await handleSendPhoneCode();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -310,7 +391,7 @@ function LoginForm() {
               userType="jobhunter"
               returnUrl={searchParams.get('redirect') || undefined}
               onError={(errorMsg) => setError(errorMsg)}
-              disabled={loading}
+              disabled={loading || sendingCode}
             />
           </div>
 
@@ -320,78 +401,187 @@ function LoginForm() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className={`px-4 py-3 rounded-lg ${
-                error.includes('Google sign-in')
-                  ? 'bg-blue-50 border border-blue-200 text-blue-700'
-                  : 'bg-red-50 border border-red-200 text-red-700'
-              }`}>
-                {error}
-                {error.includes('Google sign-in') && (
-                  <p className="mt-2 text-sm font-medium">
-                    👆 Use the "Continue with Google" button above
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                id="login-email"
-                name="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
-                  Forgot password?
-                </Link>
-              </div>
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
+          {/* Auth Method Tabs */}
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              type="button"
+              onClick={() => setAuthMethod('email')}
+              disabled={loading || sendingCode}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                authMethod === 'email'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              } disabled:opacity-50`}
             >
-              {loading ? (
+              <Mail size={18} />
+              Email
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthMethod('phone')}
+              disabled={loading || sendingCode}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                authMethod === 'phone'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              } disabled:opacity-50`}
+            >
+              <Phone size={18} />
+              Phone
+            </button>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className={`mb-4 px-4 py-3 rounded-lg ${
+              error.includes('Google sign-in')
+                ? 'bg-blue-50 border border-blue-200 text-blue-700'
+                : 'bg-red-50 border border-red-200 text-red-700'
+            }`}>
+              {error}
+              {error.includes('Google sign-in') && (
+                <p className="mt-2 text-sm font-medium">
+                  Use the "Continue with Google" button above
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Email Login Form */}
+          {authMethod === 'email' && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  id="login-email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
+                    Forgot password?
+                  </Link>
+                </div>
+                <input
+                  id="login-password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Logging in...
+                  </>
+                ) : (
+                  'Login'
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* Phone Login Form */}
+          {authMethod === 'phone' && (
+            <div className="space-y-4">
+              {!showOTPInput ? (
                 <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Logging in...
+                  <PhoneInput
+                    value={phoneNumber}
+                    onChange={(phone, isValid) => {
+                      setPhoneNumber(phone);
+                      setIsPhoneValid(isValid);
+                    }}
+                    disabled={sendingCode}
+                    label="Phone Number"
+                    placeholder="917 123 4567"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleSendPhoneCode}
+                    disabled={sendingCode || !isPhoneValid}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {sendingCode ? (
+                      <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Sending code...
+                      </>
+                    ) : (
+                      'Send Verification Code'
+                    )}
+                  </button>
                 </>
               ) : (
-                'Login'
+                <>
+                  <div className="text-center mb-4">
+                    <p className="text-gray-600">
+                      Enter the 6-digit code sent to
+                    </p>
+                    <p className="font-medium text-gray-900">{phoneNumber}</p>
+                  </div>
+
+                  <OTPInput
+                    onComplete={handleVerifyPhoneCode}
+                    onResend={handleResendCode}
+                    error={error ? undefined : undefined}
+                    disabled={loading}
+                  />
+
+                  {loading && (
+                    <div className="flex items-center justify-center gap-2 text-blue-600">
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>Verifying...</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOTPInput(false);
+                      setConfirmationResult(null);
+                      setError('');
+                      cleanupRecaptchaVerifier();
+                    }}
+                    className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+                  >
+                    Use a different number
+                  </button>
+                </>
               )}
-            </button>
-          </form>
+            </div>
+          )}
+
+          {/* reCAPTCHA container - must be present in DOM for phone auth */}
+          <div id="recaptcha-container"></div>
 
           <div className="text-center mt-6 space-y-4">
             <p className="text-gray-600">

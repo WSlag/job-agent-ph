@@ -11,8 +11,17 @@ import {
   getRedirectResult,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { getAuthInstance, getDbInstance } from '@/lib/firebase';
+import {
+  getAuthInstance,
+  getDbInstance,
+  setupRecaptchaVerifier,
+  sendPhoneOTP,
+  verifyPhoneOTP,
+  cleanupRecaptchaVerifier,
+  ConfirmationResult,
+} from '@/lib/firebase';
 import { User, UserType, JobHunter, Agency, Admin, Subscription } from '@/types';
+import { formatPhoneForFirebase, getPhoneAuthErrorMessage } from '@/lib/phone-helpers';
 import { COLLECTIONS } from '@/lib/collections';
 import { getAgencySubscription } from '@/lib/subscription-helpers';
 import { requestNotificationPermission, saveFCMToken, setupFCMListener } from '@/lib/fcm-client';
@@ -40,6 +49,15 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  // Phone auth methods
+  sendPhoneVerificationCode: (phoneNumber: string) => Promise<ConfirmationResult>;
+  signInWithPhoneCode: (confirmationResult: ConfirmationResult, code: string) => Promise<void>;
+  signUpWithPhone: (
+    confirmationResult: ConfirmationResult,
+    code: string,
+    userType: UserType,
+    profileData: ProfileData
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -690,6 +708,262 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Phone Authentication Methods
+  const sendPhoneVerificationCode = async (phoneNumber: string): Promise<ConfirmationResult> => {
+    try {
+      console.log('[AuthContext] Sending phone verification code to:', phoneNumber);
+
+      // Format phone number to E.164 format
+      const formattedPhone = formatPhoneForFirebase(phoneNumber);
+      console.log('[AuthContext] Formatted phone number:', formattedPhone);
+
+      // Set up reCAPTCHA verifier
+      const recaptchaVerifier = setupRecaptchaVerifier('recaptcha-container');
+
+      // Send OTP
+      const confirmationResult = await sendPhoneOTP(formattedPhone, recaptchaVerifier);
+      console.log('[AuthContext] Phone verification code sent successfully');
+
+      return confirmationResult;
+    } catch (error: any) {
+      console.error('[AuthContext] Error sending phone verification code:', error);
+      cleanupRecaptchaVerifier();
+
+      // Throw user-friendly error message
+      const errorMessage = getPhoneAuthErrorMessage(error.code || '');
+      throw new Error(errorMessage);
+    }
+  };
+
+  const signInWithPhoneCode = async (confirmationResult: ConfirmationResult, code: string): Promise<void> => {
+    try {
+      console.log('[AuthContext] Verifying phone code for sign in...');
+      setSessionReady(false);
+
+      // Verify OTP
+      const userCredential = await verifyPhoneOTP(confirmationResult, code);
+      const userId = userCredential.user.uid;
+      console.log('[AuthContext] Phone verification successful, user ID:', userId);
+
+      // Clean up reCAPTCHA
+      cleanupRecaptchaVerifier();
+
+      // Check if user profile exists
+      const db = getDbInstance();
+      const [jobHunterDoc, agencyDoc, adminDoc] = await Promise.all([
+        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
+        getDoc(doc(db, COLLECTIONS.AGENCIES, userId)),
+        getDoc(doc(db, COLLECTIONS.ADMINS, userId)),
+      ]);
+
+      if (!jobHunterDoc.exists() && !agencyDoc.exists() && !adminDoc.exists()) {
+        // User doesn't have a profile - they need to sign up
+        console.log('[AuthContext] No profile found for phone user, signing out...');
+        const auth = getAuthInstance();
+        await firebaseSignOut(auth);
+        throw new Error('No account found with this phone number. Please sign up first.');
+      }
+
+      // Force token refresh
+      console.log('[AuthContext] Refreshing token...');
+      const idToken = await userCredential.user.getIdToken(true);
+
+      // Create session cookie
+      console.log('[AuthContext] Creating session cookie...');
+      const response = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        console.error('[AuthContext] Failed to create session cookie');
+        throw new Error('Failed to create session. Please try again.');
+      }
+
+      console.log('[AuthContext] Session cookie created successfully');
+
+      // Wait for token propagation
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      setSessionReady(true);
+      console.log('[AuthContext] Phone sign in completed successfully');
+    } catch (error: any) {
+      console.error('[AuthContext] Error signing in with phone code:', error);
+      cleanupRecaptchaVerifier();
+
+      if (error.message) {
+        throw error;
+      }
+
+      const errorMessage = getPhoneAuthErrorMessage(error.code || '');
+      throw new Error(errorMessage);
+    }
+  };
+
+  const signUpWithPhone = async (
+    confirmationResult: ConfirmationResult,
+    code: string,
+    userType: UserType,
+    profileData: ProfileData
+  ): Promise<void> => {
+    try {
+      console.log('[AuthContext] Starting phone signup process...');
+      console.log('[AuthContext] User type:', userType);
+      setSessionReady(false);
+
+      // Verify OTP
+      const userCredential = await verifyPhoneOTP(confirmationResult, code);
+      const userId = userCredential.user.uid;
+      const phoneNumber = userCredential.user.phoneNumber;
+      console.log('[AuthContext] Phone verification successful, user ID:', userId);
+
+      // Clean up reCAPTCHA
+      cleanupRecaptchaVerifier();
+
+      const db = getDbInstance();
+
+      // Check if user already has a profile
+      const [existingJobHunter, existingAgency] = await Promise.all([
+        getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId)),
+        getDoc(doc(db, COLLECTIONS.AGENCIES, userId)),
+      ]);
+
+      if (existingJobHunter.exists() || existingAgency.exists()) {
+        console.log('[AuthContext] User already has a profile, proceeding with sign in...');
+        // User already has a profile - just sign them in
+        const idToken = await userCredential.user.getIdToken(true);
+
+        const response = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create session. Please try again.');
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        setSessionReady(true);
+        return;
+      }
+
+      // Create user profile in Firestore with legal acceptance fields
+      const userDoc: any = {
+        phone: phoneNumber,
+        userType,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Add legal acceptance fields from profileData
+      if (profileData && 'termsAcceptedAt' in profileData) {
+        userDoc.termsAcceptedAt = profileData.termsAcceptedAt;
+        userDoc.termsVersion = profileData.termsVersion;
+        userDoc.privacyAcceptedAt = profileData.privacyAcceptedAt;
+        userDoc.privacyVersion = profileData.privacyVersion;
+      }
+
+      // Add age verification for job hunters
+      if (userType === 'jobhunter' && profileData && 'dateOfBirth' in profileData) {
+        userDoc.dateOfBirth = profileData.dateOfBirth;
+        userDoc.ageVerified = profileData.ageVerified;
+      }
+
+      console.log('[AuthContext] Creating base user document...');
+      await setDoc(doc(db, COLLECTIONS.USERS, userId), userDoc);
+
+      // Create profile based on user type
+      if (userType === 'jobhunter') {
+        const typedProfileData = profileData as JobHunterProfileData;
+        const jobHunterProfile = {
+          ...profileData,
+          phone: phoneNumber,
+          userType,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        console.log('[AuthContext] Creating job hunter profile...');
+        await setDoc(doc(db, COLLECTIONS.JOB_HUNTERS, userId), jobHunterProfile);
+
+        // Update display name
+        await updateProfile(userCredential.user, {
+          displayName: `${typedProfileData.firstName} ${typedProfileData.lastName}`,
+        });
+      } else if (userType === 'agency') {
+        const typedProfileData = profileData as AgencyProfileData;
+        const agencyProfile = {
+          ...profileData,
+          phone: phoneNumber || typedProfileData.phone,
+          userType,
+          verified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        console.log('[AuthContext] Creating agency profile...');
+        await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), agencyProfile);
+
+        // Update display name
+        await updateProfile(userCredential.user, {
+          displayName: typedProfileData.companyName,
+        });
+      }
+
+      console.log('[AuthContext] Profile documents created successfully');
+
+      // Create session cookie
+      const idToken = await userCredential.user.getIdToken(true);
+
+      const sessionResponse = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!sessionResponse.ok) {
+        console.error('[AuthContext] Failed to create session cookie');
+      } else {
+        console.log('[AuthContext] Session cookie created successfully');
+      }
+
+      // Wait for session propagation
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      setSessionReady(true);
+
+      // Trigger welcome message (non-blocking)
+      if (userType === 'jobhunter') {
+        fetch('/api/jobhunter/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobHunterId: userId }),
+        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
+      } else if (userType === 'agency') {
+        fetch('/api/agency/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agencyId: userId }),
+        }).catch(err => console.error('[AuthContext] Failed to send welcome message:', err));
+      }
+
+      console.log('[AuthContext] Phone signup completed successfully');
+    } catch (error: any) {
+      console.error('[AuthContext] Phone signup error:', error);
+      cleanupRecaptchaVerifier();
+
+      if (error.message) {
+        throw error;
+      }
+
+      const errorMessage = getPhoneAuthErrorMessage(error.code || '');
+      throw new Error(errorMessage);
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -701,6 +975,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signOut,
     refreshProfile,
+    sendPhoneVerificationCode,
+    signInWithPhoneCode,
+    signUpWithPhone,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -728,5 +1005,8 @@ export function useOptionalAuth() {
     signIn: async () => {},
     signOut: async () => {},
     refreshProfile: async () => {},
+    sendPhoneVerificationCode: async () => { throw new Error('Auth context not available'); },
+    signInWithPhoneCode: async () => {},
+    signUpWithPhone: async () => {},
   };
 }

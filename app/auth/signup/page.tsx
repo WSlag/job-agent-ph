@@ -5,20 +5,27 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserType } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Phone, ArrowLeft } from 'lucide-react';
 import { getDefaultRouteForUserType, buildRedirectUrl } from '@/lib/auth-redirect';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
-import { getRedirectResult } from 'firebase/auth';
-import { getAuthInstance, getDbInstance } from '@/lib/firebase';
+import PhoneInput from '@/components/auth/PhoneInput';
+import OTPInput from '@/components/auth/OTPInput';
+import { getRedirectResult, ConfirmationResult } from 'firebase/auth';
+import { getAuthInstance, getDbInstance, cleanupRecaptchaVerifier } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/collections';
 import { validateDateOfBirth, calculateAge } from '@/lib/legal-helpers';
 import { LEGAL_VERSIONS } from '@/lib/legal-versions';
 
+type SignupMethod = 'email' | 'phone';
+
 function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signUp, user, userType: contextUserType, loading: authLoading, sessionReady } = useAuth();
+  const { signUp, signUpWithPhone, sendPhoneVerificationCode, user, userType: contextUserType, loading: authLoading, sessionReady } = useAuth();
+
+  // Signup method state
+  const [signupMethod, setSignupMethod] = useState<SignupMethod | null>(null);
 
   const [userType, setUserType] = useState<UserType>('jobhunter');
   const [email, setEmail] = useState('');
@@ -46,6 +53,14 @@ function SignUpForm() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [acceptedAgencyTerms, setAcceptedAgencyTerms] = useState(false);
+
+  // Phone auth state
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const [showOTPInput, setShowOTPInput] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
 
   // Helper function to process Google authentication result
   const processGoogleAuthResult = async (user: any) => {
@@ -304,6 +319,165 @@ function SignUpForm() {
     }
   }, [searchParams]);
 
+  // Clean up reCAPTCHA on unmount
+  useEffect(() => {
+    return () => {
+      cleanupRecaptchaVerifier();
+    };
+  }, []);
+
+  // Reset phone state when changing signup method
+  useEffect(() => {
+    if (signupMethod !== 'phone') {
+      setShowOTPInput(false);
+      setConfirmationResult(null);
+      setPhoneNumber('');
+      setPhoneVerified(false);
+      cleanupRecaptchaVerifier();
+    }
+  }, [signupMethod]);
+
+  const handleSendPhoneCode = async () => {
+    if (!isPhoneValid) {
+      setError('Please enter a valid Philippine mobile number');
+      return;
+    }
+
+    setError('');
+    setSendingCode(true);
+
+    try {
+      const result = await sendPhoneVerificationCode(phoneNumber);
+      setConfirmationResult(result);
+      setShowOTPInput(true);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send verification code');
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  // Store the OTP code for later use when submitting the form
+  const [otpCode, setOtpCode] = useState('');
+
+  const handleVerifyPhoneCode = async (code: string) => {
+    if (!confirmationResult) {
+      setError('Please request a new verification code');
+      return;
+    }
+
+    setError('');
+
+    // Store the code for later submission
+    setOtpCode(code);
+    // Mark phone as verified - user will complete profile form
+    setPhoneVerified(true);
+    setShowOTPInput(false);
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+    setShowOTPInput(false);
+    setConfirmationResult(null);
+    cleanupRecaptchaVerifier();
+
+    // Small delay to allow cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await handleSendPhoneCode();
+  };
+
+  const handlePhoneSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!confirmationResult) {
+      setError('Please verify your phone number first');
+      return;
+    }
+
+    // Validate terms acceptance
+    if (!acceptedTerms) {
+      setError('You must accept the Terms of Service to continue');
+      return;
+    }
+
+    if (!acceptedPrivacy) {
+      setError('You must accept the Privacy Policy to continue');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let profileData: any;
+
+      if (userType === 'jobhunter') {
+        if (!firstName || !lastName || !location || !dateOfBirth) {
+          setError('Please fill in all required fields');
+          setLoading(false);
+          return;
+        }
+
+        // Validate date of birth
+        const dobValidation = validateDateOfBirth(dateOfBirth);
+        if (!dobValidation.valid) {
+          setError(dobValidation.error || 'Invalid date of birth');
+          setLoading(false);
+          return;
+        }
+
+        profileData = {
+          firstName,
+          lastName,
+          location,
+          skills: [],
+          experience: 0,
+          dateOfBirth: new Date(dateOfBirth),
+          ageVerified: true,
+          termsAcceptedAt: new Date(),
+          termsVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
+          privacyAcceptedAt: new Date(),
+          privacyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
+        };
+      } else {
+        if (!companyName || !registrationNumber || !contactPerson || !address) {
+          setError('Please fill in all required fields');
+          setLoading(false);
+          return;
+        }
+
+        // Validate agency terms acceptance
+        if (!acceptedAgencyTerms) {
+          setError('You must accept the Agency Terms of Service to continue');
+          setLoading(false);
+          return;
+        }
+
+        profileData = {
+          companyName,
+          registrationNumber,
+          contactPerson,
+          phone: phoneNumber, // Use verified phone number
+          address,
+          termsAcceptedAt: new Date(),
+          termsVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
+          privacyAcceptedAt: new Date(),
+          privacyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
+          agencyTermsAcceptedAt: new Date(),
+          agencyTermsVersion: LEGAL_VERSIONS.AGENCY_TERMS,
+        };
+      }
+
+      await signUpWithPhone(confirmationResult, otpCode, userType, profileData);
+      // Redirect is handled by useEffect after userType is loaded
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to sign up';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -479,28 +653,383 @@ function SignUpForm() {
 
         {/* Sign Up Form */}
         <div className="bg-white p-8 rounded-xl shadow-md">
-          {/* Google Sign-Up Button */}
-          <div className="mb-6">
-            <GoogleAuthButton
-              userType={userType}
-              returnUrl={searchParams.get('redirect') || undefined}
-              onError={(errorMsg) => setError(errorMsg)}
-              disabled={loading}
-              buttonText="Sign up with Google"
-            />
-          </div>
+          {/* Method Selection - show only if method not selected yet */}
+          {!signupMethod && !phoneVerified && (
+            <>
+              {/* Google Sign-Up Button */}
+              <div className="mb-4">
+                <GoogleAuthButton
+                  userType={userType}
+                  returnUrl={searchParams.get('redirect') || undefined}
+                  onError={(errorMsg) => setError(errorMsg)}
+                  disabled={loading || sendingCode}
+                  buttonText="Sign up with Google"
+                />
+              </div>
 
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
-            </div>
-          </div>
+              {/* Phone Sign-Up Button */}
+              <div className="mb-4">
+                <button
+                  type="button"
+                  onClick={() => setSignupMethod('phone')}
+                  disabled={loading || sendingCode}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <Phone size={20} />
+                  Sign up with Phone
+                </button>
+              </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Divider */}
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or</span>
+                </div>
+              </div>
+
+              {/* Email Sign-Up Button */}
+              <button
+                type="button"
+                onClick={() => setSignupMethod('email')}
+                disabled={loading || sendingCode}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                Sign up with Email
+              </button>
+            </>
+          )}
+
+          {/* Phone Verification Flow */}
+          {signupMethod === 'phone' && !phoneVerified && (
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setSignupMethod(null);
+                  setShowOTPInput(false);
+                  setConfirmationResult(null);
+                  setPhoneNumber('');
+                  cleanupRecaptchaVerifier();
+                }}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium mb-4"
+              >
+                <ArrowLeft size={16} />
+                Back to options
+              </button>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+
+              {!showOTPInput ? (
+                <>
+                  <PhoneInput
+                    value={phoneNumber}
+                    onChange={(phone, isValid) => {
+                      setPhoneNumber(phone);
+                      setIsPhoneValid(isValid);
+                    }}
+                    disabled={sendingCode}
+                    label="Phone Number"
+                    placeholder="917 123 4567"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleSendPhoneCode}
+                    disabled={sendingCode || !isPhoneValid}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {sendingCode ? (
+                      <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Sending code...
+                      </>
+                    ) : (
+                      'Send Verification Code'
+                    )}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-center mb-4">
+                    <p className="text-gray-600">
+                      Enter the 6-digit code sent to
+                    </p>
+                    <p className="font-medium text-gray-900">{phoneNumber}</p>
+                  </div>
+
+                  <OTPInput
+                    onComplete={handleVerifyPhoneCode}
+                    onResend={handleResendCode}
+                    disabled={loading}
+                  />
+
+                  {loading && (
+                    <div className="flex items-center justify-center gap-2 text-blue-600">
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>Verifying...</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOTPInput(false);
+                      setConfirmationResult(null);
+                      setError('');
+                      cleanupRecaptchaVerifier();
+                    }}
+                    className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+                  >
+                    Use a different number
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Phone Profile Form - after phone is verified */}
+          {signupMethod === 'phone' && phoneVerified && (
+            <form onSubmit={handlePhoneSignupSubmit} className="space-y-4">
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
+                <p className="font-medium">Phone verified: {phoneNumber}</p>
+                <p className="text-sm">Complete your profile below</p>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+
+              {/* Job Hunter Specific Fields */}
+              {userType === 'jobhunter' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="phone-signup-first-name" className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name
+                      </label>
+                      <input
+                        id="phone-signup-first-name"
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="phone-signup-last-name" className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name
+                      </label>
+                      <input
+                        id="phone-signup-last-name"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone-signup-location" className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <input
+                      id="phone-signup-location"
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="e.g., Manila, Philippines"
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone-signup-dob" className="block text-sm font-medium text-gray-700 mb-2">
+                      Date of Birth <span className="text-gray-500 text-xs">(You must be 18+ to use this platform)</span>
+                    </label>
+                    <input
+                      id="phone-signup-dob"
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Agency Specific Fields */}
+              {userType === 'agency' && (
+                <>
+                  <div>
+                    <label htmlFor="phone-signup-company-name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Company Name
+                    </label>
+                    <input
+                      id="phone-signup-company-name"
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone-signup-registration-number" className="block text-sm font-medium text-gray-700 mb-2">
+                      Registration Number
+                    </label>
+                    <input
+                      id="phone-signup-registration-number"
+                      type="text"
+                      value={registrationNumber}
+                      onChange={(e) => setRegistrationNumber(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone-signup-contact-person" className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Person
+                    </label>
+                    <input
+                      id="phone-signup-contact-person"
+                      type="text"
+                      value={contactPerson}
+                      onChange={(e) => setContactPerson(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone-signup-address" className="block text-sm font-medium text-gray-700 mb-2">
+                      Address
+                    </label>
+                    <textarea
+                      id="phone-signup-address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      required
+                      rows={3}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Legal Acceptance */}
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-start gap-3">
+                  <input
+                    id="phone-accept-all-terms"
+                    type="checkbox"
+                    checked={acceptedTerms && acceptedPrivacy && (userType !== 'agency' || acceptedAgencyTerms)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setAcceptedTerms(checked);
+                      setAcceptedPrivacy(checked);
+                      if (userType === 'agency') {
+                        setAcceptedAgencyTerms(checked);
+                      }
+                    }}
+                    required
+                    className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0"
+                  />
+                  <label htmlFor="phone-accept-all-terms" className="text-sm text-gray-700 leading-relaxed">
+                    {userType === 'jobhunter' ? (
+                      <>
+                        By creating an account, you agree to our{' '}
+                        <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                          Terms
+                        </Link>
+                        {', '}
+                        <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                          Privacy Policy
+                        </Link>
+                        , and confirm you are 18+ years old.
+                      </>
+                    ) : (
+                      <>
+                        By creating an account, you agree to our{' '}
+                        <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                          Terms
+                        </Link>
+                        {', '}
+                        <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                          Privacy Policy
+                        </Link>
+                        {', '}
+                        <Link href="/agency-terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                          Agency Terms
+                        </Link>
+                        , and certify you hold a valid DMW license.
+                      </>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Creating Account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSignupMethod(null);
+                  setPhoneVerified(false);
+                  setShowOTPInput(false);
+                  setConfirmationResult(null);
+                  setPhoneNumber('');
+                  cleanupRecaptchaVerifier();
+                }}
+                className="w-full text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+              >
+                Start over with different method
+              </button>
+            </form>
+          )}
+
+          {/* Email Sign-Up Form */}
+          {signupMethod === 'email' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setSignupMethod(null)}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium mb-4"
+              >
+                <ArrowLeft size={16} />
+                Back to options
+              </button>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 <p>{error}</p>
@@ -800,6 +1329,11 @@ function SignUpForm() {
               )}
             </button>
           </form>
+            </>
+          )}
+
+          {/* reCAPTCHA container - must be present in DOM for phone auth */}
+          <div id="recaptcha-container"></div>
 
           <div className="text-center mt-6 space-y-4">
             <p className="text-gray-600">
