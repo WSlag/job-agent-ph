@@ -116,16 +116,60 @@ async function handleInboundEmail(data: {
     // Extract email address from "Name <email@example.com>" format
     const fromEmail = from.match(/<(.+)>/)?.[1] || from;
 
-    // Check if this is a reply to an outreach email
-    const outreachQuery = await adminDb
+    let outreachId: string | null = null;
+    let agencyName: string | null = null;
+
+    // First, try to find outreach by sender email
+    let outreachQuery = await adminDb
       .collection(COLLECTIONS.OUTREACH_LOGS)
       .where('recipientEmail', '==', fromEmail)
       .orderBy('sentAt', 'desc')
       .limit(1)
       .get();
 
-    let outreachId: string | null = null;
-    let agencyName: string | null = null;
+    // If not found by email, try to match by subject (for "Re:" replies)
+    if (outreachQuery.empty && subject) {
+      // Remove "Re:", "RE:", "Fwd:", etc. prefixes and trim
+      const cleanSubject = subject.replace(/^(Re:|RE:|Fwd:|FWD:|Fw:|FW:)\s*/gi, '').trim();
+
+      // Search for outreach with matching subject patterns
+      // The outreach subjects are:
+      // - "Post Jobs FREE on JobAgentPH - Reach Thousands of Filipino Workers" (short)
+      // - "Partner with JobAgentPH — Reach Thousands of Filipino Job Seekers" (standard)
+      // - "Partnership Invitation — JobAgentPH Recruitment Platform" (formal)
+
+      const subjectPatterns = [
+        'Post Jobs FREE on JobAgentPH',
+        'Partner with JobAgentPH',
+        'Partnership Invitation'
+      ];
+
+      const matchesOutreachSubject = subjectPatterns.some(pattern =>
+        cleanSubject.toLowerCase().includes(pattern.toLowerCase())
+      );
+
+      if (matchesOutreachSubject) {
+        // Get recent outreach logs and find one that this could be a reply to
+        const recentOutreach = await adminDb
+          .collection(COLLECTIONS.OUTREACH_LOGS)
+          .orderBy('sentAt', 'desc')
+          .limit(50)
+          .get();
+
+        // Try to find a match by checking if this sender could have received an outreach
+        for (const doc of recentOutreach.docs) {
+          const data = doc.data();
+          // Check if the fromEmail domain matches or is similar
+          const senderDomain = fromEmail.split('@')[1];
+          const recipientDomain = data.recipientEmail?.split('@')[1];
+
+          if (senderDomain && recipientDomain && senderDomain === recipientDomain) {
+            outreachQuery = { empty: false, docs: [doc] } as typeof outreachQuery;
+            break;
+          }
+        }
+      }
+    }
 
     if (!outreachQuery.empty) {
       const outreachDoc = outreachQuery.docs[0];

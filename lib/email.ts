@@ -715,7 +715,7 @@ www.jobagentph.com`,
     return {
       from: DEFAULT_FROM,
       to: data.recipientEmail,
-      replyTo: DEFAULT_FROM,
+      replyTo: process.env.RESEND_INBOUND_EMAIL || DEFAULT_FROM,
       subject: selected.subject,
       html: selected.html,
       text: selected.text,

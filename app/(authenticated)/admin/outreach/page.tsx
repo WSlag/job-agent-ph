@@ -529,14 +529,14 @@ export default function AdminOutreachPage() {
                   <p className="text-sm mt-1">
                     Replies from agencies will appear here
                   </p>
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left text-sm">
-                    <p className="font-medium text-yellow-800 mb-2">Setup Required:</p>
-                    <ol className="list-decimal list-inside text-yellow-700 space-y-1">
-                      <li>Go to <a href="https://resend.com/webhooks" target="_blank" rel="noopener noreferrer" className="underline">Resend Webhooks</a></li>
-                      <li>Add webhook URL: <code className="bg-yellow-100 px-1">https://www.jobagentph.com/api/webhooks/resend</code></li>
-                      <li>Enable &quot;email.received&quot; event</li>
-                      <li>Add signing secret to .env.local as RESEND_WEBHOOK_SECRET</li>
-                    </ol>
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left text-sm">
+                    <p className="font-medium text-blue-800 mb-2">How it works:</p>
+                    <p className="text-blue-700 mb-2">
+                      When you send outreach emails, agencies can reply directly. Their replies will automatically appear here.
+                    </p>
+                    <p className="text-blue-600 text-xs">
+                      Note: Replies are sent to the Resend inbound email address and processed via webhook.
+                    </p>
                   </div>
                 </div>
               ) : (
