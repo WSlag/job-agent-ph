@@ -8,7 +8,8 @@ import Button from '@/components/ui/Button';
 import { Facebook, Send, CheckCircle, AlertCircle, ExternalLink, Eye, Clock, RefreshCw, Copy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { Admin } from '@/types';
+import { Admin, Job as JobType } from '@/types';
+import { getAdminJobs } from '@/lib/job-management-helpers';
 
 interface Job {
   id: string;
@@ -22,7 +23,7 @@ interface Job {
   jobType: string;
   category: string;
   isActive: boolean;
-  postedAt: string;
+  postedAt: Date;
 }
 
 interface FacebookPost {
@@ -61,11 +62,10 @@ export default function AdminFacebookPage() {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/admin/jobs?status=active&limit=100');
-      if (response.ok) {
-        const data = await response.json();
-        setJobs(data.jobs || []);
-      }
+      const fetchedJobs = await getAdminJobs({ status: 'active' });
+      // Filter to only show active jobs and map to local Job type
+      const activeJobs = fetchedJobs.filter(job => job.isActive);
+      setJobs(activeJobs as Job[]);
     } catch (error) {
       console.error('Error fetching jobs:', error);
       toast.error('Failed to load jobs');
