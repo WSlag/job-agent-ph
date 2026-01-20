@@ -142,6 +142,9 @@ export enum Permission {
   // Messaging
   SEND_MESSAGES = 'SEND_MESSAGES',
   SEND_BULK_MESSAGES = 'SEND_BULK_MESSAGES',
+
+  // Facebook Cross-posting
+  POST_TO_FACEBOOK = 'POST_TO_FACEBOOK',
 }
 
 // Job Types
@@ -350,7 +353,9 @@ export type AuditAction =
   // Permission actions
   | 'permissions_updated'
   // Subscription actions
-  | 'subscription_approved' | 'subscription_rejected';
+  | 'subscription_approved' | 'subscription_rejected'
+  // Facebook cross-posting actions
+  | 'facebook_post_created' | 'facebook_post_failed';
 
 export type AuditResourceType = 'job' | 'user' | 'agency' | 'jobhunter' | 'featured_request' | 'message' | 'settings' | 'admin';
 
@@ -560,4 +565,21 @@ export interface ParsedCSVRow {
   messageType: OutreachMessageType;
   isValid: boolean;
   validationError?: string;
+}
+
+// Facebook Cross-posting Types
+export type FacebookPostStatus = 'pending' | 'posted' | 'failed';
+
+export interface FacebookPost {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  facebookPostId?: string;
+  status: FacebookPostStatus;
+  postContent: string;
+  postedAt?: Date;
+  postedBy: string;
+  postedByName: string;
+  error?: string;
+  createdAt: Date;
 }

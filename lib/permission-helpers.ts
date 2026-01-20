@@ -146,6 +146,8 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
 
   [Permission.SEND_MESSAGES]: 'Send individual messages to users',
   [Permission.SEND_BULK_MESSAGES]: 'Send bulk messages to multiple users',
+
+  [Permission.POST_TO_FACEBOOK]: 'Post jobs to Facebook page',
 };
 
 /**

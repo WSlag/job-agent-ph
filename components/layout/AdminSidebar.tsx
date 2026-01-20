@@ -19,6 +19,7 @@ import {
   Building2,
   Wrench,
   Send,
+  Facebook,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,6 +64,11 @@ const navigation = [
     name: 'Outreach',
     href: '/admin/outreach',
     icon: Send,
+  },
+  {
+    name: 'Facebook',
+    href: '/admin/facebook',
+    icon: Facebook,
   },
   {
     name: 'Featured Requests',

@@ -361,6 +361,8 @@ export function formatAuditAction(action: AuditAction): string {
     permissions_updated: 'Updated Permissions',
     subscription_approved: 'Approved Subscription',
     subscription_rejected: 'Rejected Subscription',
+    facebook_post_created: 'Posted Job to Facebook',
+    facebook_post_failed: 'Facebook Post Failed',
   };
 
   return actionMap[action] || action;
