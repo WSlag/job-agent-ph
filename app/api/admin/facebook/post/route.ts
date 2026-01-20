@@ -21,6 +21,7 @@ interface Job {
   experienceRequired: number;
   category: string;
   isActive: boolean;
+  imageUrl?: string;
 }
 
 /**
@@ -144,22 +145,43 @@ export async function POST(request: NextRequest) {
     const postContent = formatJobForFacebook(job, customMessage);
     const jobUrl = `${SITE_URL}/jobs/${job.id}`;
 
-    // Post to Facebook
-    const fbUrl = `https://graph.facebook.com/v18.0/${FACEBOOK_PAGE_ID}/feed`;
+    // Check if job has an image
+    const hasImage = jobData.imageUrl && jobData.imageUrl.trim() !== '';
 
-    const fbResponse = await fetch(fbUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: postContent,
-        link: jobUrl,
-        access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
-      }),
-    });
+    let fbResponse;
+    let fbData;
 
-    const fbData = await fbResponse.json();
+    if (hasImage) {
+      // Post as photo with caption (more engaging)
+      const fbUrl = `https://graph.facebook.com/v18.0/${FACEBOOK_PAGE_ID}/photos`;
+      fbResponse = await fetch(fbUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: jobData.imageUrl,
+          caption: postContent,
+          access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
+        }),
+      });
+    } else {
+      // Post as text with link (for jobs without images)
+      const fbUrl = `https://graph.facebook.com/v18.0/${FACEBOOK_PAGE_ID}/feed`;
+      fbResponse = await fetch(fbUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: postContent,
+          link: jobUrl,
+          access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
+        }),
+      });
+    }
+
+    fbData = await fbResponse.json();
 
     if (!fbResponse.ok) {
       console.error('Facebook API error:', fbData);
