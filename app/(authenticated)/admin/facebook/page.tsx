@@ -62,8 +62,9 @@ export default function AdminFacebookPage() {
 
   const fetchJobs = async () => {
     try {
-      const fetchedJobs = await getAdminJobs({ status: 'active' });
-      // Filter to only show active jobs and map to local Job type
+      // Fetch all jobs without status filter (some jobs may not have status field)
+      const fetchedJobs = await getAdminJobs({});
+      // Filter to only show active jobs
       const activeJobs = fetchedJobs.filter(job => job.isActive);
       setJobs(activeJobs as Job[]);
     } catch (error) {
