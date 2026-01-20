@@ -146,18 +146,18 @@ export default function SubscriptionPage() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Free Tier</p>
                   <p className="text-3xl font-bold text-gray-900">₱0</p>
-                  <p className="text-sm text-gray-500">2 lifetime job posts</p>
+                  <p className="text-sm text-gray-500">5 lifetime job posts</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Usage</p>
-                  <UsageMeter current={lifetimeJobsPosted} limit={2} />
+                  <UsageMeter current={lifetimeJobsPosted} limit={5} />
                   <p className="text-sm text-gray-600 mt-2">
-                    {lifetimeJobsPosted} of 2 posts used
+                    {lifetimeJobsPosted} of 5 posts used
                   </p>
                 </div>
 
-                {lifetimeJobsPosted >= 2 ? (
+                {lifetimeJobsPosted >= 5 ? (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <p className="text-sm text-yellow-800 font-medium mb-2">
                       Free limit reached
@@ -253,7 +253,7 @@ export default function SubscriptionPage() {
               <ul className="space-y-2">
                 <li className="flex items-start gap-2 text-sm">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-700">2 lifetime job posts</span>
+                  <span className="text-gray-700">5 lifetime job posts</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />

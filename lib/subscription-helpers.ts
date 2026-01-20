@@ -312,7 +312,7 @@ export async function getJobPostingLimits(): Promise<JobPostingLimits> {
       // Return default values if not configured
       return {
         id: 'default',
-        freeTierLimit: 2,
+        freeTierLimit: 5,
         premiumTierLimit: -1, // unlimited
         premiumMonthlyPrice: 5000,
         premiumCurrency: 'PHP',

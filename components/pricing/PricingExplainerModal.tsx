@@ -183,7 +183,7 @@ export default function PricingExplainerModal({
 
                         <div className="grid grid-cols-2 gap-4">
                           <div className="bg-white border border-gray-200 rounded-lg p-4">
-                            <div className="text-3xl font-bold text-blue-600 mb-1">2</div>
+                            <div className="text-3xl font-bold text-blue-600 mb-1">5</div>
                             <div className="text-sm text-gray-600">Free lifetime posts</div>
                           </div>
                           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -206,10 +206,10 @@ export default function PricingExplainerModal({
                             <div className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                               FREE TIER
                             </div>
-                            <div className="text-2xl font-bold text-gray-900">2 Lifetime Posts</div>
+                            <div className="text-2xl font-bold text-gray-900">5 Lifetime Posts</div>
                           </div>
                           <p className="text-gray-700 leading-relaxed mb-4">
-                            Every agency gets <strong>2 free job posts</strong> that never expire.
+                            Every agency gets <strong>5 free job posts</strong> that never expire.
                             Perfect for testing our platform or if you only hire occasionally.
                           </p>
                         </div>
@@ -218,7 +218,7 @@ export default function PricingExplainerModal({
                           <h4 className="font-semibold text-gray-900">What's included:</h4>
                           <ul className="space-y-2">
                             {[
-                              'Post up to 2 jobs (lifetime)',
+                              'Post up to 5 jobs (lifetime)',
                               'Full access to applicant tracking',
                               'Direct messaging with candidates',
                               'Job post editing and management',
@@ -234,7 +234,7 @@ export default function PricingExplainerModal({
 
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                           <p className="text-sm text-amber-800">
-                            <strong>Important:</strong> Once you've used your 2 free posts, you'll need
+                            <strong>Important:</strong> Once you've used your 5 free posts, you'll need
                             to upgrade to Premium to post more jobs.
                           </p>
                         </div>
@@ -380,7 +380,7 @@ export default function PricingExplainerModal({
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
                           <h4 className="font-semibold text-gray-900 mb-3">Quick summary:</h4>
                           <ul className="space-y-2 text-sm text-gray-700">
-                            <li>✓ Start with 2 free lifetime job posts</li>
+                            <li>✓ Start with 5 free lifetime job posts</li>
                             <li>✓ Upgrade to Premium for ₱5,000/month (unlimited posts)</li>
                             <li>✓ Add featured placement for ₱10,000 per job (premium only)</li>
                             <li>✓ Simple payment verification process</li>

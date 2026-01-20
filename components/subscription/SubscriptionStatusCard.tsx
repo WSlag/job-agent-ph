@@ -102,17 +102,17 @@ export default function SubscriptionStatusCard({
           <div>
             <p className="text-sm text-gray-600">Job Posts Used</p>
             <p className="text-2xl font-bold text-gray-900">
-              {lifetimeJobsPosted} / 2 <span className="text-sm font-normal text-gray-500">lifetime</span>
+              {lifetimeJobsPosted} / 5 <span className="text-sm font-normal text-gray-500">lifetime</span>
             </p>
           </div>
 
-          {lifetimeJobsPosted >= 2 ? (
+          {lifetimeJobsPosted >= 5 ? (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-sm text-yellow-800 font-medium mb-2">
                 Free limit reached
               </p>
               <p className="text-sm text-yellow-700 mb-3">
-                You've used all 2 free job posts. Upgrade to Premium for unlimited job postings!
+                You've used all 5 free job posts. Upgrade to Premium for unlimited job postings!
               </p>
               <Link
                 href="/agency/subscription"
@@ -124,7 +124,7 @@ export default function SubscriptionStatusCard({
           ) : (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800 font-medium mb-2">
-                {2 - lifetimeJobsPosted} post{2 - lifetimeJobsPosted === 1 ? '' : 's'} remaining
+                {5 - lifetimeJobsPosted} post{5 - lifetimeJobsPosted === 1 ? '' : 's'} remaining
               </p>
               <p className="text-sm text-blue-700 mb-3">
                 Upgrade to Premium for unlimited job postings at ₱5,000/month
