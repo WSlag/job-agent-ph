@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Facebook, Send, CheckCircle, AlertCircle, ExternalLink, Eye, Clock, RefreshCw, Copy } from 'lucide-react';
+import { Facebook, Send, CheckCircle, AlertCircle, ExternalLink, Eye, Clock, RefreshCw, Copy, ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { Admin, Job as JobType } from '@/types';
@@ -24,6 +25,7 @@ interface Job {
   category: string;
   isActive: boolean;
   postedAt: Date;
+  imageUrl?: string;
 }
 
 interface FacebookPost {
@@ -388,6 +390,29 @@ export default function AdminFacebookPage() {
                       <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
                         {formatJobForPreview(selectedJob)}
                       </pre>
+                    </div>
+                  )}
+
+                  {/* Job Image - Right-click to copy */}
+                  {selectedJob.imageUrl && (
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ImageIcon className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">Job Image</span>
+                        <span className="text-xs text-gray-400">(Right-click to copy)</span>
+                      </div>
+                      <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                        <Image
+                          src={selectedJob.imageUrl}
+                          alt={selectedJob.title}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2 text-center">
+                        Right-click the image above and select "Copy image" to paste into Facebook
+                      </p>
                     </div>
                   )}
 
