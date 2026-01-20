@@ -38,6 +38,7 @@ export const COLLECTIONS = {
   JOB_POSTING_LIMITS: 'jobPostingLimits', // System configuration for limits and pricing
   OUTREACH_LOGS: 'outreachLogs', // Admin outreach email logs
   OUTREACH_REPLIES: 'outreachReplies', // Incoming replies to outreach emails
+  OUTREACH_BATCHES: 'outreachBatches', // Bulk outreach email batches
 } as const;
 
 // Helper to get collection paths
@@ -68,6 +69,7 @@ export const getCollectionPath = {
   jobPostingLimits: () => COLLECTIONS.JOB_POSTING_LIMITS,
   outreachLogs: () => COLLECTIONS.OUTREACH_LOGS,
   outreachReplies: () => COLLECTIONS.OUTREACH_REPLIES,
+  outreachBatches: () => COLLECTIONS.OUTREACH_BATCHES,
 };
 
 // Firestore indexes needed (create in Firebase Console)

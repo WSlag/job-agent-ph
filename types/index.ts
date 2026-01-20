@@ -516,3 +516,48 @@ export interface JobPostingLimits {
   updatedAt: Date;
   updatedBy?: string;
 }
+
+// Outreach Batch Types (for bulk email outreach)
+export type OutreachBatchStatus = 'pending' | 'processing' | 'completed' | 'cancelled' | 'failed';
+export type OutreachMessageType = 'short' | 'standard' | 'formal';
+export type OutreachRecipientStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+
+export interface OutreachBatchRecipient {
+  email: string;
+  agencyName?: string;
+  messageType: OutreachMessageType;
+  status: OutreachRecipientStatus;
+  messageId?: string;
+  error?: string;
+  sentAt?: Date;
+}
+
+export interface OutreachBatch {
+  id: string;
+  adminId: string;
+  adminName?: string;
+  fileName: string;
+  totalRecipients: number;
+  sentCount: number;
+  failedCount: number;
+  skippedCount: number;
+  status: OutreachBatchStatus;
+  defaultMessageType: OutreachMessageType;
+  createdAt: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  recipients: OutreachBatchRecipient[];
+  errors: Array<{
+    email: string;
+    error: string;
+    timestamp: Date;
+  }>;
+}
+
+export interface ParsedCSVRow {
+  recipientEmail: string;
+  agencyName?: string;
+  messageType: OutreachMessageType;
+  isValid: boolean;
+  validationError?: string;
+}

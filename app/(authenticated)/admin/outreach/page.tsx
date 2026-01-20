@@ -5,9 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import AdminLayout from '@/components/layout/AdminLayout';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Send, Mail, Clock, CheckCircle, AlertCircle, Eye, Copy, Inbox, X, MessageCircle, Trash2 } from 'lucide-react';
+import { Send, Mail, Clock, CheckCircle, AlertCircle, Eye, Copy, Inbox, X, MessageCircle, Trash2, Upload, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
+import CSVUploadZone from '@/components/admin/outreach/CSVUploadZone';
+import CSVPreviewTable from '@/components/admin/outreach/CSVPreviewTable';
+import BulkSendProgress from '@/components/admin/outreach/BulkSendProgress';
+import { ParsedCSVRow, OutreachMessageType } from '@/types';
+import { getValidRows } from '@/lib/csv-helpers';
 
 interface OutreachLog {
   id: string;
@@ -104,7 +109,14 @@ export default function AdminOutreachPage() {
   const [loadingReplies, setLoadingReplies] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [selectedReply, setSelectedReply] = useState<OutreachReply | null>(null);
-  const [activeTab, setActiveTab] = useState<'send' | 'replies'>('send');
+  const [activeTab, setActiveTab] = useState<'send' | 'bulk' | 'replies'>('send');
+
+  // Bulk upload state
+  const [csvData, setCsvData] = useState<ParsedCSVRow[]>([]);
+  const [csvFileName, setCsvFileName] = useState('');
+  const [bulkMessageType, setBulkMessageType] = useState<OutreachMessageType>('standard');
+  const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
+  const [isSendingBulk, setIsSendingBulk] = useState(false);
 
   useEffect(() => {
     fetchLogs();
@@ -227,6 +239,82 @@ export default function AdminOutreachPage() {
     toast.success('Copied to clipboard');
   };
 
+  // Bulk upload handlers
+  const handleCSVFileAccepted = (data: ParsedCSVRow[], fileName: string) => {
+    setCsvData(data);
+    setCsvFileName(fileName);
+    toast.success(`Loaded ${data.length} recipients from ${fileName}`);
+  };
+
+  const handleCSVError = (error: string) => {
+    toast.error(error);
+  };
+
+  const handleRemoveRow = (index: number) => {
+    setCsvData(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleClearCSV = () => {
+    setCsvData([]);
+    setCsvFileName('');
+    setActiveBatchId(null);
+  };
+
+  const handleStartBulkSend = async () => {
+    const validRows = getValidRows(csvData);
+    if (validRows.length === 0) {
+      toast.error('No valid recipients to send');
+      return;
+    }
+
+    setIsSendingBulk(true);
+    try {
+      const response = await fetch('/api/admin/outreach/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipients: validRows.map(row => ({
+            recipientEmail: row.recipientEmail,
+            agencyName: row.agencyName,
+            messageType: row.messageType || bulkMessageType,
+          })),
+          fileName: csvFileName,
+          adminUserId: user?.uid,
+          adminName: user?.displayName || 'Admin',
+          defaultMessageType: bulkMessageType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create batch');
+      }
+
+      setActiveBatchId(data.batchId);
+      toast.success(`Batch created with ${data.totalRecipients} recipients`);
+    } catch (error) {
+      console.error('Error creating batch:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create batch');
+      setIsSendingBulk(false);
+    }
+  };
+
+  const handleBulkComplete = () => {
+    setIsSendingBulk(false);
+    setActiveBatchId(null);
+    setCsvData([]);
+    setCsvFileName('');
+    fetchLogs();
+    toast.success('Bulk outreach completed!');
+  };
+
+  const handleBulkCancel = () => {
+    setIsSendingBulk(false);
+    setActiveBatchId(null);
+    toast.success('Batch cancelled');
+  };
+
   const getPreviewText = () => {
     return MESSAGE_PREVIEWS[messageType].replace('[Agency Name]', agencyName || '');
   };
@@ -265,6 +353,17 @@ export default function AdminOutreachPage() {
             >
               <Send className="w-4 h-4 inline mr-2" />
               Send
+            </button>
+            <button
+              onClick={() => setActiveTab('bulk')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'bulk'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Upload className="w-4 h-4 inline mr-2" />
+              Bulk Upload
             </button>
             <button
               onClick={() => setActiveTab('replies')}
@@ -498,6 +597,96 @@ export default function AdminOutreachPage() {
               </div>
             </Card>
           </>
+        ) : activeTab === 'bulk' ? (
+          /* Bulk Upload Tab */
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-blue-600" />
+                Bulk Email Upload
+              </h2>
+
+              {activeBatchId ? (
+                /* Show progress when batch is active */
+                <BulkSendProgress
+                  batchId={activeBatchId}
+                  onComplete={handleBulkComplete}
+                  onCancel={handleBulkCancel}
+                />
+              ) : csvData.length === 0 ? (
+                /* Show upload zone when no data */
+                <CSVUploadZone
+                  onFileAccepted={handleCSVFileAccepted}
+                  onError={handleCSVError}
+                  isDisabled={isSendingBulk}
+                />
+              ) : (
+                /* Show preview table when data is loaded */
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-gray-500">File:</span>
+                      <span className="ml-2 font-medium">{csvFileName}</span>
+                    </div>
+                  </div>
+
+                  <CSVPreviewTable
+                    data={csvData}
+                    onRemoveRow={handleRemoveRow}
+                    onClear={handleClearCSV}
+                  />
+
+                  {/* Message Type Selection for rows without messageType */}
+                  <div className="border-t pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Default Message Type (for rows without messageType in CSV)
+                    </label>
+                    <div className="flex gap-4">
+                      {MESSAGE_TYPES.map((type) => (
+                        <label
+                          key={type.value}
+                          className={`flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer transition-colors ${
+                            bulkMessageType === type.value
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="bulkMessageType"
+                            value={type.value}
+                            checked={bulkMessageType === type.value}
+                            onChange={(e) => setBulkMessageType(e.target.value as OutreachMessageType)}
+                          />
+                          <span className="text-sm">{type.label.replace(' (Recommended)', '')}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Send Button */}
+                  <div className="flex justify-end gap-3">
+                    <Button
+                      variant="secondary"
+                      onClick={handleClearCSV}
+                      disabled={isSendingBulk}
+                    >
+                      Clear
+                    </Button>
+                    <Button
+                      onClick={handleStartBulkSend}
+                      disabled={isSendingBulk || getValidRows(csvData).length === 0}
+                      icon={Send}
+                      iconPosition="left"
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      {isSendingBulk ? 'Starting...' : `Send ${getValidRows(csvData).length} Valid Email(s)`}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
         ) : (
           /* Replies Tab */
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
