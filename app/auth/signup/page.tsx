@@ -657,7 +657,7 @@ function SignUpForm() {
                   type="button"
                   onClick={() => setSignupMethod('phone')}
                   disabled={loading || sendingCode}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
                   <Phone size={20} />
                   Sign up with Phone
@@ -690,7 +690,7 @@ function SignUpForm() {
                 type="button"
                 onClick={() => setSignupMethod('email')}
                 disabled={loading || sendingCode}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Sign up with Email
               </button>
