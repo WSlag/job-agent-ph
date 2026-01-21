@@ -39,6 +39,8 @@ function LoginForm() {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [sendingCode, setSendingCode] = useState(false);
   const verifyingRef = useRef(false);
+  const sendingCodeRef = useRef(false);
+  const lastSendTime = useRef<number>(0);
 
   // Helper function to process Google authentication result
   const processGoogleAuthResult = async (user: any) => {
@@ -302,6 +304,16 @@ function LoginForm() {
       return;
     }
 
+    // Prevent duplicate calls with ref and time-based debounce
+    const now = Date.now();
+    const MIN_SEND_INTERVAL = 10000; // 10 seconds minimum between sends
+    if (sendingCodeRef.current || now - lastSendTime.current < MIN_SEND_INTERVAL) {
+      console.log('[LoginPage] Send code already in progress or too soon, skipping');
+      return;
+    }
+
+    sendingCodeRef.current = true;
+    lastSendTime.current = now;
     setError('');
     setSendingCode(true);
 
@@ -313,6 +325,7 @@ function LoginForm() {
       setError(err.message || 'Failed to send verification code');
     } finally {
       setSendingCode(false);
+      sendingCodeRef.current = false;
     }
   };
 

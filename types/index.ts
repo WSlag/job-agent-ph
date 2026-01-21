@@ -33,6 +33,7 @@ export interface JobHunter extends User {
   location: string;
   skills: string[];
   experience: number; // years
+  age?: number; // User's age (18-100)
   resumeUrl?: string;
   profileImageUrl?: string;
   profileCompleteness?: number;

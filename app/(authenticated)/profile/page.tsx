@@ -33,6 +33,7 @@ interface JobHunterProfile {
   phone?: string;
   skills?: string[];
   experience?: number;
+  age?: number;
   bio?: string;
   resumeUrl?: string;
   profilePictureUrl?: string;
@@ -172,6 +173,16 @@ export default function ProfilePage() {
         if (value !== undefined && value !== '') {
           const expValidation = validateExperience(value);
           if (!expValidation.valid) error = expValidation.error!;
+        }
+        break;
+      case 'age':
+        if (value !== undefined && value !== '') {
+          const ageNum = parseInt(value);
+          if (isNaN(ageNum) || ageNum < 18) {
+            error = 'You must be at least 18 years old';
+          } else if (ageNum > 100) {
+            error = 'Please enter a valid age';
+          }
         }
         break;
     }
@@ -619,6 +630,38 @@ export default function ProfilePage() {
                     {fieldErrors.experience && (
                       <p id="experience-error" className="text-red-600 text-sm mt-1 flex items-center gap-1" role="alert">
                         <span>⚠️</span> {fieldErrors.experience}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <User className="inline w-4 h-4 mr-2" />
+                      Age <span className="text-gray-500 text-xs">(You must be 18+ to use this platform)</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="age"
+                      value={'age' in profile ? (profile.age || '') : ''}
+                      onChange={(e) => {
+                        handleInputChange('age', e.target.value ? parseInt(e.target.value) : undefined);
+                        clearFieldError('age');
+                      }}
+                      onBlur={(e) => validateField('age', e.target.value)}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                        fieldErrors.age
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300'
+                      }`}
+                      min="18"
+                      max="100"
+                      placeholder="Enter your age"
+                      aria-invalid={!!fieldErrors.age}
+                      aria-describedby={fieldErrors.age ? 'age-error' : undefined}
+                    />
+                    {fieldErrors.age && (
+                      <p id="age-error" className="text-red-600 text-sm mt-1 flex items-center gap-1" role="alert">
+                        <span>⚠️</span> {fieldErrors.age}
                       </p>
                     )}
                   </div>

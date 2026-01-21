@@ -14,7 +14,6 @@ import { getRedirectResult, ConfirmationResult } from 'firebase/auth';
 import { getAuthInstance, getDbInstance, cleanupRecaptchaVerifier } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/collections';
-import { validateDateOfBirth, calculateAge } from '@/lib/legal-helpers';
 import { LEGAL_VERSIONS } from '@/lib/legal-versions';
 
 type SignupMethod = 'email' | 'phone';
@@ -40,7 +39,6 @@ function SignUpForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [location, setLocation] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
 
   // Agency fields
   const [companyName, setCompanyName] = useState('');
@@ -61,6 +59,8 @@ function SignUpForm() {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [sendingCode, setSendingCode] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const sendingCodeRef = useRef(false);
+  const lastSendTime = useRef<number>(0);
 
   // Helper function to process Google authentication result
   const processGoogleAuthResult = async (user: any) => {
@@ -108,11 +108,7 @@ function SignUpForm() {
           ...legalFields,
         };
 
-        // Add age verification for job hunters (assume 18+ for Google sign-up)
-        if (storedUserType === 'jobhunter') {
-          userDoc.dateOfBirth = new Date(new Date().setFullYear(new Date().getFullYear() - 18));
-          userDoc.ageVerified = true;
-        }
+        // Note: For Google sign-up, age will be entered later in profile completion
 
         await setDoc(doc(db, COLLECTIONS.USERS, userId), userDoc);
 
@@ -130,8 +126,7 @@ function SignUpForm() {
             createdAt: now,
             updatedAt: now,
             ...legalFields,
-            dateOfBirth: new Date(new Date().setFullYear(new Date().getFullYear() - 18)),
-            ageVerified: true,
+            // Age will be entered in profile completion
           });
         } else if (storedUserType === 'agency') {
           await setDoc(doc(db, COLLECTIONS.AGENCIES, userId), {
@@ -343,6 +338,16 @@ function SignUpForm() {
       return;
     }
 
+    // Prevent duplicate calls with ref and time-based debounce
+    const now = Date.now();
+    const MIN_SEND_INTERVAL = 10000; // 10 seconds minimum between sends
+    if (sendingCodeRef.current || now - lastSendTime.current < MIN_SEND_INTERVAL) {
+      console.log('[SignupPage] Send code already in progress or too soon, skipping');
+      return;
+    }
+
+    sendingCodeRef.current = true;
+    lastSendTime.current = now;
     setError('');
     setSendingCode(true);
 
@@ -354,6 +359,7 @@ function SignUpForm() {
       setError(err.message || 'Failed to send verification code');
     } finally {
       setSendingCode(false);
+      sendingCodeRef.current = false;
     }
   };
 
@@ -421,16 +427,8 @@ function SignUpForm() {
       let profileData: any;
 
       if (userType === 'jobhunter') {
-        if (!firstName || !lastName || !location || !dateOfBirth) {
+        if (!firstName || !lastName || !location) {
           setError('Please fill in all required fields');
-          setLoading(false);
-          return;
-        }
-
-        // Validate date of birth
-        const dobValidation = validateDateOfBirth(dateOfBirth);
-        if (!dobValidation.valid) {
-          setError(dobValidation.error || 'Invalid date of birth');
           setLoading(false);
           return;
         }
@@ -441,8 +439,6 @@ function SignUpForm() {
           location,
           skills: [],
           experience: 0,
-          dateOfBirth: new Date(dateOfBirth),
-          ageVerified: true,
           termsAcceptedAt: new Date(),
           termsVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
           privacyAcceptedAt: new Date(),
@@ -519,16 +515,8 @@ function SignUpForm() {
       let profileData: any;
 
       if (userType === 'jobhunter') {
-        if (!firstName || !lastName || !location || !dateOfBirth) {
+        if (!firstName || !lastName || !location) {
           setError('Please fill in all required fields');
-          setLoading(false);
-          return;
-        }
-
-        // Validate date of birth
-        const dobValidation = validateDateOfBirth(dateOfBirth);
-        if (!dobValidation.valid) {
-          setError(dobValidation.error || 'Invalid date of birth');
           setLoading(false);
           return;
         }
@@ -539,8 +527,6 @@ function SignUpForm() {
           location,
           skills: [],
           experience: 0,
-          dateOfBirth: new Date(dateOfBirth),
-          ageVerified: true,
           termsAcceptedAt: new Date(),
           termsVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
           privacyAcceptedAt: new Date(),
@@ -871,21 +857,6 @@ function SignUpForm() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-
-                  <div>
-                    <label htmlFor="phone-signup-dob" className="block text-sm font-medium text-gray-700 mb-2">
-                      Date of Birth <span className="text-gray-500 text-xs">(You must be 18+ to use this platform)</span>
-                    </label>
-                    <input
-                      id="phone-signup-dob"
-                      type="date"
-                      value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
                 </>
               )}
 
@@ -1172,23 +1143,6 @@ function SignUpForm() {
                     placeholder="e.g., Manila, Philippines"
                     required
                     autoComplete="address-level2"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="signup-dob" className="block text-sm font-medium text-gray-700 mb-2">
-                    Date of Birth <span className="text-gray-500 text-xs">(You must be 18+ to use this platform)</span>
-                  </label>
-                  <input
-                    id="signup-dob"
-                    name="dateOfBirth"
-                    type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-                    required
-                    autoComplete="bday"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>

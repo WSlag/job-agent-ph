@@ -8,7 +8,9 @@ import {
   signInWithPhoneNumber,
   ConfirmationResult,
   UserCredential,
+  initializeRecaptchaConfig,
 } from 'firebase/auth';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, AppCheck } from 'firebase/app-check';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
@@ -45,15 +47,75 @@ function getApp(): FirebaseApp {
   return app;
 }
 
+/**
+ * Initialize Firebase App Check with reCAPTCHA Enterprise
+ * This protects all Firebase services from abuse
+ * The site key should match what's configured in Firebase Console > App Check
+ *
+ * IMPORTANT: App Check with reCAPTCHA Enterprise MUST be initialized when it's
+ * registered in Firebase Console. The Firebase SDK (v11+) handles the coordination
+ * between App Check and Phone Auth's RecaptchaVerifier automatically.
+ */
+function initializeAppCheckIfNeeded(): void {
+  if (typeof window === 'undefined' || _appCheckInitialized) {
+    return;
+  }
+
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
+  if (!siteKey) {
+    console.warn('[Firebase] NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY not set, App Check disabled');
+    _appCheckInitialized = true;
+    return;
+  }
+
+  try {
+    _appCheckInitialized = true;
+    _appCheck = initializeAppCheck(getApp(), {
+      provider: new ReCaptchaEnterpriseProvider(siteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+    console.log('[Firebase] App Check initialized with reCAPTCHA Enterprise');
+  } catch (error) {
+    console.error('[Firebase] Failed to initialize App Check:', error);
+  }
+}
+
 // Lazy-initialized services - only created when first accessed
 let _auth: Auth | null = null;
 let _db: Firestore | null = null;
 let _storage: FirebaseStorage | null = null;
+let _appCheck: AppCheck | null = null;
 let _persistenceInitialized = false;
+let _appCheckInitialized = false;
+let _recaptchaConfigInitialized = false;
+
+/**
+ * Initialize reCAPTCHA Enterprise config for phone authentication
+ * This must be called to enable reCAPTCHA Enterprise for phone auth flows
+ */
+async function initializeRecaptchaConfigIfNeeded(auth: Auth): Promise<void> {
+  if (typeof window === 'undefined' || _recaptchaConfigInitialized) {
+    return;
+  }
+
+  _recaptchaConfigInitialized = true;
+
+  try {
+    await initializeRecaptchaConfig(auth);
+    console.log('[Firebase] reCAPTCHA Enterprise config initialized for phone auth');
+  } catch (error) {
+    console.error('[Firebase] Failed to initialize reCAPTCHA config:', error);
+    // Reset flag so it can be retried
+    _recaptchaConfigInitialized = false;
+  }
+}
 
 // Getter for Auth - initializes on first use
 export function getAuthInstance(): Auth {
   if (!_auth) {
+    // Initialize App Check before auth to ensure phone auth works with reCAPTCHA Enterprise
+    initializeAppCheckIfNeeded();
+
     _auth = getAuth(getApp());
 
     // Set persistence to LOCAL mode on first auth access (persists across browser restarts)
@@ -62,6 +124,9 @@ export function getAuthInstance(): Auth {
       setPersistence(_auth, browserLocalPersistence).catch((error) => {
         console.error('Error setting auth persistence:', error);
       });
+
+      // Initialize reCAPTCHA Enterprise config for phone authentication
+      initializeRecaptchaConfigIfNeeded(_auth);
     }
   }
   return _auth;
@@ -105,13 +170,25 @@ export const storage = new Proxy({} as FirebaseStorage, {
 
 // Phone Authentication Utilities
 let _recaptchaVerifier: RecaptchaVerifier | null = null;
+let _recaptchaCreatedAt: number = 0;
+const RECAPTCHA_MAX_AGE = 60000; // 1 minute - reCAPTCHA tokens expire
 
 /**
  * Set up invisible reCAPTCHA verifier for phone authentication
+ * Reuses existing verifier if still valid (< 1 minute old)
  * @param containerId - The ID of the container element for reCAPTCHA
+ * @param forceNew - Force creation of a new verifier
  * @returns RecaptchaVerifier instance
  */
-export function setupRecaptchaVerifier(containerId: string = 'recaptcha-container'): RecaptchaVerifier {
+export function setupRecaptchaVerifier(containerId: string = 'recaptcha-container', forceNew: boolean = false): RecaptchaVerifier {
+  const now = Date.now();
+
+  // Reuse existing verifier if it's still fresh (less than 1 minute old) and not forced new
+  if (_recaptchaVerifier && !forceNew && now - _recaptchaCreatedAt < RECAPTCHA_MAX_AGE) {
+    console.log('[Phone Auth] Reusing existing reCAPTCHA verifier');
+    return _recaptchaVerifier;
+  }
+
   // Clean up existing verifier if any
   if (_recaptchaVerifier) {
     try {
@@ -131,8 +208,13 @@ export function setupRecaptchaVerifier(containerId: string = 'recaptcha-containe
     },
     'expired-callback': () => {
       console.log('[Phone Auth] reCAPTCHA expired');
+      // Mark as expired so next call creates a new one
+      _recaptchaCreatedAt = 0;
     },
   });
+
+  _recaptchaCreatedAt = now;
+  console.log('[Phone Auth] Created new reCAPTCHA verifier');
 
   return _recaptchaVerifier;
 }
@@ -159,6 +241,7 @@ export function cleanupRecaptchaVerifier(): void {
       // Ignore cleanup errors
     }
     _recaptchaVerifier = null;
+    _recaptchaCreatedAt = 0;
   }
 }
 

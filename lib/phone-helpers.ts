@@ -132,6 +132,7 @@ export function getPhoneAuthErrorMessage(errorCode: string): string {
     'auth/code-expired': 'Verification code has expired. Please request a new one',
     'auth/too-many-requests': 'Too many attempts. Please try again later',
     'auth/captcha-check-failed': 'reCAPTCHA verification failed. Please try again',
+    'auth/invalid-app-credential': 'Phone verification service configuration error. Please try again later.',
     'auth/missing-verification-code': 'Please enter the verification code',
     'auth/invalid-verification-id': 'Verification session expired. Please request a new code',
     'auth/credential-already-in-use': 'This phone number is already linked to another account',

@@ -26,6 +26,10 @@ export default function OTPInput({
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const lastSubmittedCode = useRef<string>('');
+  const lastSubmitTime = useRef<number>(0);
+  // Store onComplete in a ref to avoid dependency issues
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   // Start cooldown timer on mount
   useEffect(() => {
@@ -52,14 +56,22 @@ export default function OTPInput({
     }
   }, [autoFocus]);
 
-  // Check if OTP is complete - only submit once per unique code
+  // Check if OTP is complete - only submit once per unique code with debounce
   useEffect(() => {
     const code = otp.join('');
-    if (code.length === length && !otp.includes('') && code !== lastSubmittedCode.current) {
+    const now = Date.now();
+    // Prevent duplicate submissions: check code uniqueness AND minimum 500ms between calls
+    if (
+      code.length === length &&
+      !otp.includes('') &&
+      code !== lastSubmittedCode.current &&
+      now - lastSubmitTime.current > 500
+    ) {
       lastSubmittedCode.current = code;
-      onComplete(code);
+      lastSubmitTime.current = now;
+      onCompleteRef.current(code);
     }
-  }, [otp, length, onComplete]);
+  }, [otp, length]); // Removed onComplete from deps - using ref instead
 
   const handleChange = useCallback((index: number, value: string) => {
     // Only allow digits
