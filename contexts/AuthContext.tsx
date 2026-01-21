@@ -854,15 +854,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (existingJobHunter.exists() || existingAgency.exists()) {
-        // User already has a profile - don't silently sign in, inform them
+        // User already has a profile - perform silent login (better UX for user acquisition)
         const existingType = existingJobHunter.exists() ? 'Job Hunter' : 'Agency';
-        console.log('[AuthContext] Phone number already registered as:', existingType);
+        console.log('[AuthContext] Phone number already registered as:', existingType, '- performing silent login');
 
-        const auth = getAuthInstance();
-        await firebaseSignOut(auth);
+        // Silent login: Don't sign out, just load the existing profile
         skipProfileLoadingRef.current = false;
+        await loadUserProfile(userId);
 
-        throw new Error(`This phone number is already registered as a ${existingType} account. Please sign in instead.`);
+        // Session will be created by onAuthStateChanged listener
+        // Redirect will be handled by the signup page's useEffect
+        console.log('[AuthContext] Silent login completed for existing phone user');
+        return; // Exit without error - user is now logged in
       }
 
       // Create user profile in Firestore with legal acceptance fields
