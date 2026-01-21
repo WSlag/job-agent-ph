@@ -52,15 +52,24 @@ function getApp(): FirebaseApp {
  * This protects all Firebase services from abuse
  * The site key should match what's configured in Firebase Console > App Check
  *
- * IMPORTANT: App Check with reCAPTCHA Enterprise MUST be initialized when it's
- * registered in Firebase Console. The Firebase SDK (v11+) handles the coordination
- * between App Check and Phone Auth's RecaptchaVerifier automatically.
+ * NOTE: App Check is temporarily disabled to avoid conflict with Phone Auth's
+ * RecaptchaVerifier. Phone Auth uses standard reCAPTCHA v2 which is managed
+ * automatically by Firebase. Re-enable App Check once phone auth is working.
  */
 function initializeAppCheckIfNeeded(): void {
   if (typeof window === 'undefined' || _appCheckInitialized) {
     return;
   }
 
+  // TEMPORARILY DISABLED: App Check conflicts with Phone Auth's RecaptchaVerifier
+  // The reCAPTCHA Enterprise key causes "Invalid site key" errors because
+  // Phone Auth expects Firebase-managed reCAPTCHA v2, not Enterprise.
+  // Re-enable once phone auth is working by uncommenting the code below.
+  console.log('[Firebase] App Check disabled - using standard reCAPTCHA for phone auth');
+  _appCheckInitialized = true;
+  return;
+
+  /*
   const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
   if (!siteKey) {
     console.warn('[Firebase] NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY not set, App Check disabled');
@@ -78,6 +87,7 @@ function initializeAppCheckIfNeeded(): void {
   } catch (error) {
     console.error('[Firebase] Failed to initialize App Check:', error);
   }
+  */
 }
 
 // Lazy-initialized services - only created when first accessed
@@ -92,12 +102,24 @@ let _recaptchaConfigInitialized = false;
 /**
  * Initialize reCAPTCHA Enterprise config for phone authentication
  * This must be called to enable reCAPTCHA Enterprise for phone auth flows
+ *
+ * NOTE: Temporarily disabled - initializeRecaptchaConfig() requires Firebase
+ * Authentication to be configured for reCAPTCHA Enterprise in the Console.
+ * Using standard Firebase-managed reCAPTCHA v2 instead.
  */
 async function initializeRecaptchaConfigIfNeeded(auth: Auth): Promise<void> {
   if (typeof window === 'undefined' || _recaptchaConfigInitialized) {
     return;
   }
 
+  // TEMPORARILY DISABLED: initializeRecaptchaConfig requires Firebase Auth
+  // to be configured for reCAPTCHA Enterprise mode in Firebase Console.
+  // Using standard reCAPTCHA v2 for now (handled automatically by RecaptchaVerifier).
+  console.log('[Firebase] Using standard reCAPTCHA v2 for phone auth');
+  _recaptchaConfigInitialized = true;
+  return;
+
+  /*
   _recaptchaConfigInitialized = true;
 
   try {
@@ -108,6 +130,7 @@ async function initializeRecaptchaConfigIfNeeded(auth: Auth): Promise<void> {
     // Reset flag so it can be retried
     _recaptchaConfigInitialized = false;
   }
+  */
 }
 
 // Getter for Auth - initializes on first use
