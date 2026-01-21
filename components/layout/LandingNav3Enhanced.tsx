@@ -166,13 +166,19 @@ export default function LandingNav3Enhanced() {
                 <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse shadow-lg" aria-hidden="true"></span>
               </Link>
 
-              {/* Login/Profile - Desktop */}
+              {/* Auth Buttons - Desktop */}
               <Link
                 href="/auth/login"
+                className="hidden sm:flex items-center text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                href="/auth/signup"
                 className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 <User2 className="w-4 h-4" />
-                <span className="hidden lg:inline">Login</span>
+                <span className="hidden lg:inline">Sign Up</span>
               </Link>
 
               {/* Menu Toggle */}
@@ -345,19 +351,22 @@ export default function LandingNav3Enhanced() {
                 <div className="pb-4 border-b border-gray-200">
                   <div className="space-y-3">
                     <Link
-                      href="/auth/login"
-                      className="block w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
                       href="/auth/signup"
-                      className="block w-full px-4 py-3 border-2 border-blue-600 text-blue-600 text-center rounded-lg font-semibold hover:bg-blue-50 transition-all"
+                      className="block w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Create Account
                     </Link>
+                    <p className="text-center text-sm text-gray-500">
+                      Already have an account?{' '}
+                      <Link
+                        href="/auth/login"
+                        className="text-blue-600 hover:text-blue-700 font-semibold"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Sign In
+                      </Link>
+                    </p>
                   </div>
                 </div>
               )}
