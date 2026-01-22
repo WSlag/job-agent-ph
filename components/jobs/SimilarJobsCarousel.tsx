@@ -37,12 +37,12 @@ export default function SimilarJobsCarousel({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-md p-2 sm:p-4">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Briefcase className="text-blue-600" size={24} />
           Similar Jobs
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {[1, 2].map((i) => (
             <div key={i} className="w-full h-48 bg-gray-100 rounded-lg animate-pulse" />
           ))}
@@ -56,13 +56,13 @@ export default function SimilarJobsCarousel({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white rounded-xl shadow-md p-2 sm:p-4">
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <Briefcase className="text-blue-600" size={24} />
         Similar Jobs ({jobs.length})
       </h2>
 
-      <div className={`grid gap-4 ${jobs.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      <div className={`grid gap-3 ${jobs.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
         {jobs.map((job) => (
           <div key={job.id} className="w-full">
             <JobCard job={job} />
