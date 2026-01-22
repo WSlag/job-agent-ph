@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Chrome, ExternalLink, Copy, CheckCircle, Smartphone, Zap, Shield, Bell } from 'lucide-react';
 import Image from 'next/image';
 import { useInstallFlow } from '@/contexts/InstallFlowContext';
-import { copyToClipboard, getCurrentUrl, getOpenInBrowserUrl } from '@/lib/browser-detection';
+import { copyToClipboard, getCurrentUrlWithInstallParams, getOpenInBrowserUrl } from '@/lib/browser-detection';
 import { COLORS } from '@/lib/colors';
 
 /**
@@ -40,7 +40,8 @@ export default function WelcomeModal() {
   const recommendedBrowser = platform === 'ios' ? 'Safari' : 'Chrome';
 
   const handleCopyUrl = async () => {
-    const url = getCurrentUrl();
+    // Use URL with install params to trigger PWA install prompt in external browser
+    const url = getCurrentUrlWithInstallParams();
     const success = await copyToClipboard(url);
     if (success) {
       setCopied(true);

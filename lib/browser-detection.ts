@@ -91,23 +91,30 @@ export function isPWAInstalled(): boolean {
 }
 
 /**
- * Generate a URL to open in an external browser
+ * Generate a URL to open in an external browser with install prompt parameter
  * For Android, generates a Chrome intent URL
  * For iOS, returns the regular URL (user must manually open in Safari)
+ *
+ * Adds ?source=fb&install=1 to trigger immediate PWA install prompt
  */
 export function getOpenInBrowserUrl(path: string = '/'): string {
   if (typeof window === 'undefined') return path;
 
   const platform = getDevicePlatform();
-  const fullUrl = `${window.location.origin}${path}`;
+  const browserName = getInAppBrowserName() || 'social';
+
+  // Add install prompt parameters to the path
+  const separator = path.includes('?') ? '&' : '?';
+  const pathWithParams = `${path}${separator}source=${browserName}&install=1`;
 
   if (platform === 'android') {
     // Chrome intent URL for Android
     // This will open the URL in Chrome if installed
-    return `intent://${window.location.host}${path}#Intent;scheme=https;package=com.android.chrome;end`;
+    return `intent://${window.location.host}${pathWithParams}#Intent;scheme=https;package=com.android.chrome;end`;
   }
 
-  return fullUrl;
+  // For iOS/desktop, return full URL with parameters
+  return `${window.location.origin}${pathWithParams}`;
 }
 
 /**
@@ -167,4 +174,21 @@ export function getRecommendedBrowserName(): string {
 export function getCurrentUrl(): string {
   if (typeof window === 'undefined') return '';
   return window.location.href;
+}
+
+/**
+ * Get the current page URL with install prompt parameters
+ * Used when copying URL for users to paste in external browser
+ */
+export function getCurrentUrlWithInstallParams(): string {
+  if (typeof window === 'undefined') return '';
+
+  const browserName = getInAppBrowserName() || 'social';
+  const url = new URL(window.location.href);
+
+  // Add install parameters
+  url.searchParams.set('source', browserName);
+  url.searchParams.set('install', '1');
+
+  return url.toString();
 }

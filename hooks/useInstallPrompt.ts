@@ -63,6 +63,17 @@ interface InstallPromptHook {
    * Whether the install is in progress
    */
   isInstalling: boolean;
+
+  /**
+   * Whether the user came from a social media app (FB/IG/TikTok)
+   * Used to show install prompt immediately without waiting
+   */
+  isFromSocialApp: boolean;
+
+  /**
+   * The source social app name (facebook, instagram, tiktok, etc.)
+   */
+  socialAppSource: string | null;
 }
 
 /**
@@ -175,12 +186,30 @@ export function useInstallPrompt(): InstallPromptHook {
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
   const [isInstalling, setIsInstalling] = useState<boolean>(false);
   const [platform, setPlatform] = useState<Platform>('unsupported');
+  const [isFromSocialApp, setIsFromSocialApp] = useState<boolean>(false);
+  const [socialAppSource, setSocialAppSource] = useState<string | null>(null);
 
   // Initialize state on mount
   useEffect(() => {
     setPlatform(detectPlatform());
     setIsInstalled(checkIfInstalled());
     setIsDismissed(checkIfDismissed());
+
+    // Check if user came from a social media app via URL parameters
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const source = urlParams.get('source');
+      const installParam = urlParams.get('install');
+
+      if (source && installParam === '1') {
+        console.log('[PWA] User came from social app:', source);
+        setIsFromSocialApp(true);
+        setSocialAppSource(source);
+
+        // Clean up URL parameters after reading (optional - keeps URL clean)
+        // We'll keep them for now so the install banner can use them
+      }
+    }
   }, []);
 
   // Listen for beforeinstallprompt event
@@ -302,5 +331,7 @@ export function useInstallPrompt(): InstallPromptHook {
     dismissPrompt,
     platform,
     isInstalling,
+    isFromSocialApp,
+    socialAppSource,
   };
 }

@@ -51,22 +51,33 @@ export default function InstallPWABanner() {
     promptInstall,
     dismissPrompt,
     platform,
+    isFromSocialApp,
+    socialAppSource,
   } = useInstallPrompt();
 
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [hasEngagement, setHasEngagement] = useState(false);
 
-  // Track time on site
+  // For users from social apps, skip the wait time entirely
+  useEffect(() => {
+    if (isFromSocialApp && !isInstalled && !isDismissed && platform === 'chrome') {
+      console.log('[PWA Banner] User from social app, showing immediately');
+      setHasEngagement(true);
+    }
+  }, [isFromSocialApp, isInstalled, isDismissed, platform]);
+
+  // Track time on site (skip if from social app - already engaged)
   useEffect(() => {
     if (isInstalled || isDismissed || platform !== 'chrome') return;
+    if (isFromSocialApp) return; // Skip wait for social app users
 
     const timer = setTimeout(() => {
       setHasEngagement(true);
     }, ENGAGEMENT_THRESHOLDS.TIME_ON_SITE);
 
     return () => clearTimeout(timer);
-  }, [isInstalled, isDismissed, platform]);
+  }, [isInstalled, isDismissed, platform, isFromSocialApp]);
 
   // Track page visits
   useEffect(() => {
@@ -184,13 +195,15 @@ export default function InstallPWABanner() {
               id="install-banner-title"
               className="font-semibold text-gray-900 text-sm md:text-base truncate"
             >
-              Install Job Agent PH
+              {isFromSocialApp ? 'Add to Home Screen' : 'Install Job Agent PH'}
             </h3>
             <p
               id="install-banner-description"
               className="text-xs md:text-sm text-gray-600 mt-0.5"
             >
-              Faster access & works offline
+              {isFromSocialApp
+                ? 'Quick access to jobs anytime!'
+                : 'Faster access & works offline'}
             </p>
           </div>
 
@@ -211,10 +224,10 @@ export default function InstallPWABanner() {
               style={{
                 backgroundColor: COLORS.PRIMARY.BLUE,
               }}
-              aria-label="Install app"
+              aria-label={isFromSocialApp ? "Add to home screen" : "Install app"}
             >
               <Download size={16} aria-hidden="true" />
-              <span className="hidden sm:inline">Install</span>
+              <span className="hidden sm:inline">{isFromSocialApp ? 'Add' : 'Install'}</span>
             </button>
 
             {/* Close Button */}

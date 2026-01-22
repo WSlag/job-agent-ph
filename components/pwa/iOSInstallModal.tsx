@@ -57,7 +57,7 @@ export default function IOSInstallModal({
   isOpen: controlledIsOpen,
   onClose,
 }: iOSInstallModalProps = {}) {
-  const { platform, isInstalled } = useInstallPrompt();
+  const { platform, isInstalled, isFromSocialApp, socialAppSource } = useInstallPrompt();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -81,12 +81,25 @@ export default function IOSInstallModal({
     }
   }, []);
 
-  // Auto-show modal for iOS users (if not controlled)
+  // Immediately show modal for users from social apps (skip wait)
   useEffect(() => {
     if (controlledIsOpen !== undefined) return; // Skip if controlled
     if (platform !== 'ios') return;
     if (isInstalled) return;
     if (isDismissed) return;
+    if (!isFromSocialApp) return;
+
+    console.log('[iOS Install] User from social app, showing immediately');
+    setInternalIsOpen(true);
+  }, [platform, isInstalled, isDismissed, controlledIsOpen, isFromSocialApp]);
+
+  // Auto-show modal for iOS users (if not controlled and not from social app)
+  useEffect(() => {
+    if (controlledIsOpen !== undefined) return; // Skip if controlled
+    if (platform !== 'ios') return;
+    if (isInstalled) return;
+    if (isDismissed) return;
+    if (isFromSocialApp) return; // Skip - handled by immediate effect above
 
     // Show modal after a delay (30 seconds or 3 page views)
     const timer = setTimeout(() => {
@@ -94,7 +107,7 @@ export default function IOSInstallModal({
     }, 30000);
 
     return () => clearTimeout(timer);
-  }, [platform, isInstalled, isDismissed, controlledIsOpen]);
+  }, [platform, isInstalled, isDismissed, controlledIsOpen, isFromSocialApp]);
 
   const handleClose = () => {
     try {
@@ -192,7 +205,9 @@ export default function IOSInstallModal({
               id="ios-install-description"
               className="text-gray-700 mb-6 text-center"
             >
-              Install our app for quick access and offline browsing
+              {isFromSocialApp
+                ? 'Save the app to your home screen for quick access to job listings!'
+                : 'Install our app for quick access and offline browsing'}
             </p>
 
             {/* Installation Steps */}
