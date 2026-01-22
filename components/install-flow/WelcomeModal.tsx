@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Chrome, ExternalLink, Copy, CheckCircle, Smartphone, Zap, Shield, Bell } from 'lucide-react';
+import { X, Chrome, ExternalLink, Copy, CheckCircle, Smartphone, Zap, Shield, Download } from 'lucide-react';
 import Image from 'next/image';
 import { useInstallFlow } from '@/contexts/InstallFlowContext';
 import { copyToClipboard, getCurrentUrlWithInstallParams, getOpenInBrowserUrl } from '@/lib/browser-detection';
@@ -19,6 +19,8 @@ export default function WelcomeModal() {
     showWelcomeModal,
     browserName,
     platform,
+    isPWAInstalled,
+    isAuthenticated,
     dismissWelcome,
     openInExternalBrowser,
     continueAnyway,
@@ -113,10 +115,12 @@ export default function WelcomeModal() {
             </div>
 
             <h2 className="text-2xl font-bold text-white mb-2">
-              Welcome to Job Agent PH
+              {isAuthenticated ? 'Better Experience' : 'Welcome to Job Agent PH'}
             </h2>
             <p className="text-white/90 text-sm">
-              For the best experience, open in {recommendedBrowser}
+              {isAuthenticated
+                ? `Open in ${recommendedBrowser} for the best experience`
+                : `For the best experience, open in ${recommendedBrowser}`}
             </p>
           </div>
 
@@ -127,8 +131,9 @@ export default function WelcomeModal() {
                 {/* Why message */}
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
                   <p className="text-amber-800 text-sm">
-                    You're viewing this in {browserDisplayName}'s browser.
-                    Some features like signing in and installing the app work better in {recommendedBrowser}.
+                    {isAuthenticated
+                      ? `You're viewing this in ${browserDisplayName}'s browser. For better performance and to install the app, open in ${recommendedBrowser}.`
+                      : `You're viewing this in ${browserDisplayName}'s browser. Some features like signing in and installing the app work better in ${recommendedBrowser}.`}
                   </p>
                 </div>
 
@@ -147,18 +152,35 @@ export default function WelcomeModal() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: COLORS.STATUS.SUCCESS + '15' }}
-                    >
-                      <Shield size={20} style={{ color: COLORS.STATUS.SUCCESS }} />
+                  {!isAuthenticated && (
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: COLORS.STATUS.SUCCESS + '15' }}
+                      >
+                        <Shield size={20} style={{ color: COLORS.STATUS.SUCCESS }} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Secure Sign-in</p>
+                        <p className="text-sm text-gray-500">Phone and Google authentication</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Secure Sign-in</p>
-                      <p className="text-sm text-gray-500">Phone and Google authentication</p>
+                  )}
+
+                  {!isPWAInstalled && (
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: COLORS.ACCENT.PURPLE + '15' }}
+                      >
+                        <Download size={20} style={{ color: COLORS.ACCENT.PURPLE }} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Install as App</p>
+                        <p className="text-sm text-gray-500">Add to home screen for quick access</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="flex items-center gap-3">
                     <div
@@ -168,8 +190,8 @@ export default function WelcomeModal() {
                       <Smartphone size={20} style={{ color: COLORS.ACCENT.PURPLE }} />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">Install as App</p>
-                      <p className="text-sm text-gray-500">Add to home screen for quick access</p>
+                      <p className="font-medium text-gray-900">Full App Experience</p>
+                      <p className="text-sm text-gray-500">Works offline with saved content</p>
                     </div>
                   </div>
                 </div>

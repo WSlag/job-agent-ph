@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useFacebookBrowser } from '@/hooks/useFacebookBrowser';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   getOpenInBrowserUrl,
   copyToClipboard,
@@ -33,6 +34,7 @@ interface InstallFlowContextType {
   browserName: 'facebook' | 'instagram' | 'tiktok' | 'other' | null;
   platform: 'ios' | 'android' | 'desktop';
   isPWAInstalled: boolean;
+  isAuthenticated: boolean;
   showWelcomeModal: boolean;
   showApplyModal: boolean;
   showBanner: boolean;
@@ -71,6 +73,7 @@ interface InstallFlowProviderProps {
  */
 export function InstallFlowProvider({ children }: InstallFlowProviderProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const {
     isInAppBrowser,
     browserName,
@@ -81,6 +84,9 @@ export function InstallFlowProvider({ children }: InstallFlowProviderProps) {
     continueAnyway: hookContinueAnyway,
     hasContinuedAnyway,
   } = useFacebookBrowser();
+
+  // Check if user is authenticated (logged in or registered)
+  const isAuthenticated = !!user;
 
   // Modal states
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -247,6 +253,7 @@ export function InstallFlowProvider({ children }: InstallFlowProviderProps) {
         browserName,
         platform,
         isPWAInstalled,
+        isAuthenticated,
         showWelcomeModal,
         showApplyModal,
         showBanner,
