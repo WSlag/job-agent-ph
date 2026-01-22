@@ -28,7 +28,16 @@ export default function ApplyActionModal() {
 
   if (!showApplyModal) return null;
 
-  const actionText = pendingAction === 'apply' ? 'Apply' : 'Message';
+  // Determine action text based on pending action type
+  const actionText = pendingAction === 'apply'
+    ? 'Apply'
+    : pendingAction === 'message'
+    ? 'Message'
+    : pendingAction === 'signup'
+    ? 'Sign Up'
+    : 'Sign In';
+
+  const isAuthAction = pendingAction === 'signup' || pendingAction === 'signin';
   const recommendedBrowser = platform === 'ios' ? 'Safari' : 'Chrome';
 
   const handleCopyUrl = async () => {
@@ -108,7 +117,9 @@ export default function ApplyActionModal() {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">
-                      {actionText} to {pendingActionData?.jobTitle || 'this job'}
+                      {isAuthAction
+                        ? `${actionText} for Job Agent PH`
+                        : `${actionText} to ${pendingActionData?.jobTitle || 'this job'}`}
                     </h3>
                     <p className="text-sm text-gray-500">
                       Better experience in {recommendedBrowser}
@@ -119,8 +130,9 @@ export default function ApplyActionModal() {
                 {/* Warning Message */}
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
                   <p className="text-amber-800 text-sm">
-                    Sign-in may not work properly in this browser.
-                    For a reliable {actionText.toLowerCase()} process, we recommend opening in {recommendedBrowser}.
+                    {isAuthAction
+                      ? `Phone and Google sign-in work better in ${recommendedBrowser}. Open the app there to create your account and save it to your home screen.`
+                      : `Sign-in may not work properly in this browser. For a reliable ${actionText.toLowerCase()} process, we recommend opening in ${recommendedBrowser}.`}
                   </p>
                 </div>
 

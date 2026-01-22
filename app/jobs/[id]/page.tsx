@@ -1047,6 +1047,14 @@ export default function JobDetailsPage() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
+                  // Check for FB browser interception
+                  if (isInAppBrowser) {
+                    const shouldProceed = interceptAction('signup', { jobId: job?.id, jobTitle: job?.title }, true);
+                    if (!shouldProceed) {
+                      setShowAuthPrompt(false);
+                      return;
+                    }
+                  }
                   if (authPromptAction === 'apply') {
                     router.push(`/auth/signup?type=jobhunter&redirect=/jobs/${params.id}&action=apply`);
                   } else {
@@ -1059,6 +1067,14 @@ export default function JobDetailsPage() {
               </button>
               <button
                 onClick={() => {
+                  // Check for FB browser interception
+                  if (isInAppBrowser) {
+                    const shouldProceed = interceptAction('signin', { jobId: job?.id, jobTitle: job?.title }, true);
+                    if (!shouldProceed) {
+                      setShowAuthPrompt(false);
+                      return;
+                    }
+                  }
                   if (authPromptAction === 'apply') {
                     router.push(`/auth/login?redirect=/jobs/${params.id}&action=apply`);
                   } else {

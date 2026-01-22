@@ -7,6 +7,7 @@ import { doc, getDoc, collection, query, where, getDocs, limit as firestoreLimit
 import { getDbInstance } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/collections';
 import { useAuth } from '@/contexts/AuthContext';
+import { useInstallFlow } from '@/contexts/InstallFlowContext';
 import toast from 'react-hot-toast';
 import {
   Building2,
@@ -68,6 +69,7 @@ export default function AgencyProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, userType } = useAuth();
+  const { isInAppBrowser, interceptAction } = useInstallFlow();
   const [isFollowing, setIsFollowing] = useState(false);
   const [agency, setAgency] = useState<Agency | null>(null);
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
@@ -192,6 +194,12 @@ export default function AgencyProfilePage() {
   };
 
   const handleMessage = () => {
+    // Check for FB browser interception (only for non-authenticated users)
+    if (isInAppBrowser && !user) {
+      const shouldProceed = interceptAction('signin', { agencyId: params.id as string }, true);
+      if (!shouldProceed) return;
+    }
+
     if (!user) {
       // Redirect to login with preserved context
       const loginParams = new URLSearchParams({

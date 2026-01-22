@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useOptionalAuth } from '@/contexts/AuthContext';
+import { useInstallFlow } from '@/contexts/InstallFlowContext';
 import { User, LogOut, Menu, X, MessageCircle, Briefcase, FileText, CreditCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Logo from '@/components/ui/Logo';
@@ -12,10 +13,23 @@ import InstallPWAButton from '@/components/pwa/InstallPWAButton';
 
 export default function Header() {
   const { user, userType, signOut, loading } = useOptionalAuth();
+  const { isInAppBrowser, interceptAction } = useInstallFlow();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingApplications, setPendingApplications] = useState(0);
+
+  // Handle auth button clicks with FB browser interception
+  const handleAuthClick = (action: 'signup' | 'signin', href: string) => (e: React.MouseEvent) => {
+    if (isInAppBrowser) {
+      const shouldProceed = interceptAction(action, undefined, true); // forceIntercept = true
+      if (!shouldProceed) {
+        e.preventDefault();
+        return;
+      }
+    }
+    // If not intercepted, navigation proceeds normally via Link
+  };
 
   useEffect(() => {
     if (!user || !userType) {
@@ -158,12 +172,14 @@ export default function Header() {
               <>
                 <Link
                   href="/auth/login"
+                  onClick={handleAuthClick('signin', '/auth/login')}
                   className="text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 hover:scale-105"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/signup"
+                  onClick={handleAuthClick('signup', '/auth/signup')}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 hover:scale-105 hover:shadow-lg font-semibold"
                 >
                   Sign Up
@@ -292,14 +308,20 @@ export default function Header() {
                   <Link
                     href="/auth/login"
                     className="text-gray-700 hover:text-blue-600 transition-colors px-2 py-1"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      handleAuthClick('signin', '/auth/login')(e);
+                      if (!e.defaultPrevented) setMobileMenuOpen(false);
+                    }}
                   >
                     Login
                   </Link>
                   <Link
                     href="/auth/signup"
                     className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      handleAuthClick('signup', '/auth/signup')(e);
+                      if (!e.defaultPrevented) setMobileMenuOpen(false);
+                    }}
                   >
                     Sign Up
                   </Link>

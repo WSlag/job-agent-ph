@@ -66,13 +66,14 @@ const checkIfDismissed = (): boolean => {
 };
 
 /**
- * Check if user chose to continue anyway
+ * Check if user chose to continue anyway (session-only, resets when browser closes)
  */
 const checkHasContinuedAnyway = (): boolean => {
   if (typeof window === 'undefined') return false;
 
   try {
-    return localStorage.getItem(STORAGE_KEYS.CONTINUE_ANYWAY) === 'true';
+    // Use sessionStorage so it resets when browser/tab closes
+    return sessionStorage.getItem(STORAGE_KEYS.CONTINUE_ANYWAY) === 'true';
   } catch {
     return false;
   }
@@ -132,13 +133,14 @@ export function useFacebookBrowser(): UseFacebookBrowserReturn {
   }, []);
 
   /**
-   * User chose to continue using in-app browser
+   * User chose to continue using in-app browser (session-only)
    */
   const continueAnyway = useCallback(() => {
     try {
-      localStorage.setItem(STORAGE_KEYS.CONTINUE_ANYWAY, 'true');
+      // Use sessionStorage so choice resets when browser/tab closes
+      sessionStorage.setItem(STORAGE_KEYS.CONTINUE_ANYWAY, 'true');
       setHasContinuedAnyway(true);
-      console.log('[FB Browser] User chose to continue in-app');
+      console.log('[FB Browser] User chose to continue in-app (session only)');
     } catch (error) {
       console.error('[FB Browser] Failed to save continue anyway state:', error);
     }
@@ -151,7 +153,7 @@ export function useFacebookBrowser(): UseFacebookBrowserReturn {
     try {
       localStorage.removeItem(STORAGE_KEYS.DISMISSED);
       localStorage.removeItem(STORAGE_KEYS.DISMISSED_AT);
-      localStorage.removeItem(STORAGE_KEYS.CONTINUE_ANYWAY);
+      sessionStorage.removeItem(STORAGE_KEYS.CONTINUE_ANYWAY); // Session storage
       setIsDismissed(false);
       setHasContinuedAnyway(false);
       console.log('[FB Browser] Preferences cleared');

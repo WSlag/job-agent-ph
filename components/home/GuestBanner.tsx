@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { X, Sparkles, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useInstallFlow } from '@/contexts/InstallFlowContext';
 
 interface GuestBannerProps {
   onSignup?: () => void;
@@ -17,6 +18,7 @@ interface GuestBannerProps {
  * Shows benefits of creating an account
  */
 export default function GuestBanner({ onSignup }: GuestBannerProps) {
+  const { isInAppBrowser, interceptAction } = useInstallFlow();
   const [isDismissed, setIsDismissed] = useState(
     typeof window !== 'undefined'
       ? localStorage.getItem('guestBannerDismissed') === 'true'
@@ -26,6 +28,17 @@ export default function GuestBanner({ onSignup }: GuestBannerProps) {
   const handleDismiss = () => {
     setIsDismissed(true);
     localStorage.setItem('guestBannerDismissed', 'true');
+  };
+
+  // Handle auth button clicks with FB browser interception
+  const handleAuthClick = (action: 'signup' | 'signin') => (e: React.MouseEvent) => {
+    if (isInAppBrowser) {
+      const shouldProceed = interceptAction(action, undefined, true);
+      if (!shouldProceed) {
+        e.preventDefault();
+        return;
+      }
+    }
   };
 
   if (isDismissed) return null;
@@ -91,7 +104,10 @@ export default function GuestBanner({ onSignup }: GuestBannerProps) {
               <div className="flex flex-col sm:flex-row gap-3">
                 {onSignup ? (
                   <button
-                    onClick={onSignup}
+                    onClick={(e) => {
+                      handleAuthClick('signup')(e);
+                      if (!e.defaultPrevented) onSignup();
+                    }}
                     className="bg-white text-primary-600 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-md inline-flex items-center justify-center gap-2"
                   >
                     Sign Up Free
@@ -100,6 +116,7 @@ export default function GuestBanner({ onSignup }: GuestBannerProps) {
                 ) : (
                   <Link
                     href="/auth/signup"
+                    onClick={handleAuthClick('signup')}
                     className="bg-white text-primary-600 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-md inline-flex items-center justify-center gap-2"
                   >
                     Sign Up Free
@@ -108,6 +125,7 @@ export default function GuestBanner({ onSignup }: GuestBannerProps) {
                 )}
                 <Link
                   href="/auth/login"
+                  onClick={handleAuthClick('signin')}
                   className="border-2 border-white text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-white/10 transition-colors inline-flex items-center justify-center"
                 >
                   Log In

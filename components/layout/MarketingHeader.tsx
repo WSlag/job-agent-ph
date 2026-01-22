@@ -3,9 +3,22 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
+import { useInstallFlow } from '@/contexts/InstallFlowContext';
 
 export default function MarketingHeader() {
   const pathname = usePathname();
+  const { isInAppBrowser, interceptAction } = useInstallFlow();
+
+  // Handle auth button clicks with FB browser interception
+  const handleAuthClick = (action: 'signup' | 'signin') => (e: React.MouseEvent) => {
+    if (isInAppBrowser) {
+      const shouldProceed = interceptAction(action, undefined, true);
+      if (!shouldProceed) {
+        e.preventDefault();
+        return;
+      }
+    }
+  };
 
   const navLinks = [
     { href: '/jobs', label: 'Jobs' },
@@ -48,12 +61,14 @@ export default function MarketingHeader() {
             <div className="flex items-center gap-3">
               <Link
                 href="/auth/login"
+                onClick={handleAuthClick('signin')}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               >
                 Login
               </Link>
               <Link
                 href="/auth/signup"
+                onClick={handleAuthClick('signup')}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
                 Sign Up

@@ -6,6 +6,7 @@ import { Menu, X, Search, Bell, Heart, User2, Sparkles, TrendingUp, Globe, Messa
 import Logo from '@/components/ui/Logo';
 import { useState, useEffect, useRef } from 'react';
 import { useOptionalAuth } from '@/contexts/AuthContext';
+import { useInstallFlow } from '@/contexts/InstallFlowContext';
 
 /**
  * LANDING NAV 3 ENHANCED: Beautiful App-Style Navigation
@@ -21,6 +22,7 @@ import { useOptionalAuth } from '@/contexts/AuthContext';
 
 export default function LandingNav3Enhanced() {
   const { user, userType } = useOptionalAuth();
+  const { isInAppBrowser, interceptAction } = useInstallFlow();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,6 +30,17 @@ export default function LandingNav3Enhanced() {
   const [showSearchBar, setShowSearchBar] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Handle auth button clicks with FB browser interception
+  const handleAuthClick = (action: 'signup' | 'signin') => (e: React.MouseEvent) => {
+    if (isInAppBrowser) {
+      const shouldProceed = interceptAction(action, undefined, true); // forceIntercept = true
+      if (!shouldProceed) {
+        e.preventDefault();
+        return;
+      }
+    }
+  };
 
   // Get active filters from URL
   const activeLocation = searchParams?.get('location');
@@ -169,12 +182,14 @@ export default function LandingNav3Enhanced() {
               {/* Auth Buttons - Desktop */}
               <Link
                 href="/auth/login"
+                onClick={handleAuthClick('signin')}
                 className="hidden sm:flex items-center text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors"
               >
                 Login
               </Link>
               <Link
                 href="/auth/signup"
+                onClick={handleAuthClick('signup')}
                 className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 <User2 className="w-4 h-4" />
@@ -353,7 +368,10 @@ export default function LandingNav3Enhanced() {
                     <Link
                       href="/auth/signup"
                       className="block w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={(e) => {
+                        handleAuthClick('signup')(e);
+                        if (!e.defaultPrevented) setIsMenuOpen(false);
+                      }}
                     >
                       Create Account
                     </Link>
@@ -362,7 +380,10 @@ export default function LandingNav3Enhanced() {
                       <Link
                         href="/auth/login"
                         className="text-blue-600 hover:text-blue-700 font-semibold"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={(e) => {
+                          handleAuthClick('signin')(e);
+                          if (!e.defaultPrevented) setIsMenuOpen(false);
+                        }}
                       >
                         Sign In
                       </Link>

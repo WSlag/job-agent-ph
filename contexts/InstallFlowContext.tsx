@@ -20,6 +20,11 @@ interface PendingActionData {
 }
 
 /**
+ * Action types that can be intercepted
+ */
+type InterceptableAction = 'apply' | 'message' | 'signup' | 'signin';
+
+/**
  * Install Flow Context type
  */
 interface InstallFlowContextType {
@@ -31,14 +36,21 @@ interface InstallFlowContextType {
   showWelcomeModal: boolean;
   showApplyModal: boolean;
   showBanner: boolean;
-  pendingAction: 'apply' | 'message' | null;
+  pendingAction: InterceptableAction | null;
   pendingActionData: PendingActionData | null;
   hasContinuedAnyway: boolean;
 
   // Actions
   dismissWelcome: () => void;
   dismissBanner: () => void;
-  interceptAction: (action: 'apply' | 'message', data?: PendingActionData) => boolean;
+  /**
+   * Intercept an action and show modal
+   * @param action - The action type being attempted
+   * @param data - Additional data about the action
+   * @param forceIntercept - If true, always show modal even if user previously chose "continue anyway"
+   * @returns true if action should proceed, false if intercepted
+   */
+  interceptAction: (action: InterceptableAction, data?: PendingActionData, forceIntercept?: boolean) => boolean;
   proceedWithAction: () => void;
   cancelAction: () => void;
   openInExternalBrowser: () => void;
@@ -77,7 +89,7 @@ export function InstallFlowProvider({ children }: InstallFlowProviderProps) {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // Pending action state
-  const [pendingAction, setPendingAction] = useState<'apply' | 'message' | null>(null);
+  const [pendingAction, setPendingAction] = useState<InterceptableAction | null>(null);
   const [pendingActionData, setPendingActionData] = useState<PendingActionData | null>(null);
 
   // Check if we should show the welcome modal on homepage
@@ -141,16 +153,27 @@ export function InstallFlowProvider({ children }: InstallFlowProviderProps) {
   }, []);
 
   /**
-   * Intercept an action (Apply/Message)
+   * Intercept an action (Apply/Message/SignUp/SignIn)
    * Returns true if action should proceed, false if intercepted
+   *
+   * @param action - The action type being attempted
+   * @param data - Additional data about the action
+   * @param forceIntercept - If true, always show modal (for auth CTAs like signup/signin)
    */
   const interceptAction = useCallback((
-    action: 'apply' | 'message',
-    data?: PendingActionData
+    action: InterceptableAction,
+    data?: PendingActionData,
+    forceIntercept: boolean = false
   ): boolean => {
-    // If not in-app browser or user chose to continue anyway, allow action
-    if (!isInAppBrowser || hasContinuedAnyway || isPWAInstalled) {
+    // If not in-app browser or PWA is installed, allow action
+    if (!isInAppBrowser || isPWAInstalled) {
       return true; // Proceed with action
+    }
+
+    // For auth-related CTAs (signup/signin), always intercept when forceIntercept is true
+    // For apply/message, respect hasContinuedAnyway unless forceIntercept is true
+    if (!forceIntercept && hasContinuedAnyway) {
+      return true; // User previously chose to continue anyway
     }
 
     // Intercept the action
