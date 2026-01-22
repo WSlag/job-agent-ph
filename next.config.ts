@@ -120,6 +120,10 @@ const nextConfig: NextConfig = {
       },
       // Add other specific domains as needed
     ],
+    // Cache optimized images for longer to reduce re-fetching
+    minimumCacheTTL: 86400, // 24 hours
+    // Skip optimization in development to avoid timeout issues with large images
+    unoptimized: process.env.NODE_ENV === 'development',
   },
   compiler: {
     // Remove console.log in production
