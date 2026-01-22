@@ -8,8 +8,10 @@ import ClientFooter from "@/components/layout/ClientFooter";
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { InstallFlowProvider } from "@/contexts/InstallFlowContext";
 import InstallPWABanner from "@/components/pwa/InstallPWABanner";
 import IOSInstallModal from "@/components/pwa/iOSInstallModal";
+import { WelcomeModal, ApplyActionModal, InstallBanner } from "@/components/install-flow";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -55,44 +57,51 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased pb-14 md:pb-0 md:pt-16`}>
         <ErrorBoundary>
           <AuthProvider>
-            <ConditionalHeader />
-            {children}
-            <ClientFooter />
-            <Suspense fallback={null}>
-              <BottomNav />
-            </Suspense>
+            <InstallFlowProvider>
+              <ConditionalHeader />
+              {children}
+              <ClientFooter />
+              <Suspense fallback={null}>
+                <BottomNav />
+              </Suspense>
 
-            {/* PWA Install Banner */}
-            <InstallPWABanner />
+              {/* PWA Install Banner */}
+              <InstallPWABanner />
 
-            {/* iOS Install Modal */}
-            <IOSInstallModal />
+              {/* iOS Install Modal */}
+              <IOSInstallModal />
 
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#fff',
-                  color: '#363636',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#10b981',
-                    secondary: '#fff',
+              {/* Facebook/Instagram/TikTok In-App Browser Flow */}
+              <WelcomeModal />
+              <ApplyActionModal />
+              <InstallBanner />
+
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#fff',
+                    color: '#363636',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#fff',
+                  success: {
+                    iconTheme: {
+                      primary: '#10b981',
+                      secondary: '#fff',
+                    },
                   },
-                },
-              }}
-            />
+                  error: {
+                    iconTheme: {
+                      primary: '#ef4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </InstallFlowProvider>
           </AuthProvider>
         </ErrorBoundary>
       </body>

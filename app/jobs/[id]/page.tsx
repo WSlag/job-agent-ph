@@ -8,6 +8,7 @@ import { COLLECTIONS } from '@/lib/collections';
 import { Job } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useInstallFlow } from '@/contexts/InstallFlowContext';
 import { hasAppliedToJob } from '@/lib/application-helpers';
 import toast from 'react-hot-toast';
 import { calculateJobMatch, getPlaceholderJobData } from '@/lib/placeholder-data';
@@ -76,6 +77,7 @@ export default function JobDetailsPage() {
   const searchParams = useSearchParams();
   const { user, userType, loading: authLoading } = useAuth();
   const { onboardingData, startTour } = useOnboarding();
+  const { isInAppBrowser, hasContinuedAnyway, interceptAction, isPWAInstalled } = useInstallFlow();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -240,6 +242,12 @@ export default function JobDetailsPage() {
   };
 
   const handleApply = () => {
+    // Check for FB browser interception (only for non-authenticated actions)
+    if (isInAppBrowser && !hasContinuedAnyway && !isPWAInstalled && !user) {
+      const shouldProceed = interceptAction('apply', { jobId: job?.id, jobTitle: job?.title });
+      if (!shouldProceed) return; // Modal will handle flow
+    }
+
     if (!user) {
       // Show login prompt for apply action
       setAuthPromptAction('apply');
@@ -263,6 +271,12 @@ export default function JobDetailsPage() {
   };
 
   const handleQuickApply = () => {
+    // Check for FB browser interception (only for non-authenticated actions)
+    if (isInAppBrowser && !hasContinuedAnyway && !isPWAInstalled && !user) {
+      const shouldProceed = interceptAction('apply', { jobId: job?.id, jobTitle: job?.title });
+      if (!shouldProceed) return; // Modal will handle flow
+    }
+
     if (!user) {
       setAuthPromptAction('apply');
       setShowAuthPrompt(true);
@@ -369,6 +383,12 @@ export default function JobDetailsPage() {
   };
 
   const handleMessageAgency = () => {
+    // Check for FB browser interception (only for non-authenticated actions)
+    if (isInAppBrowser && !hasContinuedAnyway && !isPWAInstalled && !user) {
+      const shouldProceed = interceptAction('message', { jobId: job?.id, jobTitle: job?.title, agencyId: job?.agencyId });
+      if (!shouldProceed) return; // Modal will handle flow
+    }
+
     if (!user) {
       // Show login prompt for message action
       setAuthPromptAction('message');
