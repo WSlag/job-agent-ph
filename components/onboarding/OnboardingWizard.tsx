@@ -293,7 +293,7 @@ export default function OnboardingWizard() {
       await dismissWizard()
     } else {
       await completeStep(currentStep.id as any)
-      setCurrentStepIndex(prev => prev + 1)
+      setCurrentStepIndex(prev => Math.min(prev + 1, STEPS.length - 1))
     }
   }
 

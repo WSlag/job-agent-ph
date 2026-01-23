@@ -97,8 +97,13 @@ export async function logUserActivity(params: LogUserActivityParams): Promise<vo
       ipAddress: params.ipAddress,
     };
 
+    // Strip undefined values - Firestore rejects them
+    const cleanActivity = Object.fromEntries(
+      Object.entries(activity).filter(([, v]) => v !== undefined)
+    );
+
     await addDoc(collection(db, COLLECTIONS.USER_ACTIVITIES), {
-      ...activity,
+      ...cleanActivity,
       timestamp: Timestamp.now(),
     });
   } catch (error) {

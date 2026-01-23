@@ -317,7 +317,7 @@ export default function AgencyOnboardingWizard() {
       await dismissWizard()
     } else {
       await completeStep(currentStep.id)
-      setCurrentStepIndex(prev => prev + 1)
+      setCurrentStepIndex(prev => Math.min(prev + 1, STEPS.length - 1))
     }
   }
 
