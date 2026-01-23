@@ -100,38 +100,68 @@ export async function POST(request: NextRequest) {
 }
 
 /**
+ * Fetch full email content from Resend's receiving API
+ * The webhook only contains metadata; body must be fetched separately.
+ */
+async function fetchEmailContent(emailId: string): Promise<{ text: string | null; html: string | null; from: string; subject: string }> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || !emailId) {
+    return { text: null, html: null, from: '', subject: '' };
+  }
+
+  try {
+    const response = await fetch(`https://api.resend.com/emails/receiving/${emailId}`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to fetch email content: ${response.status}`);
+      return { text: null, html: null, from: '', subject: '' };
+    }
+
+    const emailData = await response.json();
+    return {
+      text: typeof emailData.text === 'string' ? emailData.text : null,
+      html: typeof emailData.html === 'string' ? emailData.html : null,
+      from: typeof emailData.from === 'string' ? emailData.from : '',
+      subject: typeof emailData.subject === 'string' ? emailData.subject : '',
+    };
+  } catch (error) {
+    console.error('Error fetching email content from Resend:', error);
+    return { text: null, html: null, from: '', subject: '' };
+  }
+}
+
+/**
  * Handle inbound email (reply from agency)
  *
- * Resend email.received webhook payload structure:
- * - from: string (e.g., "Name <email@example.com>")
- * - to: string[] (array of recipient emails)
- * - subject: string
- * - text?: string (plain text body - may not be present)
- * - html?: string (HTML body - may not be present)
+ * Resend email.received webhook only contains metadata (from, to, subject, email_id).
+ * The body must be fetched via GET /emails/receiving/:id.
  */
 async function handleInboundEmail(data: Record<string, unknown>) {
   try {
-    // Log the full payload for debugging
-    console.log('Inbound email data:', JSON.stringify(data, null, 2));
+    console.log('Inbound email webhook data:', JSON.stringify(data, null, 2));
 
-    // Extract fields with proper type handling
-    // Resend may nest data differently or use alternative field names
+    // Extract metadata from webhook payload
     const from = typeof data.from === 'string' ? data.from : '';
     const to = Array.isArray(data.to) ? data.to[0] : (typeof data.to === 'string' ? data.to : '');
     const subject = typeof data.subject === 'string' ? data.subject : '';
+    const emailId = typeof data.email_id === 'string' ? data.email_id : '';
 
-    // Try multiple field names for content (Resend may use different formats)
-    const text = typeof data.text === 'string' ? data.text
-      : typeof data.text_body === 'string' ? data.text_body
-      : typeof data.body === 'string' ? data.body
-      : typeof data.plain_text === 'string' ? data.plain_text
-      : null;
-    const html = typeof data.html === 'string' ? data.html
-      : typeof data.html_body === 'string' ? data.html_body
-      : null;
+    // Fetch full email content from Resend receiving API
+    const emailContent = await fetchEmailContent(emailId);
+
+    // Use fetched content, falling back to any inline data
+    const text = emailContent.text
+      || (typeof data.text === 'string' ? data.text : null);
+    const html = emailContent.html
+      || (typeof data.html === 'string' ? data.html : null);
+
+    // Use the more complete 'from' if available from the API (includes display name)
+    const resolvedFrom = emailContent.from || from;
 
     // Extract email address from "Name <email@example.com>" format
-    const fromEmail = from.match(/<(.+)>/)?.[1] || from;
+    const fromEmail = resolvedFrom.match(/<(.+)>/)?.[1] || resolvedFrom;
 
     // Validate we have at least the from email
     if (!fromEmail) {
@@ -202,10 +232,10 @@ async function handleInboundEmail(data: Record<string, unknown>) {
       });
     }
 
-    // Store the reply with raw data keys for debugging
-    const replyData: Record<string, unknown> = {
+    // Store the reply
+    const replyData = {
       fromEmail,
-      fromName: from.match(/^([^<]+)/)?.[1]?.trim() || fromEmail,
+      fromName: resolvedFrom.match(/^([^<]+)/)?.[1]?.trim() || fromEmail,
       toEmail: to,
       subject,
       textContent: text || null,
@@ -215,18 +245,6 @@ async function handleInboundEmail(data: Record<string, unknown>) {
       receivedAt: FieldValue.serverTimestamp(),
       isRead: false,
     };
-
-    // Store raw data keys for debugging if content is missing
-    if (!text && !html) {
-      replyData._rawDataKeys = Object.keys(data);
-      // Try to extract any string content from unknown fields
-      const possibleContent = Object.entries(data)
-        .filter(([key, val]) => typeof val === 'string' && val.length > 20 && !['from', 'to', 'subject'].includes(key))
-        .map(([key, val]) => ({ key, preview: (val as string).substring(0, 200) }));
-      if (possibleContent.length > 0) {
-        replyData._possibleContentFields = possibleContent;
-      }
-    }
 
     await adminDb.collection(COLLECTIONS.OUTREACH_REPLIES).add(replyData);
 
