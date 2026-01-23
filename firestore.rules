@@ -203,26 +203,9 @@ service cloud.firestore {
                       request.resource.data.agencyId == request.auth.uid &&
                       // Subscription check - enforce job posting limits
                       canPostJob(request.auth.uid) &&
-                      // Agency profile must be complete with certifications
-                      // Support both new multi-file fields (dmwLicenseFiles) and legacy single URL (dmwLicenseUrl)
-                      (
-                        // Check new multi-file fields (array with at least 1 file)
-                        (get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.keys().hasAny(['dmwLicenseFiles']) &&
-                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseFiles is list &&
-                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseFiles.size() > 0) ||
-                        // Fallback to legacy single URL field
-                        get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.dmwLicenseUrl != null
-                      ) &&
-                      (
-                        // Check new multi-file fields
-                        (get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.keys().hasAny(['businessPermitFiles']) &&
-                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitFiles is list &&
-                         get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitFiles.size() > 0) ||
-                        // Fallback to legacy single URL field
-                        get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.businessPermitUrl != null
-                      ) &&
-                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.logoUrl != null &&
-                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.registrationNumber != null &&
+                      // Minimum profile: companyName, contactPerson, phone
+                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.companyName != null &&
+                      get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.contactPerson != null &&
                       get(/databases/$(database)/documents/agencies/$(request.auth.uid)).data.phone != null &&
                       // Field validations (adjusted for realistic use)
                       validateStringLength(request.resource.data.title, 5, 200) &&

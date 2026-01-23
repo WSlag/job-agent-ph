@@ -59,7 +59,7 @@ export async function createJob(params: CreateJobParams): Promise<string> {
     throw new Error(subscriptionCheck.reason || 'Unable to post job. Please check your subscription.')
   }
 
-  // Validate agency profile is complete before allowing job creation
+  // Validate minimum agency profile fields before allowing job creation
   const db = getDbInstance()
   const agencyRef = doc(db, 'agencies', agencyId)
   const agencySnap = await getDoc(agencyRef)
@@ -70,31 +70,13 @@ export async function createJob(params: CreateJobParams): Promise<string> {
 
   const agencyData = agencySnap.data()
 
-  // Check for required certifications (support both new multi-file and legacy single URL)
-  const hasDmwLicense =
-    (agencyData.dmwLicenseFiles && agencyData.dmwLicenseFiles.length > 0) ||
-    Boolean(agencyData.dmwLicenseUrl)
-
-  const hasBusinessPermit =
-    (agencyData.businessPermitFiles && agencyData.businessPermitFiles.length > 0) ||
-    Boolean(agencyData.businessPermitUrl)
-
-  if (!hasDmwLicense || !hasBusinessPermit) {
-    throw new Error(
-      'Agency profile incomplete. Please upload DMW License and Business Permit before posting jobs.'
-    )
-  }
-
-  // Check for other required profile fields
+  // Only require minimum fields: companyName, contactPerson, phone
   if (
     !agencyData.companyName?.trim() ||
-    !agencyData.registrationNumber?.trim() ||
     !agencyData.contactPerson?.trim() ||
-    !agencyData.phone?.trim() ||
-    !agencyData.address?.trim() ||
-    !agencyData.logoUrl
+    !agencyData.phone?.trim()
   ) {
-    throw new Error('Agency profile incomplete. Please complete all required fields before posting jobs.')
+    throw new Error('Please add your Company Name, Contact Person, and Phone before posting jobs.')
   }
 
   // Validate category

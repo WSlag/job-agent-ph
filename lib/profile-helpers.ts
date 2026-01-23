@@ -68,45 +68,52 @@ export async function updateJobHunterProfile(
 }
 
 /**
- * Checks if an agency profile is complete with all mandatory fields
- * Supports both legacy single-file (dmwLicenseUrl) and new multi-file (dmwLicenseFiles) formats
+ * Checks if an agency profile has the minimum required fields to post a job.
+ * Only companyName, contactPerson, and phone are mandatory for posting.
+ * Logo, DMW License, and Business Permit are recommended but not blocking.
  * @param agency The agency profile to check
- * @returns true if profile is complete, false otherwise
+ * @returns true if minimum required fields are present, false otherwise
  */
 export function isAgencyProfileComplete(agency: Agency): boolean {
-  // Check basic required fields
-  const hasBasicInfo = Boolean(
+  return Boolean(
     agency.companyName?.trim() &&
-    agency.registrationNumber?.trim() &&
     agency.contactPerson?.trim() &&
-    agency.phone?.trim() &&
-    agency.address?.trim() &&
-    agency.logoUrl
+    agency.phone?.trim()
   )
+}
 
-  // Check mandatory certifications (support both new multi-file and legacy single URL)
+/**
+ * Checks if an agency has uploaded recommended documents (logo, DMW, permit).
+ * Used to show reminders on the job posting page.
+ */
+export function getAgencyMissingDocuments(agency: Agency): string[] {
+  const missing: string[] = []
+
+  if (!agency.logoUrl) missing.push('Company Logo')
+
   const hasDmwLicense =
     (agency.dmwLicenseFiles && agency.dmwLicenseFiles.length > 0) ||
     Boolean(agency.dmwLicenseUrl)
+  if (!hasDmwLicense) missing.push('DMW License')
 
   const hasBusinessPermit =
     (agency.businessPermitFiles && agency.businessPermitFiles.length > 0) ||
     Boolean(agency.businessPermitUrl)
+  if (!hasBusinessPermit) missing.push('Business Permit')
 
-  const hasCertifications = hasDmwLicense && hasBusinessPermit
-
-  return hasBasicInfo && hasCertifications
+  return missing
 }
 
 /**
- * Gets a detailed profile completion status for an agency
- * Supports both legacy single-file and new multi-file certification formats
+ * Gets a detailed profile completion status for an agency.
+ * Includes both required (for posting) and recommended (documents) fields.
  * @param agency The agency profile to check
  * @returns Object with missing fields and completion status
  */
 export function getAgencyProfileCompletionStatus(agency: Agency): {
   isComplete: boolean
   missingFields: string[]
+  missingDocuments: string[]
   completionPercentage: number
 } {
   // Check DMW License (either new multi-file or legacy single URL)
@@ -119,44 +126,58 @@ export function getAgencyProfileCompletionStatus(agency: Agency): {
     (agency.businessPermitFiles && agency.businessPermitFiles.length > 0) ||
     Boolean(agency.businessPermitUrl)
 
+  // Required fields (minimum to post jobs)
   const requiredFields = [
     { key: 'companyName', label: 'Company Name', value: agency.companyName },
-    { key: 'registrationNumber', label: 'Registration Number', value: agency.registrationNumber },
     { key: 'contactPerson', label: 'Contact Person', value: agency.contactPerson },
     { key: 'phone', label: 'Phone', value: agency.phone },
+  ]
+
+  // Recommended fields (not blocking, but should be completed)
+  const recommendedFields = [
+    { key: 'registrationNumber', label: 'Registration Number', value: agency.registrationNumber },
     { key: 'address', label: 'Address', value: agency.address },
     { key: 'logoUrl', label: 'Company Logo', value: agency.logoUrl },
     { key: 'dmwLicense', label: 'DMW License', value: hasDmwLicense },
     { key: 'businessPermit', label: 'Business Permit', value: hasBusinessPermit },
   ]
 
+  const allFields = [...requiredFields, ...recommendedFields]
   const missingFields: string[] = []
+  const missingDocuments: string[] = []
   let completedCount = 0
 
   requiredFields.forEach(field => {
+    if (field.value && String(field.value).trim()) {
+      completedCount++
+    } else {
+      missingFields.push(field.label)
+    }
+  })
+
+  recommendedFields.forEach(field => {
     if (field.key === 'dmwLicense' || field.key === 'businessPermit') {
-      // Boolean value for certification fields
       if (field.value) {
         completedCount++
       } else {
-        missingFields.push(field.label)
+        missingDocuments.push(field.label)
       }
     } else {
-      // String value for other fields
       if (field.value && String(field.value).trim()) {
         completedCount++
       } else {
-        missingFields.push(field.label)
+        missingDocuments.push(field.label)
       }
     }
   })
 
-  const completionPercentage = Math.round((completedCount / requiredFields.length) * 100)
-  const isComplete = completedCount === requiredFields.length
+  const completionPercentage = Math.round((completedCount / allFields.length) * 100)
+  const isComplete = missingFields.length === 0
 
   return {
     isComplete,
     missingFields,
+    missingDocuments,
     completionPercentage,
   }
 }

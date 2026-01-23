@@ -8,7 +8,7 @@ import Card from '@/components/ui/Card'
 import { ArrowLeft } from 'lucide-react'
 import AgencyDashboardHeader from '@/components/layout/AgencyDashboardHeader'
 import MobileNativeHeader from '@/components/layout/MobileNativeHeader'
-import { isAgencyProfileComplete } from '@/lib/profile-helpers'
+import { isAgencyProfileComplete, getAgencyMissingDocuments } from '@/lib/profile-helpers'
 import { canPostJob } from '@/lib/subscription-helpers'
 import { Agency } from '@/types'
 import { AlertCircle } from 'lucide-react'
@@ -20,6 +20,7 @@ export default function PostJobPage() {
   const router = useRouter()
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [profileIncomplete, setProfileIncomplete] = useState(false)
+  const [missingDocuments, setMissingDocuments] = useState<string[]>([])
   const [subscriptionCheck, setSubscriptionCheck] = useState<{
     allowed: boolean;
     reason?: string;
@@ -44,7 +45,6 @@ export default function PostJobPage() {
   const checkAuthorization = async () => {
     if (!user) return
 
-    // Check if profile is complete with certifications
     const agency = userProfile as Agency
     const isComplete = isAgencyProfileComplete(agency)
 
@@ -53,6 +53,10 @@ export default function PostJobPage() {
       setIsAuthorized(false)
       return
     }
+
+    // Check for missing documents (non-blocking reminder)
+    const missing = getAgencyMissingDocuments(agency)
+    setMissingDocuments(missing)
 
     // Check subscription limits
     try {
@@ -90,16 +94,13 @@ export default function PostJobPage() {
     )
   }
 
-  // Show profile incomplete warning
+  // Show profile incomplete warning (only for truly required fields: companyName, contactPerson, phone)
   if (profileIncomplete) {
     const agency = userProfile as Agency
-    const missingCertifications = []
-    // Check both new multi-file format and legacy single-file format
-    const hasDmwLicense = (agency.dmwLicenseFiles && agency.dmwLicenseFiles.length > 0) || Boolean(agency.dmwLicenseUrl)
-    const hasBusinessPermit = (agency.businessPermitFiles && agency.businessPermitFiles.length > 0) || Boolean(agency.businessPermitUrl)
-
-    if (!hasDmwLicense) missingCertifications.push('DMW License')
-    if (!hasBusinessPermit) missingCertifications.push('Business Permit')
+    const missingRequired = []
+    if (!agency.companyName?.trim()) missingRequired.push('Company Name')
+    if (!agency.contactPerson?.trim()) missingRequired.push('Contact Person')
+    if (!agency.phone?.trim()) missingRequired.push('Phone Number')
 
     return (
       <>
@@ -118,30 +119,21 @@ export default function PostJobPage() {
                   <AlertCircle className="h-8 w-8 text-yellow-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Profile Incomplete
+                  Basic Info Required
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  You need to complete your agency profile before posting jobs.
+                  Please add the following to your profile before posting jobs:
                 </p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm font-medium text-gray-900 mb-2">
-                    Missing Required Certifications:
-                  </p>
                   <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
-                    {missingCertifications.map((cert) => (
-                      <li key={cert}>{cert}</li>
+                    {missingRequired.map((field) => (
+                      <li key={field}>{field}</li>
                     ))}
-                    {!agency.logoUrl && <li>Company Logo</li>}
-                    {!agency.companyName?.trim() && <li>Company Name</li>}
-                    {!agency.registrationNumber?.trim() && <li>Registration Number</li>}
-                    {!agency.contactPerson?.trim() && <li>Contact Person</li>}
-                    {!agency.phone?.trim() && <li>Phone Number</li>}
-                    {!agency.address?.trim() && <li>Address</li>}
                   </ul>
                 </div>
                 <div className="space-y-3">
                   <Link
-                    href="/agency/profile/edit?reason=certifications"
+                    href="/agency/profile/edit"
                     className="inline-block w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Complete Profile
@@ -238,6 +230,31 @@ export default function PostJobPage() {
               Fill out the details below to create a job posting for candidates
             </p>
           </div>
+
+          {/* Missing documents reminder */}
+          {missingDocuments.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    Please upload the following documents as soon as possible:
+                  </p>
+                  <ul className="text-sm text-amber-700 list-disc list-inside mt-1 space-y-0.5">
+                    {missingDocuments.map((doc) => (
+                      <li key={doc}>{doc}</li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/agency/profile/edit"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2 inline-block"
+                  >
+                    Go to Profile Settings →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Subscription limit banner */}
           {subscriptionCheck && (

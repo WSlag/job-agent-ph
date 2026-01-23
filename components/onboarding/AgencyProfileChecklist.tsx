@@ -45,7 +45,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: 'dmwLicenseUploaded',
     title: 'Upload DMW License',
-    description: 'Required certification - Department of Migrant Workers License',
+    description: 'Recommended - Department of Migrant Workers License builds credibility',
     icon: Shield,
     link: '/agency/profile/edit?reason=certifications',
     linkText: 'Upload License',
@@ -53,7 +53,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: 'businessPermitUploaded',
     title: 'Upload Business Permit',
-    description: 'Required certification - Valid Business Permit',
+    description: 'Recommended - Valid Business Permit builds trust with candidates',
     icon: Shield,
     link: '/agency/profile/edit?reason=certifications',
     linkText: 'Upload Permit',
