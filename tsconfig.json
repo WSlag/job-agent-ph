@@ -42,7 +42,8 @@
     "middleware.ts",
     "next-env.d.ts",
     "types/**/*.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "content/**/*.mdx"
   ],
   "exclude": [
     "node_modules",
