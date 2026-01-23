@@ -115,11 +115,20 @@ async function handleInboundEmail(data: Record<string, unknown>) {
     console.log('Inbound email data:', JSON.stringify(data, null, 2));
 
     // Extract fields with proper type handling
+    // Resend may nest data differently or use alternative field names
     const from = typeof data.from === 'string' ? data.from : '';
     const to = Array.isArray(data.to) ? data.to[0] : (typeof data.to === 'string' ? data.to : '');
     const subject = typeof data.subject === 'string' ? data.subject : '';
-    const text = typeof data.text === 'string' ? data.text : null;
-    const html = typeof data.html === 'string' ? data.html : null;
+
+    // Try multiple field names for content (Resend may use different formats)
+    const text = typeof data.text === 'string' ? data.text
+      : typeof data.text_body === 'string' ? data.text_body
+      : typeof data.body === 'string' ? data.body
+      : typeof data.plain_text === 'string' ? data.plain_text
+      : null;
+    const html = typeof data.html === 'string' ? data.html
+      : typeof data.html_body === 'string' ? data.html_body
+      : null;
 
     // Extract email address from "Name <email@example.com>" format
     const fromEmail = from.match(/<(.+)>/)?.[1] || from;
@@ -193,8 +202,8 @@ async function handleInboundEmail(data: Record<string, unknown>) {
       });
     }
 
-    // Store the reply
-    const replyData = {
+    // Store the reply with raw data keys for debugging
+    const replyData: Record<string, unknown> = {
       fromEmail,
       fromName: from.match(/^([^<]+)/)?.[1]?.trim() || fromEmail,
       toEmail: to,
@@ -206,6 +215,18 @@ async function handleInboundEmail(data: Record<string, unknown>) {
       receivedAt: FieldValue.serverTimestamp(),
       isRead: false,
     };
+
+    // Store raw data keys for debugging if content is missing
+    if (!text && !html) {
+      replyData._rawDataKeys = Object.keys(data);
+      // Try to extract any string content from unknown fields
+      const possibleContent = Object.entries(data)
+        .filter(([key, val]) => typeof val === 'string' && val.length > 20 && !['from', 'to', 'subject'].includes(key))
+        .map(([key, val]) => ({ key, preview: (val as string).substring(0, 200) }));
+      if (possibleContent.length > 0) {
+        replyData._possibleContentFields = possibleContent;
+      }
+    }
 
     await adminDb.collection(COLLECTIONS.OUTREACH_REPLIES).add(replyData);
 
