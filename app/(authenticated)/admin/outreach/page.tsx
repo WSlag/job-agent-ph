@@ -38,6 +38,7 @@ interface OutreachReply {
   outreachId: string | null;
   receivedAt: string;
   isRead: boolean;
+  repliedAt?: string | null;
 }
 
 const MESSAGE_TYPES = [
@@ -110,6 +111,12 @@ export default function AdminOutreachPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [selectedReply, setSelectedReply] = useState<OutreachReply | null>(null);
   const [activeTab, setActiveTab] = useState<'send' | 'bulk' | 'replies'>('send');
+
+  // Reply compose state
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replySubject, setReplySubject] = useState('');
+  const [replyMessage, setReplyMessage] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
 
   // Bulk upload state
   const [csvData, setCsvData] = useState<ParsedCSVRow[]>([]);
@@ -229,8 +236,52 @@ export default function AdminOutreachPage() {
 
   const openReply = (reply: OutreachReply) => {
     setSelectedReply(reply);
+    setShowReplyForm(false);
     if (!reply.isRead) {
       markReplyAsRead(reply.id);
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!selectedReply || !replyMessage.trim()) {
+      toast.error('Please enter a message');
+      return;
+    }
+
+    setSendingReply(true);
+    try {
+      const response = await fetch('/api/admin/outreach/replies/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toEmail: selectedReply.fromEmail,
+          toName: selectedReply.fromName || selectedReply.fromEmail,
+          subject: replySubject,
+          message: replyMessage.trim(),
+          replyId: selectedReply.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send reply');
+      }
+
+      toast.success('Reply sent successfully');
+      setShowReplyForm(false);
+      setReplyMessage('');
+
+      // Update the reply in local state with repliedAt
+      const now = new Date().toISOString();
+      setReplies(replies.map(r =>
+        r.id === selectedReply.id ? { ...r, repliedAt: now } : r
+      ));
+      setSelectedReply({ ...selectedReply, repliedAt: now });
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send reply');
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -755,8 +806,13 @@ export default function AdminOutreachPage() {
                           <div className="text-sm text-gray-500 truncate">
                             {reply.fromEmail}
                           </div>
-                          <div className="text-sm text-gray-600 truncate mt-1">
-                            {reply.subject}
+                          <div className="text-sm text-gray-600 truncate mt-1 flex items-center gap-2">
+                            <span className="truncate">{reply.subject}</span>
+                            {reply.repliedAt && (
+                              <span className="flex-shrink-0 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                                Replied
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-gray-400 mt-1">
                             {reply.receivedAt
@@ -789,10 +845,18 @@ export default function AdminOutreachPage() {
                           Agency: {selectedReply.agencyName}
                         </div>
                       )}
-                      <div className="text-xs text-gray-400 mt-1">
-                        {selectedReply.receivedAt
-                          ? new Date(selectedReply.receivedAt).toLocaleString()
-                          : 'Just now'}
+                      <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                        <span>
+                          {selectedReply.receivedAt
+                            ? new Date(selectedReply.receivedAt).toLocaleString()
+                            : 'Just now'}
+                        </span>
+                        {selectedReply.repliedAt && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                            <CheckCircle className="w-3 h-3" />
+                            Replied
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -828,16 +892,59 @@ export default function AdminOutreachPage() {
                   </div>
 
                   <div className="border-t mt-6 pt-4">
-                    <Button
-                      onClick={() => {
-                        window.open(`mailto:${selectedReply.fromEmail}?subject=Re: ${selectedReply.subject}`, '_blank');
-                      }}
-                      icon={Send}
-                      iconPosition="left"
-                      className="w-full"
-                    >
-                      Reply via Email Client
-                    </Button>
+                    {!showReplyForm ? (
+                      <Button
+                        onClick={() => {
+                          setShowReplyForm(true);
+                          setReplySubject(`Re: ${selectedReply.subject}`);
+                          setReplyMessage('');
+                        }}
+                        icon={Send}
+                        iconPosition="left"
+                        className="w-full"
+                      >
+                        Reply
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                          <input
+                            type="text"
+                            value={replySubject}
+                            onChange={(e) => setReplySubject(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                          <textarea
+                            value={replyMessage}
+                            onChange={(e) => setReplyMessage(e.target.value)}
+                            rows={6}
+                            placeholder="Type your reply..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleSendReply}
+                            disabled={sendingReply || !replyMessage.trim()}
+                            icon={Send}
+                            iconPosition="left"
+                          >
+                            {sendingReply ? 'Sending...' : 'Send Reply'}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => setShowReplyForm(false)}
+                            disabled={sendingReply}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (

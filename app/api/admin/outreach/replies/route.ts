@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
       id: doc.id,
       ...doc.data(),
       receivedAt: doc.data().receivedAt?.toDate?.()?.toISOString() || null,
+      repliedAt: doc.data().repliedAt?.toDate?.()?.toISOString() || null,
     }));
 
     // Get unread count

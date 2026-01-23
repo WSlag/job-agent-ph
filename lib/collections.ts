@@ -41,6 +41,7 @@ export const COLLECTIONS = {
   OUTREACH_BATCHES: 'outreachBatches', // Bulk outreach email batches
   FACEBOOK_POSTS: 'facebookPosts', // Facebook cross-posting records
   USER_ACTIVITIES: 'userActivities', // User activity tracking (admin-only view)
+  OUTREACH_SENT_REPLIES: 'outreachSentReplies', // Admin-sent replies to outreach emails
 } as const;
 
 // Helper to get collection paths
@@ -74,6 +75,7 @@ export const getCollectionPath = {
   outreachBatches: () => COLLECTIONS.OUTREACH_BATCHES,
   facebookPosts: () => COLLECTIONS.FACEBOOK_POSTS,
   userActivities: () => COLLECTIONS.USER_ACTIVITIES,
+  outreachSentReplies: () => COLLECTIONS.OUTREACH_SENT_REPLIES,
 };
 
 // Firestore indexes needed (create in Firebase Console)
