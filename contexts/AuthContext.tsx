@@ -24,6 +24,7 @@ import { User, UserType, JobHunter, Agency, Admin, Subscription } from '@/types'
 import { formatPhoneForFirebase, getPhoneAuthErrorMessage } from '@/lib/phone-helpers';
 import { COLLECTIONS } from '@/lib/collections';
 import { getAgencySubscription } from '@/lib/subscription-helpers';
+import { logUserActivity } from '@/lib/activity-helpers';
 import { requestNotificationPermission, saveFCMToken, setupFCMListener } from '@/lib/fcm-client';
 
 // Type-safe profile data for signup
@@ -552,6 +553,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSessionReady(true);
       console.log('[AuthContext] Session ready for redirect');
 
+      // Log account_created activity (fire-and-forget)
+      if (userType === 'jobhunter' || userType === 'agency') {
+        logUserActivity({
+          userId,
+          userType: userType as 'jobhunter' | 'agency',
+          userName: userCredential.user.displayName || email,
+          activityType: 'account_created',
+          title: 'Account Created',
+          description: `Created new ${userType} account`,
+          resourceType: 'profile',
+          resourceId: userId,
+        });
+      }
+
       // Trigger welcome message (non-blocking) - AFTER session is ready
       console.log('[AuthContext] Triggering welcome message...');
       if (userType === 'jobhunter') {
@@ -650,6 +665,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Mark session as ready - this allows login page to redirect
       setSessionReady(true);
       console.log('[AuthContext] Session ready for redirect');
+
+      // Log login activity (fire-and-forget)
+      const uid = userCredential.user.uid;
+      const displayName = userCredential.user.displayName || email;
+      const db = getDbInstance();
+      getDoc(doc(db, COLLECTIONS.JOB_HUNTERS, uid)).then((jhDoc) => {
+        const uType: 'jobhunter' | 'agency' = jhDoc.exists() ? 'jobhunter' : 'agency';
+        const userName = jhDoc.exists()
+          ? `${jhDoc.data()?.firstName || ''} ${jhDoc.data()?.lastName || ''}`.trim() || displayName
+          : displayName;
+        logUserActivity({
+          userId: uid,
+          userType: uType,
+          userName,
+          activityType: 'login',
+          title: 'Login',
+          description: `Signed in via email`,
+        });
+      }).catch(() => {
+        // Fallback: log with basic info
+        logUserActivity({
+          userId: uid,
+          userType: 'jobhunter',
+          userName: displayName,
+          activityType: 'login',
+          title: 'Login',
+          description: `Signed in via email`,
+        });
+      });
     } catch (error: any) {
       console.error('[AuthContext] Login error:', error);
 

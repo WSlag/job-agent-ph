@@ -116,6 +116,7 @@ export function getDefaultPermissions(
     Permission.HOLD_JOBS,
     Permission.VIEW_FEATURED_REQUESTS,
     Permission.VIEW_AUDIT_LOGS,
+    Permission.VIEW_USER_ACTIVITIES,
     Permission.VIEW_ANALYTICS,
     Permission.SEND_MESSAGES,
   ];
@@ -148,6 +149,8 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   [Permission.SEND_BULK_MESSAGES]: 'Send bulk messages to multiple users',
 
   [Permission.POST_TO_FACEBOOK]: 'Post jobs to Facebook page',
+
+  [Permission.VIEW_USER_ACTIVITIES]: 'View user activity logs',
 };
 
 /**
@@ -174,6 +177,7 @@ export const PERMISSION_CATEGORIES = {
   'System & Administration': [
     Permission.MANAGE_SETTINGS,
     Permission.VIEW_AUDIT_LOGS,
+    Permission.VIEW_USER_ACTIVITIES,
     Permission.MANAGE_PERMISSIONS,
     Permission.VIEW_ANALYTICS,
   ],
@@ -228,3 +232,6 @@ export const canSendMessages = (admin: Admin | null | undefined) =>
 
 export const canSendBulkMessages = (admin: Admin | null | undefined) =>
   hasPermission(admin, Permission.SEND_BULK_MESSAGES);
+
+export const canViewUserActivities = (admin: Admin | null | undefined) =>
+  hasPermission(admin, Permission.VIEW_USER_ACTIVITIES);

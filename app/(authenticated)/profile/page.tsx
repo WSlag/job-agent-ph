@@ -23,6 +23,7 @@ import {
 } from '@/lib/validation';
 import { User, Mail, Phone, MapPin, Briefcase, FileText, Lock, Upload, Save, ArrowLeft, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { logUserActivity } from '@/lib/activity-helpers';
 import UserDashboardHeader from '@/components/layout/UserDashboardHeader';
 import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
 
@@ -361,6 +362,33 @@ export default function ProfilePage() {
       }
 
       toast.success('Profile updated successfully!');
+
+      // Log activity
+      if (currentUser) {
+        logUserActivity({
+          userId: currentUser.uid,
+          userType: userType as 'jobhunter' | 'agency',
+          userName: currentUser.displayName || 'User',
+          activityType: userType === 'jobhunter' ? 'profile_updated' : 'agency_profile_updated',
+          title: userType === 'jobhunter' ? 'Profile Updated' : 'Agency Profile Updated',
+          description: `Updated ${userType === 'jobhunter' ? 'personal' : 'agency'} profile`,
+          resourceType: 'profile',
+          resourceId: currentUser.uid,
+        });
+        if (resumeUrl) {
+          logUserActivity({
+            userId: currentUser.uid,
+            userType: 'jobhunter',
+            userName: currentUser.displayName || 'User',
+            activityType: 'resume_uploaded',
+            title: 'Resume Uploaded',
+            description: 'Uploaded a new resume',
+            resourceType: 'profile',
+            resourceId: currentUser.uid,
+          });
+        }
+      }
+
       await loadProfile();
 
       // Update profile checklist for job hunters

@@ -39,3 +39,22 @@ export {
 export {
   cleanupOldNotifications,
 } from './cleanup/notification-cleanup';
+
+// Export activity tracking functions
+export {
+  onApplicationCreatedActivity,
+  onApplicationStatusChangedActivity,
+} from './activities/application-activities';
+
+export {
+  onJobCreatedActivity,
+  onJobUpdatedActivity,
+} from './activities/job-activities';
+
+export {
+  onMessageSentActivity,
+} from './activities/message-activities';
+
+export {
+  cleanupOldActivities,
+} from './activities/activity-cleanup';

@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { Bookmark, MapPin, DollarSign, Clock, Trash2, ExternalLink } from 'lucide-react';
 import { Job } from '@/types';
+import { logUserActivity } from '@/lib/activity-helpers';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import MobileNativeHeader from '@/components/layout/MobileNativeHeader';
@@ -125,6 +126,16 @@ export default function SavedJobsPage() {
       const db = getDbInstance();
       await deleteDoc(doc(db, 'savedJobs', currentUser.uid, 'jobs', jobId));
       setSavedJobs(prev => prev.filter(job => job.id !== jobId));
+      logUserActivity({
+        userId: currentUser.uid,
+        userType: 'jobhunter',
+        userName: currentUser.displayName || 'Job Hunter',
+        activityType: 'job_unsaved',
+        title: 'Job Unsaved',
+        description: 'Removed a job from saved list',
+        resourceType: 'job',
+        resourceId: jobId,
+      });
     } catch (error) {
       console.error('Error removing saved job:', error);
       alert('Failed to remove saved job. Please try again.');

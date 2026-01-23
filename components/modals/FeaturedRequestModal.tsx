@@ -8,6 +8,7 @@ import { getAgencyJobs } from '@/lib/job-helpers';
 import { Job, PaymentMethod } from '@/types';
 import { Star, DollarSign, FileText, CreditCard, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { logUserActivity } from '@/lib/activity-helpers';
 
 interface FeaturedRequestModalProps {
   isOpen: boolean;
@@ -147,6 +148,19 @@ export default function FeaturedRequestModal({
       });
 
       toast.success('Featured job request submitted successfully!');
+
+      // Log activity
+      logUserActivity({
+        userId: user.uid,
+        userType: 'agency',
+        userName: user.displayName || 'Agency',
+        activityType: 'featured_request_submitted',
+        title: 'Featured Request Submitted',
+        description: `Submitted featured job request`,
+        resourceType: 'job',
+        resourceId: formData.jobId,
+        metadata: { paymentMethod: formData.paymentMethod, amount: formData.paymentAmount },
+      });
 
       // Reset form
       setFormData({

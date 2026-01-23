@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getDbInstance } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { logUserActivity } from '@/lib/activity-helpers';
 import { Bell, Mail, MessageCircle, Briefcase, Calendar, Shield } from 'lucide-react';
 
 interface NotificationPreferences {
@@ -25,7 +26,7 @@ const defaultPreferences: NotificationPreferences = {
 };
 
 export default function NotificationSettingsPage() {
-  const { user } = useAuth();
+  const { user, userType } = useAuth();
   const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -62,6 +63,16 @@ export default function NotificationSettingsPage() {
       const db = getDbInstance();
       await setDoc(doc(db, 'notificationPreferences', user.uid), preferences);
       setSaveMessage('Preferences saved successfully!');
+      logUserActivity({
+        userId: user.uid,
+        userType: (userType === 'agency' ? 'agency' : 'jobhunter') as 'jobhunter' | 'agency',
+        userName: user.displayName || 'User',
+        activityType: 'notification_preferences_updated',
+        title: 'Notification Preferences Updated',
+        description: 'Updated notification preferences',
+        resourceType: 'profile',
+        resourceId: user.uid,
+      });
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
       console.error('Error saving preferences:', error);

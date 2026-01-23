@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { updateAgencyProfile } from '@/lib/profile-helpers'
 import { uploadFile, uploadMultipleCertifications, deleteCertificationFile } from '@/lib/storage-helpers'
+import { logUserActivity } from '@/lib/activity-helpers'
 import Button from '@/components/ui/Button'
 import { Upload, X, Building2, Plus } from 'lucide-react'
 import type { Agency, CertificationFile } from '@/types'
@@ -319,6 +320,18 @@ export default function AgencyProfileEditForm({ agency }: AgencyProfileEditFormP
       // CRITICAL: Refresh the profile in AuthContext to get the latest data
       // This ensures certification URLs and other updates are immediately available
       await refreshProfile()
+
+      // Log activity
+      logUserActivity({
+        userId: agency.id,
+        userType: 'agency',
+        userName: formData.companyName || agency.companyName,
+        activityType: 'agency_profile_updated',
+        title: 'Agency Profile Updated',
+        description: 'Updated agency profile information',
+        resourceType: 'profile',
+        resourceId: agency.id,
+      })
 
       // Show success message
       setSuccess(true)

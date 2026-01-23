@@ -20,6 +20,7 @@ import {
   Wrench,
   Send,
   Facebook,
+  Activity,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -84,6 +85,11 @@ const navigation = [
     name: 'Audit Logs',
     href: '/admin/audit-logs',
     icon: ScrollText,
+  },
+  {
+    name: 'User Activities',
+    href: '/admin/user-activities',
+    icon: Activity,
   },
   {
     name: 'Settings',

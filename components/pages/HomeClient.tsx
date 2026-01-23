@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { collection, query, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { getDbInstance } from '@/lib/firebase';
 import { useOptionalAuth } from '@/contexts/AuthContext';
+import { logUserActivity } from '@/lib/activity-helpers';
 import { Job } from '@/types';
 import {
   ArrowRight,
@@ -85,6 +86,16 @@ export default function HomeClient({
           newSet.delete(jobId);
           return newSet;
         });
+        logUserActivity({
+          userId: user.uid,
+          userType: 'jobhunter',
+          userName: user.displayName || 'Job Hunter',
+          activityType: 'job_unsaved',
+          title: 'Job Unsaved',
+          description: 'Removed a job from saved list',
+          resourceType: 'job',
+          resourceId: jobId,
+        });
       } else {
         await setDoc(savedJobRef, {
           savedAt: new Date(),
@@ -93,6 +104,16 @@ export default function HomeClient({
           const newSet = new Set(prev);
           newSet.add(jobId);
           return newSet;
+        });
+        logUserActivity({
+          userId: user.uid,
+          userType: 'jobhunter',
+          userName: user.displayName || 'Job Hunter',
+          activityType: 'job_saved',
+          title: 'Job Saved',
+          description: 'Saved a job to favorites',
+          resourceType: 'job',
+          resourceId: jobId,
         });
       }
     } catch (error) {

@@ -146,6 +146,9 @@ export enum Permission {
 
   // Facebook Cross-posting
   POST_TO_FACEBOOK = 'POST_TO_FACEBOOK',
+
+  // User Activities
+  VIEW_USER_ACTIVITIES = 'VIEW_USER_ACTIVITIES',
 }
 
 // Job Types
@@ -583,4 +586,48 @@ export interface FacebookPost {
   postedByName: string;
   error?: string;
   createdAt: Date;
+}
+
+// User Activity Types
+export type UserActivityType =
+  // Job Hunter actions
+  | 'application_submitted'
+  | 'application_withdrawn'
+  | 'job_saved'
+  | 'job_unsaved'
+  | 'profile_updated'
+  | 'resume_uploaded'
+  | 'message_sent'
+  | 'account_created'
+  | 'login'
+  // Agency actions
+  | 'job_posted'
+  | 'job_updated'
+  | 'job_deactivated'
+  | 'job_reactivated'
+  | 'application_status_changed'
+  | 'message_sent_to_applicant'
+  | 'agency_profile_updated'
+  | 'featured_request_submitted'
+  | 'subscription_purchased'
+  // Shared
+  | 'notification_preferences_updated';
+
+export type UserActivityCategory =
+  | 'application' | 'job' | 'profile' | 'message' | 'account' | 'subscription';
+
+export interface UserActivity {
+  id: string;
+  userId: string;
+  userType: 'jobhunter' | 'agency';
+  userName: string;
+  activityType: UserActivityType;
+  category: UserActivityCategory;
+  title: string;
+  description: string;
+  timestamp: Date;
+  resourceType?: 'job' | 'application' | 'conversation' | 'profile' | 'subscription';
+  resourceId?: string;
+  metadata?: Record<string, any>;
+  ipAddress?: string;
 }
