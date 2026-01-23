@@ -189,7 +189,7 @@ export default function AdminOutreachPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send email');
+        throw new Error(data.details || data.error || 'Failed to send email');
       }
 
       toast.success(`Outreach email sent to ${recipientEmail}`);

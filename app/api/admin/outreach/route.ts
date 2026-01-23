@@ -49,7 +49,19 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email
-    const result = await sendEmail(outreachEmail);
+    let result;
+    try {
+      result = await sendEmail(outreachEmail);
+    } catch (emailError) {
+      console.error('Resend API error:', emailError);
+      return NextResponse.json(
+        {
+          error: 'Email sending failed',
+          details: emailError instanceof Error ? emailError.message : 'Unknown email error'
+        },
+        { status: 502 }
+      );
+    }
 
     // Log the outreach in Firestore for tracking
     const outreachLog = {
