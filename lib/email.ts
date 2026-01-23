@@ -744,14 +744,15 @@ export async function sendEmail(options: {
 
     if (error) {
       console.error('Error sending email:', error);
-      throw error;
+      throw new Error((error as any).message || JSON.stringify(error));
     }
 
     console.log('Email sent successfully:', data?.id);
     return { success: true, messageId: data?.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending email:', error);
-    throw error;
+    if (error instanceof Error) throw error;
+    throw new Error(error?.message || JSON.stringify(error));
   }
 }
 
