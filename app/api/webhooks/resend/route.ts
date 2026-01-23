@@ -133,24 +133,16 @@ async function handleInboundEmail(data: Record<string, unknown>) {
     let outreachId: string | null = null;
     let agencyName: string | null = null;
 
-    // First, try to find outreach by sender email
+    // First, try to find outreach by sender email (no orderBy to avoid composite index requirement)
     let outreachQuery = await adminDb
       .collection(COLLECTIONS.OUTREACH_LOGS)
       .where('recipientEmail', '==', fromEmail)
-      .orderBy('sentAt', 'desc')
-      .limit(1)
       .get();
 
     // If not found by email, try to match by subject (for "Re:" replies)
     if (outreachQuery.empty && subject) {
       // Remove "Re:", "RE:", "Fwd:", etc. prefixes and trim
       const cleanSubject = subject.replace(/^(Re:|RE:|Fwd:|FWD:|Fw:|FW:)\s*/gi, '').trim();
-
-      // Search for outreach with matching subject patterns
-      // The outreach subjects are:
-      // - "Post Jobs FREE on JobAgentPH - Reach Thousands of Filipino Workers" (short)
-      // - "Partner with JobAgentPH — Reach Thousands of Filipino Job Seekers" (standard)
-      // - "Partnership Invitation — JobAgentPH Recruitment Platform" (formal)
 
       const subjectPatterns = [
         'Post Jobs FREE on JobAgentPH',
@@ -163,19 +155,16 @@ async function handleInboundEmail(data: Record<string, unknown>) {
       );
 
       if (matchesOutreachSubject) {
-        // Get recent outreach logs and find one that this could be a reply to
+        // Get recent outreach logs and find one by domain match
         const recentOutreach = await adminDb
           .collection(COLLECTIONS.OUTREACH_LOGS)
-          .orderBy('sentAt', 'desc')
-          .limit(50)
+          .limit(100)
           .get();
 
-        // Try to find a match by checking if this sender could have received an outreach
         for (const doc of recentOutreach.docs) {
-          const data = doc.data();
-          // Check if the fromEmail domain matches or is similar
+          const docData = doc.data();
           const senderDomain = fromEmail.split('@')[1];
-          const recipientDomain = data.recipientEmail?.split('@')[1];
+          const recipientDomain = docData.recipientEmail?.split('@')[1];
 
           if (senderDomain && recipientDomain && senderDomain === recipientDomain) {
             outreachQuery = { empty: false, docs: [doc] } as typeof outreachQuery;
@@ -186,7 +175,14 @@ async function handleInboundEmail(data: Record<string, unknown>) {
     }
 
     if (!outreachQuery.empty) {
-      const outreachDoc = outreachQuery.docs[0];
+      // Sort by sentAt in memory to get the most recent outreach to this email
+      const sortedDocs = outreachQuery.docs.sort((a, b) => {
+        const aTime = a.data().sentAt?.toDate?.()?.getTime() || 0;
+        const bTime = b.data().sentAt?.toDate?.()?.getTime() || 0;
+        return bTime - aTime;
+      });
+
+      const outreachDoc = sortedDocs[0];
       outreachId = outreachDoc.id;
       agencyName = outreachDoc.data().agencyName || null;
 
@@ -224,23 +220,29 @@ async function handleInboundEmail(data: Record<string, unknown>) {
  * Update outreach log status based on email events
  */
 async function updateOutreachStatus(
-  data: { email_id?: string; to?: string },
+  data: { email_id?: string; to?: string | string[] },
   status: 'delivered' | 'opened' | 'clicked' | 'bounced' | 'complained'
 ) {
   try {
-    const recipientEmail = data.to;
+    // Handle both string and array formats for 'to' field
+    const recipientEmail = Array.isArray(data.to) ? data.to[0] : data.to;
     if (!recipientEmail) return;
 
-    // Find the most recent outreach to this email
+    // Find outreach logs for this email (no orderBy to avoid composite index requirement)
     const outreachQuery = await adminDb
       .collection(COLLECTIONS.OUTREACH_LOGS)
       .where('recipientEmail', '==', recipientEmail)
-      .orderBy('sentAt', 'desc')
-      .limit(1)
       .get();
 
     if (!outreachQuery.empty) {
-      const outreachDoc = outreachQuery.docs[0];
+      // Sort in memory to get the most recent
+      const sortedDocs = outreachQuery.docs.sort((a, b) => {
+        const aTime = a.data().sentAt?.toDate?.()?.getTime() || 0;
+        const bTime = b.data().sentAt?.toDate?.()?.getTime() || 0;
+        return bTime - aTime;
+      });
+
+      const outreachDoc = sortedDocs[0];
       const updateData: Record<string, unknown> = {
         [`events.${status}`]: true,
         [`events.${status}At`]: FieldValue.serverTimestamp(),
