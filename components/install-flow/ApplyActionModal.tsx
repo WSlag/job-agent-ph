@@ -38,7 +38,7 @@ export default function ApplyActionModal() {
     : 'Sign In';
 
   const isAuthAction = pendingAction === 'signup' || pendingAction === 'signin';
-  const recommendedBrowser = platform === 'ios' ? 'Safari' : 'Chrome';
+  const recommendedBrowser = platform === 'ios' ? 'Safari' : 'Google';
 
   const handleCopyUrl = async () => {
     // Use URL with install params to trigger PWA install prompt in external browser
@@ -147,7 +147,7 @@ export default function ApplyActionModal() {
                     {platform === 'android' ? (
                       <>
                         <Chrome size={20} />
-                        Open in Chrome
+                        Open in Google
                       </>
                     ) : (
                       <>

@@ -39,7 +39,7 @@ export default function WelcomeModal() {
     ? 'TikTok'
     : 'this app';
 
-  const recommendedBrowser = platform === 'ios' ? 'Safari' : 'Chrome';
+  const recommendedBrowser = platform === 'ios' ? 'Safari' : 'Google';
 
   const handleCopyUrl = async () => {
     // Use URL with install params to trigger PWA install prompt in external browser
@@ -206,7 +206,7 @@ export default function WelcomeModal() {
                     {platform === 'android' ? (
                       <>
                         <Chrome size={20} />
-                        Open in Chrome
+                        Open in Google
                       </>
                     ) : (
                       <>
