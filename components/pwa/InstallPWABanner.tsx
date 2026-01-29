@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Download, Smartphone } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useInstallPrompt } from '@/hooks/useInstallPrompt';
 import { COLORS } from '@/lib/colors';
 import Image from 'next/image';
@@ -24,18 +24,11 @@ const ENGAGEMENT_THRESHOLDS = {
 /**
  * InstallPWABanner Component
  *
- * Displays a dismissible banner promoting PWA installation.
- * Follows Google's best practices for install promotion:
- * - Shows after user demonstrates engagement
- * - Dismissible and respects user choice
- * - Displays for 4-7 seconds minimum
- * - Bottom placement (non-intrusive)
- *
- * Display Logic:
- * - Shows after 30 seconds OR 3 pages visited
- * - Does not show if dismissed in last 7 days
- * - Does not show if installed
- * - Does not show if dismissed 3+ times total
+ * Displays a compact, non-intrusive banner promoting PWA installation.
+ * - Shows after user demonstrates engagement (30s or 3 pages)
+ * - Bottom placement above mobile nav
+ * - Stays visible until user installs
+ * - Does not show if already installed
  *
  * @example
  * ```tsx
@@ -49,10 +42,8 @@ export default function InstallPWABanner() {
     isInstalled,
     isDismissed,
     promptInstall,
-    dismissPrompt,
     platform,
     isFromSocialApp,
-    socialAppSource,
   } = useInstallPrompt();
 
   const [isVisible, setIsVisible] = useState(false);
@@ -131,12 +122,6 @@ export default function InstallPWABanner() {
     setTimeout(() => setIsVisible(false), 300);
   };
 
-  const handleDismiss = () => {
-    dismissPrompt();
-    setIsAnimating(false);
-    setTimeout(() => setIsVisible(false), 300);
-  };
-
   // Don't render if not visible
   if (!isVisible) {
     return null;
@@ -193,43 +178,27 @@ export default function InstallPWABanner() {
           </p>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Install Button */}
-          <button
-            onClick={handleInstall}
-            className="
-              inline-flex items-center gap-1
-              px-3 py-1.5 rounded-lg
-              text-white font-medium text-xs
-              transition-all duration-200
-              hover:scale-105 active:scale-95
-              shadow-sm hover:shadow-md
-              focus:outline-none focus:ring-2 focus:ring-offset-1
-            "
-            style={{
-              backgroundColor: COLORS.PRIMARY.BLUE,
-            }}
-            aria-label={isFromSocialApp ? "Add to home screen" : "Install app"}
-          >
-            <Download size={14} aria-hidden="true" />
-            <span>{isFromSocialApp ? 'Add' : 'Install'}</span>
-          </button>
-
-          {/* Close Button */}
-          <button
-            onClick={handleDismiss}
-            className="
-              p-1.5 rounded-lg
-              text-gray-400 hover:text-gray-600 hover:bg-gray-100
-              transition-colors
-              focus:outline-none focus:ring-2 focus:ring-gray-300
-            "
-            aria-label="Dismiss"
-          >
-            <X size={16} aria-hidden="true" />
-          </button>
-        </div>
+        {/* Install Button */}
+        <button
+          onClick={handleInstall}
+          className="
+            flex-shrink-0
+            inline-flex items-center gap-1
+            px-3 py-1.5 rounded-lg
+            text-white font-medium text-xs
+            transition-all duration-200
+            hover:scale-105 active:scale-95
+            shadow-sm hover:shadow-md
+            focus:outline-none focus:ring-2 focus:ring-offset-1
+          "
+          style={{
+            backgroundColor: COLORS.PRIMARY.BLUE,
+          }}
+          aria-label={isFromSocialApp ? "Add to home screen" : "Install app"}
+        >
+          <Download size={14} aria-hidden="true" />
+          <span>{isFromSocialApp ? 'Add' : 'Install'}</span>
+        </button>
       </div>
     </div>
   );
