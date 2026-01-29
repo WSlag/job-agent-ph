@@ -143,112 +143,94 @@ export default function InstallPWABanner() {
   }
 
   return (
-    <>
-      {/* Backdrop (subtle) */}
+    <div
+      className={`
+        fixed bottom-16 md:bottom-4 left-4 right-4
+        max-w-md mx-auto z-50
+        transition-all duration-300 ease-out
+        ${isAnimating ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
+      `}
+      role="dialog"
+      aria-labelledby="install-banner-title"
+      aria-describedby="install-banner-description"
+    >
       <div
-        className={`
-          fixed inset-0 bg-black/10 backdrop-blur-sm z-40
-          transition-opacity duration-300
-          ${isAnimating ? 'opacity-100' : 'opacity-0'}
-        `}
-        onClick={handleDismiss}
-        aria-hidden="true"
-      />
-
-      {/* Banner */}
-      <div
-        className={`
-          fixed bottom-16 md:bottom-4 left-4 right-4
-          max-w-lg mx-auto z-50
-          transition-all duration-300 ease-out
-          ${isAnimating ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
-        `}
-        role="dialog"
-        aria-labelledby="install-banner-title"
-        aria-describedby="install-banner-description"
+        className="
+          bg-white rounded-xl shadow-lg border border-gray-200
+          p-2.5 flex items-center gap-3
+        "
       >
+        {/* App Icon */}
         <div
-          className="
-            bg-white rounded-2xl shadow-2xl border border-gray-200
-            p-4 flex items-center gap-4
-            hover:shadow-3xl transition-shadow
-          "
+          className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden shadow-sm"
+          style={{ backgroundColor: COLORS.PRIMARY.BLUE_LIGHT }}
         >
-          {/* App Icon */}
-          <div
-            className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden shadow-md"
-            style={{ backgroundColor: COLORS.PRIMARY.BLUE_LIGHT }}
-          >
-            <Image
-              src="/icons/icon-192x192.png"
-              alt="Job Agent PH"
-              width={56}
-              height={56}
-              sizes="56px"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <h3
-              id="install-banner-title"
-              className="font-semibold text-gray-900 text-sm md:text-base truncate"
-            >
-              {isFromSocialApp ? 'Add to Home Screen' : 'Install Job Agent PH'}
-            </h3>
-            <p
-              id="install-banner-description"
-              className="text-xs md:text-sm text-gray-600 mt-0.5"
-            >
-              {isFromSocialApp
-                ? 'Quick access to jobs anytime!'
-                : 'Faster access & works offline'}
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Install Button */}
-            <button
-              onClick={handleInstall}
-              className="
-                inline-flex items-center gap-1.5
-                px-4 py-2 rounded-lg
-                text-white font-medium text-sm
-                transition-all duration-200
-                hover:scale-105 active:scale-95
-                shadow-md hover:shadow-lg
-                focus:outline-none focus:ring-2 focus:ring-offset-2
-              "
-              style={{
-                backgroundColor: COLORS.PRIMARY.BLUE,
-              }}
-              aria-label={isFromSocialApp ? "Add to home screen" : "Install app"}
-            >
-              <Download size={16} aria-hidden="true" />
-              <span className="hidden sm:inline">{isFromSocialApp ? 'Add' : 'Install'}</span>
-            </button>
-
-            {/* Close Button */}
-            <button
-              onClick={handleDismiss}
-              className="
-                p-2 rounded-lg
-                text-gray-400 hover:text-gray-600 hover:bg-gray-100
-                transition-colors
-                focus:outline-none focus:ring-2 focus:ring-gray-300
-              "
-              aria-label="Dismiss"
-            >
-              <X size={20} aria-hidden="true" />
-            </button>
-          </div>
+          <Image
+            src="/icons/icon-192x192.png"
+            alt="Job Agent PH"
+            width={40}
+            height={40}
+            sizes="40px"
+            className="w-full h-full object-cover"
+          />
         </div>
 
-        {/* Mobile indicator (shows it's above bottom nav) */}
-        <div className="md:hidden h-2" aria-hidden="true" />
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3
+            id="install-banner-title"
+            className="font-semibold text-gray-900 text-xs truncate"
+          >
+            {isFromSocialApp ? 'Add to Home Screen' : 'Install Job Agent PH'}
+          </h3>
+          <p
+            id="install-banner-description"
+            className="text-[11px] text-gray-500"
+          >
+            {isFromSocialApp
+              ? 'Quick access to jobs anytime!'
+              : 'Faster access & works offline'}
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Install Button */}
+          <button
+            onClick={handleInstall}
+            className="
+              inline-flex items-center gap-1
+              px-3 py-1.5 rounded-lg
+              text-white font-medium text-xs
+              transition-all duration-200
+              hover:scale-105 active:scale-95
+              shadow-sm hover:shadow-md
+              focus:outline-none focus:ring-2 focus:ring-offset-1
+            "
+            style={{
+              backgroundColor: COLORS.PRIMARY.BLUE,
+            }}
+            aria-label={isFromSocialApp ? "Add to home screen" : "Install app"}
+          >
+            <Download size={14} aria-hidden="true" />
+            <span>{isFromSocialApp ? 'Add' : 'Install'}</span>
+          </button>
+
+          {/* Close Button */}
+          <button
+            onClick={handleDismiss}
+            className="
+              p-1.5 rounded-lg
+              text-gray-400 hover:text-gray-600 hover:bg-gray-100
+              transition-colors
+              focus:outline-none focus:ring-2 focus:ring-gray-300
+            "
+            aria-label="Dismiss"
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
