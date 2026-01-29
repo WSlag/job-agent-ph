@@ -271,6 +271,17 @@ body {
   }
 }
 
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3),
+                0 4px 6px -4px rgba(37, 99, 235, 0.3);
+  }
+  50% {
+    box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.5),
+                0 4px 10px -4px rgba(37, 99, 235, 0.5);
+  }
+}
+
 /* Shimmer Loading Effect */
 @keyframes shimmer {
   0% {

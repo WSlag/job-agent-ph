@@ -11,6 +11,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { InstallFlowProvider } from "@/contexts/InstallFlowContext";
 import InstallPWABanner from "@/components/pwa/InstallPWABanner";
 import IOSInstallModal from "@/components/pwa/iOSInstallModal";
+import FloatingInstallButton from "@/components/pwa/FloatingInstallButton";
 import { WelcomeModal, ApplyActionModal, InstallBanner } from "@/components/install-flow";
 
 const inter = Inter({
@@ -70,6 +71,9 @@ export default function RootLayout({
 
               {/* iOS Install Modal */}
               <IOSInstallModal />
+
+              {/* Floating Install Button - always visible until installed */}
+              <FloatingInstallButton />
 
               {/* Facebook/Instagram/TikTok In-App Browser Flow */}
               <WelcomeModal />
