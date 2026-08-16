@@ -4,8 +4,6 @@
 
 A job marketplace platform connecting Filipino professionals with employment opportunities locally and abroad.
 
-👉 Live Platform: https://jobagentph.com
-
 Designed to digitize recruitment workflows and simplify job applications.
 
 ---
