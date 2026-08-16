@@ -43,9 +43,10 @@ const auth = getAuth();
 const db = getFirestore();
 
 // Test admin data
+// Password comes from TEST_ADMIN_PASSWORD env var — never hardcode credentials in the repo.
 const testAdmin = {
   email: 'admin@jobagentph.com',
-  password: '***REMOVED***',
+  password: process.env.TEST_ADMIN_PASSWORD ?? '',
   firstName: 'System',
   lastName: 'Administrator',
   role: 'super_admin' as const,
@@ -54,6 +55,10 @@ const testAdmin = {
 
 async function createTestAdmin() {
   try {
+    if (!testAdmin.password) {
+      console.error('❌ TEST_ADMIN_PASSWORD env var is required (set it in .env.local)');
+      process.exit(1);
+    }
     console.log('\n🚀 Creating test admin user...\n');
 
     // Step 1: Create Firebase Auth user

@@ -42,10 +42,11 @@ const auth = getAuth();
 const db = getFirestore();
 
 // Test agencies data
+// Passwords come from TEST_AGENCY_PASSWORD env var — never hardcode credentials in the repo.
 const testAgencies = [
   {
     email: 'techhire@example.com',
-    password: '***REMOVED***',
+    password: process.env.TEST_AGENCY_PASSWORD ?? '',
     companyName: 'TechHire Global',
     registrationNumber: 'TH-2024-001',
     contactPerson: 'Maria Santos',
@@ -54,7 +55,7 @@ const testAgencies = [
   },
   {
     email: 'healthcare@example.com',
-    password: '***REMOVED***',
+    password: process.env.TEST_AGENCY_PASSWORD ?? '',
     companyName: 'HealthCare Staffing Inc.',
     registrationNumber: 'HC-2024-002',
     contactPerson: 'Juan Dela Cruz',
@@ -63,7 +64,7 @@ const testAgencies = [
   },
   {
     email: 'engineering@example.com',
-    password: '***REMOVED***',
+    password: process.env.TEST_AGENCY_PASSWORD ?? '',
     companyName: 'Engineering Talent Solutions',
     registrationNumber: 'ET-2024-003',
     contactPerson: 'Ana Reyes',
@@ -158,6 +159,11 @@ const sampleJobs = [
 
 async function seedData() {
   console.log('\n🌱 Starting data seeding process...\n');
+
+  if (!testAgencies.some((a) => a.password)) {
+    console.error('❌ TEST_AGENCY_PASSWORD env var is required (set it in .env.local)');
+    process.exit(1);
+  }
 
   const createdAgencies: any[] = [];
   const createdJobs: any[] = [];
